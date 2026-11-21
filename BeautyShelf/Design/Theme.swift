@@ -2,9 +2,9 @@ import SwiftUI
 import UIKit
 
 /// 设计令牌。主题：一面放满玻璃瓶的梳妆台。
-/// 颜色来自产品本身（每个瓶子的液体色），界面其余部分保持安静、跟随系统明暗。
+/// 颜色来自产品本身（每个容器的液体色），界面其余部分保持安静、跟随系统明暗。
 enum Theme {
-    // Porcelain：浅色下是冷调瓷白，深色下退回系统分组背景
+    // Porcelain：浅色下是冷调瓷白，深色下退回纯黑
     static let porcelain = Color(light: "EEF1F4", dark: "000000")
     // Shelf：架板颜色
     static let shelf = Color(light: "D9DEE4", dark: "2C2C2E")
@@ -13,9 +13,14 @@ enum Theme {
     static let sage = Color(light: "5E9277", dark: "7FB89A")
     static let honey = Color(light: "C7862B", dark: "E3A54E")
     static let rouge = Color(light: "B8404F", dark: "E06876")
+    /// 瓶盖、罐盖、口红管等"实心"部件
+    static let cap = Color(light: "3A3A3C", dark: "AEAEB2")
+    /// 卡片底色（今日、空瓶页的分组）
+    static let card = Color(uiColor: .secondarySystemGroupedBackground)
 
-    /// 瓶中液体可选色：取自真实产品（精华的琥珀、乳液的奶白、化妆水的淡蓝、香水的淡紫……）
-    static let liquids = ["E7B873", "F1E6D8", "BFD7EA", "D5C6E8", "C8E0CC", "F2C4C9", "E9A07A"]
+    /// 液体可选色：取自真实产品（精华的琥珀、乳液的奶白、化妆水的淡蓝、香水的淡紫……）
+    static let liquids = ["E7B873", "F1E6D8", "BFD7EA", "D5C6E8", "C8E0CC", "F2C4C9", "E9A07A", "C9505C", "D9B38C"]
+    static let liquidNames = ["琥珀", "奶白", "淡蓝", "淡紫", "薄荷", "裸粉", "珊瑚", "正红", "肤色"]
 
     static let spring = Animation.spring(response: 0.42, dampingFraction: 0.82)
     static let snappy = Animation.spring(response: 0.3, dampingFraction: 0.65)
@@ -32,6 +37,29 @@ extension Color {
     init(light: String, dark: String) {
         self.init(uiColor: UIColor { $0.userInterfaceStyle == .dark
             ? UIColor(Color(hex: dark)) : UIColor(Color(hex: light)) })
+    }
+}
+
+/// 中文格式化
+enum Fmt {
+    /// 2027 年 5 月 21 日
+    static func day(_ date: Date) -> String {
+        let c = Calendar.current.dateComponents([.year, .month, .day], from: date)
+        return "\(c.year ?? 0) 年 \(c.month ?? 0) 月 \(c.day ?? 0) 日"
+    }
+    /// 5 月 21 日
+    static func shortDay(_ date: Date) -> String {
+        let c = Calendar.current.dateComponents([.month, .day], from: date)
+        return "\(c.month ?? 0) 月 \(c.day ?? 0) 日"
+    }
+    /// 31 / 0.5（最多一位小数）
+    static func amount(_ v: Double) -> String {
+        let r = (v * 10).rounded() / 10
+        if r == r.rounded() { return "\(Int(r))" }
+        return String(format: "%.1f", r)
+    }
+    static func money(_ v: Double) -> String {
+        v >= 10 ? "¥\(Int(v.rounded()))" : String(format: "¥%.1f", v)
     }
 }
 
