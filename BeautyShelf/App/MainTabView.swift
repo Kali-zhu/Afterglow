@@ -55,9 +55,27 @@ struct MainTabView: View {
             Text("「\(p.name)」已移入空瓶，用了 \(p.useCount) 次。")
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .background { NotificationService.reschedule(products: products) }
+            switch phase {
+            case .background:
+                NotificationService.reschedule(products: products)
+                coordinator.saveAndReloadWidgets()
+            case .active:
+                coordinator.finishDrainedProducts(products)
+            default:
+                break
+            }
+        }
+        // 任何页面（妆台、详情、表单、设置）改了会影响小组件的数据 → 防抖保存并刷新小组件
+        .onChange(of: widgetSignature) { coordinator.dataChanged() }
+        .onChange(of: ObjectIdentifier(context)) {
+            // 小组件改过数据、换了新上下文：记到 0 的产品补上"用完了"
+            coordinator.context = context
+            coordinator.finishDrainedProducts(products)
         }
         .task {
+            coordinator.context = context
+            SharedStore.consumeExternalChange()
+            coordinator.finishDrainedProducts(products)
             onboarded = true
             NotificationService.reschedule(products: products)
             if startWithAdd {
@@ -65,6 +83,26 @@ struct MainTabView: View {
                 coordinator.editor = .new
             }
         }
+    }
+
+    /// 小组件会显示的字段的指纹：变了就刷新小组件
+    private var widgetSignature: Int {
+        var h = Hasher()
+        for p in products {
+            h.combine(p.uid)
+            h.combine(p.name)
+            h.combine(p.remainingAmount)
+            h.combine(p.useCount)
+            h.combine(p.finishedDate)
+            h.combine(p.inMorning)
+            h.combine(p.inEvening)
+            h.combine(p.expiryDate)
+            h.combine(p.openedDate)
+            h.combine(p.paoMonths)
+            h.combine(p.tintHex)
+            h.combine(p.kindRaw)
+        }
+        return h.finalize()
     }
 
     private var restockBinding: Binding<Bool> {
@@ -78,5 +116,6 @@ struct MainTabView: View {
         fresh.backupStock = max(0, p.backupStock - 1)
         p.backupStock = 0
         withAnimation(Theme.spring) { context.insert(fresh) }
+        coordinator.dataChanged()
     }
 }

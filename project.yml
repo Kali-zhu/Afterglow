@@ -3,19 +3,60 @@ options:
   bundleIdPrefix: com.llmzhu
   deploymentTarget:
     iOS: "17.0"
+settings:
+  base:
+    MARKETING_VERSION: "0.2.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.9"
 targets:
   BeautyShelf:
     type: application
     platform: iOS
     sources: [BeautyShelf]
+    dependencies:
+      - target: BeautyShelfWidgets
+        embed: true
+    entitlements:
+      path: Entitlements/BeautyShelf.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.llmzhu.BeautyShelf
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.llmzhu.BeautyShelf
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_CFBundleDisplayName: 妆台
-        INFOPLIST_KEY_NSCameraUsageDescription: "拍一张产品照片，贴在妆台上的容器上当标签。"
-        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "从相册选一张产品照片，贴在妆台上的容器上当标签。"
-        MARKETING_VERSION: "0.2.0"
-        CURRENT_PROJECT_VERSION: "1"
-        SWIFT_VERSION: "5.9"
+        INFOPLIST_KEY_NSCameraUsageDescription: "拍一张产品照片：自动把产品从背景里抠出来放上妆台，并识别保质期和容量。"
+        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "从相册选一张产品照片：自动抠图放上妆台，并识别保质期和容量。"
+        INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: "把生成的空瓶记图片存到相册。"
+        CODE_SIGN_ENTITLEMENTS: Entitlements/BeautyShelf.entitlements
+
+  BeautyShelfWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Widgets
+      # 与 App 共用的模型、设计令牌、共享存储
+      - path: BeautyShelf/Models/Product.swift
+      - path: BeautyShelf/Design/Theme.swift
+      - path: BeautyShelf/Services/SharedStore.swift
+    entitlements:
+      path: Entitlements/BeautyShelfWidgets.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.llmzhu.BeautyShelf
+    info:
+      path: Widgets/Info.plist
+      properties:
+        CFBundleDisplayName: 妆台
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.llmzhu.BeautyShelf.Widgets
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: 妆台
+        CODE_SIGN_ENTITLEMENTS: Entitlements/BeautyShelfWidgets.entitlements
+        SKIP_INSTALL: YES
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks"

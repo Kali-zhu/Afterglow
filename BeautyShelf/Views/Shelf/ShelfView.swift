@@ -1,11 +1,13 @@
 import SwiftUI
 import SwiftData
 
-/// 妆台：一层层架子，每层三件。
+/// 妆台：一层层玻璃架子，每层三件（大字号时两件）。
 /// 快到期 / 已过期的永远在最上面一层"该先用掉"，其他按分类排列。
+/// 物件按真实比例高低错落、底边贴住架板；点一下把它"拿起来"看详情。
 struct ShelfView: View {
     @Environment(\.modelContext) private var context
     @Environment(AppCoordinator.self) private var coordinator
+    @Environment(\.dynamicTypeSize) private var typeSize
     @Query(sort: \Product.createdAt, order: .forward, animation: .spring(response: 0.42, dampingFraction: 0.82))
     private var all: [Product]
     @Namespace private var ns
@@ -37,7 +39,7 @@ struct ShelfView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 28) {
+                LazyVStack(alignment: .leading, spacing: 30) {
                     if !active.isEmpty { categoryPicker }
                     if !needsAttention.isEmpty {
                         shelfSection("该先用掉", subtitle: "快到期或已过期，先用它们", items: needsAttention)
@@ -66,13 +68,9 @@ struct ShelfView: View {
                 }
             }
         }
-        .overlay {
-            if let p = selected, !p.isDeleted {
-                ProductDetailView(product: p, ns: ns) {
-                    withAnimation(Theme.spring) { selected = nil }
-                }
-            }
-        }
+        .modifier(DetailPresenter(selected: $selected, ns: ns, coordinator: coordinator, context: context))
+        .onAppear { MotionService.shared.begin() }
+        .onDisappear { MotionService.shared.end() }
         .sensoryFeedback(.selection, trigger: filter)
         .sensoryFeedback(.impact(weight: .light), trigger: quickUses)
         .confirmationDialog("删除这件产品？", isPresented: deleteBinding, titleVisibility: .visible,
@@ -122,7 +120,7 @@ struct ShelfView: View {
 
     /// 一个区块 = 标题 + 若干层架子
     private func shelfSection(_ title: String, subtitle: String?, items: [Product]) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
+        LazyVStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.title3.weight(.semibold))
                 if let subtitle {
@@ -131,33 +129,45 @@ struct ShelfView: View {
             }
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
-            ForEach(Array(stride(from: 0, to: items.count, by: 3)), id: \.self) { start in
-                shelfRow(Array(items[start..<min(start + 3, items.count)]))
+            ForEach(Array(stride(from: 0, to: items.count, by: columns)), id: \.self) { start in
+                shelfRow(Array(items[start..<min(start + columns, items.count)]))
             }
         }
     }
 
+    /// 大字号时每层两件，名字有地方放
+    private var columns: Int { typeSize.isAccessibilitySize ? 2 : 3 }
+    private var stageHeight: CGFloat { typeSize.isAccessibilitySize ? 150 : ProductCard.defaultStageHeight }
+
+    /// 一层：物件站在玻璃架板上，名字在架板下方
     private func shelfRow(_ row: [Product]) -> some View {
-        VStack(spacing: 0) {
-            HStack(alignment: .bottom, spacing: 12) {
-                ForEach(row) { p in
-                    Button { withAnimation(Theme.spring) { selected = p } } label: {
-                        ProductCard(product: p, ns: ns, isSource: selected?.id != p.id)
-                    }
-                    .pressable()
-                    .opacity(selected?.id == p.id ? 0 : 1)
-                    .transition(.asymmetric(insertion: .offset(y: -220).combined(with: .opacity),
-                                            removal: .scale(scale: 0.6).combined(with: .opacity)))
-                    .contextMenu { menu(for: p) }
-                    .accessibilityAction(named: "用了一次") { quickUse(p) }
+        HStack(alignment: .top, spacing: 12) {
+            ForEach(row) { p in
+                let isSelected = selected?.id == p.id
+                Button { withAnimation(Theme.lift) { selected = p } } label: {
+                    ProductCard(product: p, ns: ns,
+                                isSource: !isSelected,
+                                live: selected == nil,
+                                stageHeight: stageHeight)
                 }
-                ForEach(0..<(3 - row.count), id: \.self) { _ in
-                    Color.clear.frame(maxWidth: .infinity, maxHeight: 1)
-                }
+                .buttonStyle(ShelfPressStyle())
+                // 浮层模式下，拿起来的那件从架子上"消失"（matchedGeometryEffect 把它带到详情）
+                .opacity(isSelected && !LiftPresentation.usesZoom ? 0 : 1)
+                .transition(.asymmetric(insertion: .offset(y: -220).combined(with: .opacity),
+                                        removal: .scale(scale: 0.6).combined(with: .opacity)))
+                .contextMenu { menu(for: p) }
+                .accessibilityAction(named: "用了一次") { quickUse(p) }
             }
-            .padding(.bottom, 10)
-            ShelfPlank()
+            ForEach(0..<(columns - row.count), id: \.self) { _ in
+                Color.clear.frame(maxWidth: .infinity, maxHeight: 1)
+            }
         }
+        .background(alignment: .top) {
+            ShelfPlank()
+                .padding(.horizontal, -10)
+                .padding(.top, stageHeight)
+        }
+        .padding(.top, 6)
     }
 
     @ViewBuilder
@@ -178,8 +188,8 @@ struct ShelfView: View {
 
     private var emptyState: some View {
         VStack(spacing: 14) {
-            ContainerView(kind: .bottle, level: 0.15, tint: Color(hex: Theme.liquids[0]))
-                .frame(width: 64, height: 104)
+            ContainerView(kind: .bottle, level: 0.15, tint: Color(hex: Theme.liquids[0]), cap: .dropper, finish: .clear)
+                .frame(width: 70, height: 114)
                 .accessibilityHidden(true)
             Text("架子还是空的").font(.headline)
             Text("添加你正在用的第一件，记录用量和保质期。")
@@ -199,5 +209,52 @@ struct ShelfView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 60)
+    }
+}
+
+/// 架子上的按压：轻轻下沉一点（像手指按在玻璃上），松开弹回
+struct ShelfPressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.96 : 1, anchor: .bottom)
+            .animation(Theme.snappy, value: configuration.isPressed)
+    }
+}
+
+/// 详情的呈现：iOS 18 全屏 + 系统缩放转场（.navigationTransition(.zoom)）；
+/// iOS 17 浮层 + matchedGeometryEffect。两种都由详情页自己做"拿起来"的 3D 倾斜与投影。
+struct DetailPresenter: ViewModifier {
+    @Binding var selected: Product?
+    let ns: Namespace.ID
+    let coordinator: AppCoordinator
+    let context: ModelContext
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        #if compiler(>=6.0)
+        if #available(iOS 18.0, *) {
+            content.fullScreenCover(item: $selected) { p in
+                ProductDetailView(product: p, ns: ns, zoomed: true) { selected = nil }
+                    .environment(coordinator)
+                    .modelContext(context)
+                    .navigationTransition(.zoom(sourceID: p.uid, in: ns))
+                    .presentationBackground(.clear)
+            }
+        } else {
+            overlayed(content)
+        }
+        #else
+        overlayed(content)
+        #endif
+    }
+
+    private func overlayed(_ content: Content) -> some View {
+        content.overlay {
+            if let p = selected, !p.isDeleted {
+                ProductDetailView(product: p, ns: ns) {
+                    withAnimation(Theme.lift) { selected = nil }
+                }
+            }
+        }
     }
 }

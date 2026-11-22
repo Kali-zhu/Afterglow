@@ -1,115 +1,60 @@
 import SwiftUI
 import SwiftData
-import PhotosUI
 import UIKit
 
-enum OpenedChoice: Hashable { case notYet, today, custom }
-enum ExpChoice: Hashable { case years(Int), custom }
-
-enum PerUseLevel: CaseIterable, Hashable {
-    case small, medium, large
-    var title: String {
-        switch self {
-        case .small: "少量"
-        case .medium: "适中"
-        case .large: "多"
-        }
-    }
-    private var factor: Double {
-        switch self {
-        case .small: 0.01
-        case .medium: 0.02
-        case .large: 0.04
-        }
-    }
-    /// 按容量自动换算，保留一位小数
-    func amount(total: Double) -> Double {
-        max(0.1, (total * factor * 10).rounded() / 10)
-    }
-}
-
-/// 表单里正在编辑的值
-struct ProductDraft {
-    var name = ""
-    var brand = ""
-    var category: ProductCategory = .skincare
-    var kind: VesselKind = .bottle
-    var total: Double = 50
-    var remaining: Double = 50
-    var remainingTouched = false
-    var unit = "ml"
-    var perUse: Double = 1
-    var perUseLevel: PerUseLevel? = .medium
-    var opened: OpenedChoice = .notYet
-    var openedDate = Date.now
-    var pao: Int? = 6
-    var paoTouched = false
-    var exp: ExpChoice = .years(2)
-    var expDate = Date.now
-    var priceText = ""
-    var backup = 0
-    var tint = "E7B873"
-    var tintTouched = false
-    var morning = false
-    var evening = false
-    var photo: Data? = nil
-
-    init() {}
-
-    init(product p: Product) {
-        name = p.name
-        brand = p.brand
-        category = p.category
-        kind = p.kind
-        total = p.totalAmount
-        remaining = p.remainingAmount
-        remainingTouched = true
-        unit = p.unit
-        perUse = p.amountPerUse
-        perUseLevel = PerUseLevel.allCases.first { abs($0.amount(total: p.totalAmount) - p.amountPerUse) < 0.001 }
-        if let o = p.openedDate {
-            opened = Calendar.current.isDateInToday(o) ? .today : .custom
-            openedDate = o
-        } else {
-            opened = .notYet
-        }
-        pao = p.paoMonths
-        paoTouched = true
-        exp = .custom
-        expDate = p.expiryDate
-        if let price = p.price { priceText = Fmt.amount(price) }
-        backup = p.backupStock
-        tint = p.tintHex
-        tintTouched = true
-        morning = p.inMorning
-        evening = p.inEvening
-        photo = p.photo
-    }
-}
-
-/// 添加 / 编辑：一张底部弹出的表单，目标 15 秒加一件。
+/// 添加 / 编辑一件产品。
+///
+/// 新增（目标 10 秒）：
+/// 1. 全屏相机 + 取景框（或相册 / 不拍照手动添加）
+/// 2. "浮起来"：主体从照片背景里升起，同时识别 EXP、开封后保质期、容量、名称
+/// 3. 一张确认卡：名称已填好并聚焦，识别到的胶囊可点改，「放上妆台」
+///
+/// 编辑：直接是同一张确认卡（全部展开），可以重新拍照 / 重新抠图，调整剩余量。
 struct ProductEditorView: View {
     let target: EditorTarget
 
+    enum Stage: Equatable { case camera, lifting, confirm }
+
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Namespace private var subjectSpace
+
     @State private var d: ProductDraft
-    @State private var pickerItem: PhotosPickerItem? = nil
-    @State private var showingCamera = false
-    @State private var showMore: Bool
-    @FocusState private var nameFocused: Bool
+    @State private var stage: Stage
+    /// 方向已归正的照片（内存里，用来显示和重新抠图）
+    @State private var photoImage: UIImage? = nil
+    @State private var cutout: ProductCutout? = nil
+    @State private var cutoutImage: UIImage? = nil
+    @State private var lifted = false
+    @State private var analyzing = false
+    @State private var liftTick = 0
+    @State private var recutTick = 0
+    @State private var isRecutting = false
+    @State private var recutStatus: String? = nil
+    /// 从确认卡点「重新拍照」进来的：关掉相机回到确认卡，而不是关掉整个表单
+    @State private var cameraFromConfirm = false
+    @State private var work: Task<Void, Never>? = nil
 
     init(target: EditorTarget) {
         self.target = target
         switch target {
         case .new:
             _d = State(initialValue: ProductDraft())
-            _showMore = State(initialValue: false)
+            _stage = State(initialValue: .camera)
+            _photoImage = State(initialValue: nil)
+            _cutoutImage = State(initialValue: nil)
         case .edit(let p):
-            let draft = ProductDraft(product: p)
-            _d = State(initialValue: draft)
-            _showMore = State(initialValue: draft.morning || draft.evening || draft.backup > 0 || !draft.priceText.isEmpty)
+            _d = State(initialValue: ProductDraft(product: p))
+            _stage = State(initialValue: .confirm)
+            _photoImage = State(initialValue: p.photo.flatMap { UIImage(data: $0) })
+            _cutoutImage = State(initialValue: p.cutout.flatMap { UIImage(data: $0) })
         }
+    }
+
+    /// 便捷入口：nil = 新增
+    init(product: Product?) {
+        self.init(target: product.map { EditorTarget.edit($0) } ?? .new)
     }
 
     private var isEditing: Bool {
@@ -117,501 +62,202 @@ struct ProductEditorView: View {
         return false
     }
 
-    private var mode: MeasureMode { d.kind.measureMode }
+    private var motion: Animation { reduceMotion ? EditorMotion.fade : EditorMotion.spring }
 
     var body: some View {
         NavigationStack {
-            Form {
-                photoSection
-                basicsSection
-                shapeSection
-                capacitySection
-                if mode == .volume { perUseSection }
-                datesSection
-                moreSection
-            }
-            .navigationTitle(isEditing ? "编辑" : "添加一件")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("保存", action: save)
-                        .fontWeight(.semibold)
-                        .disabled(trimmedName.isEmpty)
+            ZStack {
+                switch stage {
+                case .camera:
+                    CaptureCameraView(
+                        onCapture: { image, crop in startAnalysis(image, crop: crop) },
+                        onLibrary: { image in startAnalysis(image, crop: nil) },
+                        onManual: manualAdd,
+                        onClose: closeCamera,
+                        closeTitle: cameraFromConfirm ? "返回" : "取消")
+                    .transition(.opacity)
+
+                case .lifting:
+                    LiftingStageView(photo: photoImage, cutout: cutout, lifted: lifted, analyzing: analyzing,
+                                     namespace: subjectSpace)
+                    .transition(.opacity)
+
+                case .confirm:
+                    ProductConfirmCard(
+                        d: $d,
+                        isEditing: isEditing,
+                        photoImage: photoImage,
+                        cutoutImage: cutoutImage,
+                        namespace: subjectSpace,
+                        matchEnabled: true,
+                        recutStatus: recutStatus,
+                        isRecutting: isRecutting,
+                        onRetake: retake,
+                        onRecut: recut,
+                        onUseOriginal: useOriginal,
+                        onSave: save)
+                    .transition(.opacity)
                 }
             }
-            .onChange(of: d.kind) { old, new in kindChanged(from: old, to: new) }
-            .onChange(of: d.total) { _, new in totalChanged(new) }
-            .onChange(of: d.category) { _, new in
-                if !d.paoTouched { d.pao = d.kind.suggestedPAO(for: new) }
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(stage == .camera ? .hidden : .visible, for: .navigationBar)
+            .toolbar {
+                if stage != .camera {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("取消") { dismiss() }
+                    }
+                }
             }
-            .onChange(of: pickerItem) { _, item in loadPhoto(item) }
-            .fullScreenCover(isPresented: $showingCamera) {
-                CameraPicker(onImage: { image in d.photo = ImageTools.squareJPEG(image) },
-                             onDismiss: { showingCamera = false })
-                    .ignoresSafeArea()
-            }
-            .onAppear { if !isEditing { nameFocused = true } }
         }
         .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
+        .presentationDragIndicator(stage == .camera ? .hidden : .visible)
+        .presentationBackground(stage == .camera ? Color.black : Color(uiColor: .systemGroupedBackground))
+        .interactiveDismissDisabled(stage == .lifting)
+        .sensoryFeedback(.impact(weight: .medium), trigger: liftTick)
+        .sensoryFeedback(.selection, trigger: recutTick)
+        .onDisappear { work?.cancel() }
     }
 
-    private var trimmedName: String { d.name.trimmingCharacters(in: .whitespacesAndNewlines) }
-
-    // MARK: 1. 照片
-
-    private var photoSection: some View {
-        Section {
-            HStack(spacing: 16) {
-                photoPreview
-                VStack(alignment: .leading, spacing: 4) {
-                    if CameraPicker.isAvailable {
-                        Button { showingCamera = true } label: {
-                            Label("拍照", systemImage: "camera").frame(minHeight: 44)
-                        }
-                    }
-                    PhotosPicker(selection: $pickerItem, matching: .images) {
-                        Label("从相册选", systemImage: "photo.on.rectangle").frame(minHeight: 44)
-                    }
-                    if d.photo != nil {
-                        Button(role: .destructive) {
-                            d.photo = nil
-                            pickerItem = nil
-                        } label: {
-                            Label("移除照片", systemImage: "trash").frame(minHeight: 44)
-                        }
-                    }
-                }
-                .buttonStyle(.borderless)
-            }
-        } footer: {
-            Text("没有照片就用形状插画。照片会贴在容器上当标签。")
+    private var title: String {
+        switch stage {
+        case .camera: return ""
+        case .lifting: return "识别中"
+        case .confirm: return isEditing ? "编辑" : "确认一下"
         }
     }
 
-    @ViewBuilder
-    private var photoPreview: some View {
-        if let data = d.photo, let image = UIImage(data: data) {
-            Image(uiImage: image)
-                .resizable()
-                .scaledToFill()
-                .frame(width: 84, height: 84)
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .accessibilityLabel("产品照片")
-        } else {
-            ContainerView(kind: d.kind, level: mode == .estimate ? d.remaining / 100 : 0.7,
-                          tint: Color(hex: d.tint), animated: false)
-                .frame(width: 42, height: 68)
-                .frame(width: 84, height: 84)
-                .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Color.primary.opacity(0.05)))
-                .accessibilityHidden(true)
-        }
-    }
+    // MARK: 第 1 → 2 步：拍到照片，开始抠图 + 识别
 
-    private func loadPhoto(_ item: PhotosPickerItem?) {
-        guard let item else { return }
-        Task { @MainActor in
-            if let data = try? await item.loadTransferable(type: Data.self),
-               let square = ImageTools.squareJPEG(from: data) {
-                d.photo = square
-            }
-        }
-    }
+    private func startAnalysis(_ raw: UIImage, crop: CGRect?) {
+        work?.cancel()
+        lifted = false
+        analyzing = true
+        cutout = nil
+        cutoutImage = nil
+        recutStatus = nil
+        photoImage = nil
+        withAnimation(motion) { stage = .lifting }
 
-    // MARK: 2. 名称、品牌
+        let overwrite = !isEditing
+        work = Task { @MainActor in
+            let prepared = await Task.detached(priority: .userInitiated) { () -> UIImage in
+                let up = ImageTools.normalized(raw, maxSide: 2400)
+                guard let crop else { return up }
+                return ImageTools.crop(up, normalizedRect: crop)
+            }.value
+            guard !Task.isCancelled else { return }
+            photoImage = prepared
 
-    private var basicsSection: some View {
-        Section {
-            TextField("名称（必填），例如 小棕瓶精华", text: $d.name)
-                .focused($nameFocused)
-                .submitLabel(.next)
-            TextField("品牌", text: $d.brand)
-            Picker("分类", selection: $d.category) {
-                ForEach(ProductCategory.allCases) { c in
-                    Label(c.rawValue, systemImage: c.symbol).tag(c)
-                }
-            }
-        }
-    }
+            let a = await CaptureService.analyze(prepared)
+            guard !Task.isCancelled else { return }
+            let jpeg = await Task.detached(priority: .userInitiated) { ImageTools.photoJPEG(a.photo) }.value
+            guard !Task.isCancelled else { return }
 
-    // MARK: 3. 形状
+            d.apply(a, overwrite: overwrite)
+            d.photo = jpeg
+            d.cutout = a.cutout?.png
+            photoImage = a.photo
+            analyzing = false
+            announce(a)
 
-    private var shapeSection: some View {
-        Section {
-            ScrollView(.horizontal) {
-                HStack(spacing: 8) {
-                    ForEach(VesselKind.allCases) { k in
-                        shapeTile(k)
-                    }
-                }
-                .padding(.vertical, 4)
-            }
-            .scrollIndicators(.hidden)
-        } header: {
-            Text("形状")
-        } footer: {
-            Text(d.kind.examples)
-        }
-    }
-
-    private func shapeTile(_ k: VesselKind) -> some View {
-        let on = d.kind == k
-        return Button {
-            withAnimation(Theme.snappy) { d.kind = k }
-        } label: {
-            VStack(spacing: 6) {
-                ContainerView(kind: k, level: 0.65, tint: Color(hex: on ? d.tint : k.defaultTint), animated: false)
-                    .frame(width: 26, height: 42)
-                Text(k.title)
-                    .font(.caption.weight(on ? .semibold : .regular))
-                    .lineLimit(1)
-            }
-            .frame(minWidth: 58, minHeight: 80)
-            .padding(.horizontal, 2)
-            .background(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(on ? Color.primary.opacity(0.08) : Color.clear))
-            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(on ? Color.primary : Color.primary.opacity(0.12), lineWidth: on ? 2 : 1))
-            .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(k.title)，\(k.examples)")
-        .accessibilityAddTraits(on ? [.isButton, .isSelected] : .isButton)
-    }
-
-    // MARK: 4. 容量 / 剩余
-
-    private var remainingBinding: Binding<Double> {
-        Binding(get: { d.remaining }, set: { d.remaining = $0; d.remainingTouched = true })
-    }
-
-    @ViewBuilder
-    private var capacitySection: some View {
-        switch mode {
-        case .volume:
-            Section("容量") {
-                FlowLayout(spacing: 8) {
-                    ForEach(d.kind.quickTotals, id: \.self) { v in
-                        ChoiceChip(title: "\(Fmt.amount(v)) \(d.unit)", isOn: d.total == v) { d.total = v }
-                    }
-                }
-                .padding(.vertical, 4)
-                Stepper(value: $d.total, in: 1...1000, step: d.total < 30 ? 1 : 5) {
-                    Text("总量 \(Fmt.amount(d.total)) \(d.unit)").monospacedDigit()
-                }
-                Picker("单位", selection: $d.unit) {
-                    Text("ml").tag("ml")
-                    Text("g").tag("g")
-                }
-                .pickerStyle(.segmented)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("现在剩 \(Fmt.amount(d.remaining)) \(d.unit)").monospacedDigit()
-                    Slider(value: remainingBinding, in: 0...max(d.total, 1))
-                        .accessibilityLabel("现在剩余")
-                        .accessibilityValue("\(Fmt.amount(d.remaining)) \(d.unit)")
-                }
-            }
-        case .count:
-            Section {
-                FlowLayout(spacing: 8) {
-                    ForEach(d.kind.quickTotals, id: \.self) { v in
-                        ChoiceChip(title: "\(Int(v)) 片", isOn: d.total == v) { d.total = v }
-                    }
-                }
-                .padding(.vertical, 4)
-                Stepper(value: $d.total, in: 1...200, step: 1) {
-                    Text("共 \(Int(d.total)) 片").monospacedDigit()
-                }
-                Stepper(value: remainingBinding, in: 0...max(d.total, 1), step: 1) {
-                    Text("现在剩 \(Int(d.remaining)) 片").monospacedDigit()
-                }
-            } header: {
-                Text("数量")
-            } footer: {
-                Text("每用一次记 1 片。")
-            }
-        case .estimate:
-            Section {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("估算还剩 \(Int(d.remaining))%").monospacedDigit()
-                    Slider(value: remainingBinding, in: 0...100, step: 5)
-                        .accessibilityLabel("估算剩余")
-                        .accessibilityValue("\(Int(d.remaining))%")
-                }
-            } header: {
-                Text("剩余")
-            } footer: {
-                Text("口红、眼影盘这类不好称量，凭感觉估一下就好。以后在详情里直接拖动液面调整。")
-            }
-        }
-    }
-
-    // MARK: 5. 每次用量
-
-    private var perUseSection: some View {
-        Section {
-            FlowLayout(spacing: 8) {
-                ForEach(PerUseLevel.allCases, id: \.self) { level in
-                    ChoiceChip(title: "\(level.title) \(Fmt.amount(level.amount(total: d.total))) \(d.unit)",
-                               isOn: d.perUseLevel == level) {
-                        d.perUseLevel = level
-                        d.perUse = level.amount(total: d.total)
-                    }
-                }
-            }
-            .padding(.vertical, 4)
-            Stepper(value: Binding(get: { d.perUse }, set: { d.perUse = $0; d.perUseLevel = nil }),
-                    in: 0.1...100, step: 0.1) {
-                Text("每次约 \(Fmt.amount(d.perUse)) \(d.unit)").monospacedDigit()
-            }
-        } header: {
-            Text("每次用量")
-        } footer: {
-            Text("按这个用量，大约还能用 \(Int(d.remaining / max(d.perUse, 0.1))) 次。")
-        }
-    }
-
-    // MARK: 6. 日期
-
-    private var openedValue: Date? {
-        switch d.opened {
-        case .notYet: return nil
-        case .today, .custom: return d.openedDate
-        }
-    }
-
-    private var expValue: Date {
-        switch d.exp {
-        case .years(let n):
-            let cal = Calendar.current
-            return cal.date(byAdding: .year, value: n, to: cal.startOfDay(for: .now)) ?? .now
-        case .custom:
-            return d.expDate
-        }
-    }
-
-    private var datesSection: some View {
-        Section {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("开封了吗？").font(.subheadline).foregroundStyle(.secondary)
-                FlowLayout(spacing: 8) {
-                    ChoiceChip(title: "还没开", isOn: d.opened == .notYet) { d.opened = .notYet }
-                    ChoiceChip(title: "今天开的", isOn: d.opened == .today) {
-                        d.opened = .today
-                        d.openedDate = .now
-                    }
-                    ChoiceChip(title: "选日期", systemImage: "calendar", isOn: d.opened == .custom) {
-                        d.opened = .custom
-                    }
-                }
-            }
-            .padding(.vertical, 4)
-            if d.opened == .custom {
-                DatePicker("开封日期", selection: $d.openedDate, in: ...Date.now, displayedComponents: .date)
-            }
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("开封后保质（罐子图标上的 M）").font(.subheadline).foregroundStyle(.secondary)
-                FlowLayout(spacing: 8) {
-                    ForEach([6, 12, 24, 36], id: \.self) { m in
-                        ChoiceChip(title: "\(m)M", isOn: d.pao == m) {
-                            d.paoTouched = true
-                            d.pao = d.pao == m ? nil : m
-                        }
-                        .accessibilityLabel("开封后 \(m) 个月")
-                    }
-                }
-            }
-            .padding(.vertical, 4)
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("包装到期日（EXP）").font(.subheadline).foregroundStyle(.secondary)
-                FlowLayout(spacing: 8) {
-                    ForEach([1, 2, 3], id: \.self) { n in
-                        ChoiceChip(title: "\(n) 年后", isOn: d.exp == .years(n)) { d.exp = .years(n) }
-                    }
-                    ChoiceChip(title: "选日期", systemImage: "calendar", isOn: d.exp == .custom) {
-                        if d.exp != .custom { d.expDate = expValue }
-                        d.exp = .custom
-                    }
-                }
-            }
-            .padding(.vertical, 4)
-            if d.exp == .custom {
-                DatePicker("到期日", selection: $d.expDate, displayedComponents: .date)
-            }
-
-            expiryPreview
-        } header: {
-            Text("日期")
-        }
-    }
-
-    private var expiryPreview: some View {
-        let r = Product.computeExpiry(exp: expValue, opened: openedValue, pao: d.pao)
-        let days = Product.days(until: r.date)
-        let state = Product.state(forDays: days)
-        var text = days < 0
-            ? "已在 \(Fmt.day(r.date)) 过期（\(r.basis.text)）"
-            : "会在 \(Fmt.day(r.date)) 过期（\(r.basis.text)）"
-        if openedValue == nil, let m = d.pao {
-            text += "。开封后要在 \(m) 个月内用完，第一次记录使用时自动算开封。"
-        }
-        return HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Circle().fill(state.color).frame(width: 8, height: 8)
-            Text(text)
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(state == .fresh ? Color.primary : state.color)
-                .fixedSize(horizontal: false, vertical: true)
-                .contentTransition(.opacity)
-        }
-        .padding(.vertical, 6)
-        .animation(Theme.spring, value: text)
-        .accessibilityElement(children: .combine)
-    }
-
-    // MARK: 7. 更多
-
-    private var moreSection: some View {
-        Section {
-            DisclosureGroup("更多", isExpanded: $showMore) {
-                HStack {
-                    Text("价格")
-                    Spacer()
-                    Text("¥").foregroundStyle(.secondary)
-                    TextField("选填", text: $d.priceText)
-                        .keyboardType(.decimalPad)
-                        .multilineTextAlignment(.trailing)
-                        .frame(maxWidth: 120)
-                }
-                .frame(minHeight: 44)
-
-                Stepper(value: $d.backup, in: 0...20) {
-                    Text("备用库存 \(d.backup) 件").monospacedDigit()
-                }
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("液体颜色").font(.subheadline).foregroundStyle(.secondary)
-                    FlowLayout(spacing: 2) {
-                        ForEach(Theme.liquids.indices, id: \.self) { i in
-                            colorSwatch(i)
-                        }
-                    }
-                }
-                .padding(.vertical, 4)
-
-                Toggle(isOn: $d.morning) { Label("加入早间流程", systemImage: RoutineSlot.morning.symbol) }
-                Toggle(isOn: $d.evening) { Label("加入晚间流程", systemImage: RoutineSlot.evening.symbol) }
-            }
-        }
-    }
-
-    private func colorSwatch(_ i: Int) -> some View {
-        let hex = Theme.liquids[i]
-        let on = d.tint == hex
-        return Button {
-            withAnimation(Theme.snappy) {
-                d.tint = hex
-                d.tintTouched = true
-            }
-        } label: {
-            Circle()
-                .fill(Color(hex: hex))
-                .frame(width: 30, height: 30)
-                .overlay(Circle().strokeBorder(Color.primary.opacity(on ? 1 : 0.12), lineWidth: on ? 2 : 1))
-                .scaleEffect(on ? 1.12 : 1)
-                .frame(width: 44, height: 44)
-                .contentShape(Circle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(Theme.liquidNames[i])
-        .accessibilityAddTraits(on ? [.isButton, .isSelected] : .isButton)
-    }
-
-    // MARK: 联动
-
-    private func kindChanged(from old: VesselKind, to new: VesselKind) {
-        let fraction = d.total > 0 ? min(1, d.remaining / d.total) : 1
-        if !isEditing || old.measureMode != new.measureMode {
-            d.unit = new.defaultUnit
-            d.total = new.defaultTotal
-            if d.remainingTouched {
-                let r = new.defaultTotal * fraction
-                d.remaining = new.measureMode == .volume ? r : r.rounded()
+            if let c = a.cutout {
+                // 先把抠图原位叠在照片上（看不出区别），下一帧再让它浮起来
+                cutout = c
+                cutoutImage = c.image
+                try? await Task.sleep(for: .milliseconds(80))
+                withAnimation(reduceMotion ? EditorMotion.fade : EditorMotion.lift) { lifted = true }
+                liftTick += 1
+                try? await Task.sleep(for: .milliseconds(reduceMotion ? 500 : 1100))
             } else {
-                d.remaining = new.defaultTotal
+                try? await Task.sleep(for: .milliseconds(700))
             }
+            guard !Task.isCancelled else { return }
+            withAnimation(motion) { stage = .confirm }
         }
-        if let level = d.perUseLevel { d.perUse = level.amount(total: d.total) }
-        if !d.paoTouched { d.pao = new.suggestedPAO(for: d.category) }
-        if !d.tintTouched { d.tint = new.defaultTint }
     }
 
-    private func totalChanged(_ total: Double) {
-        if d.remainingTouched {
-            d.remaining = min(d.remaining, total)
+    private func announce(_ a: CaptureAnalysis) {
+        guard UIAccessibility.isVoiceOverRunning else { return }
+        var parts: [String] = [a.cutout != nil ? "已抠出产品" : "没找到清楚的主体，使用整张照片"]
+        if let e = a.reading.expiry { parts.append("到期 \(e.text)") }
+        if let m = a.reading.pao { parts.append("开封后 \(m) 个月") }
+        if let c = a.reading.capacity, let u = a.reading.unit { parts.append("\(EditorFmt.amount(c)) \(u)") }
+        if let n = a.reading.name { parts.append("名称 \(n)") }
+        UIAccessibility.post(notification: .announcement, argument: parts.joined(separator: "，"))
+    }
+
+    // MARK: 其他路径
+
+    private func manualAdd() {
+        withAnimation(motion) { stage = .confirm }
+    }
+
+    private func closeCamera() {
+        if cameraFromConfirm {
+            withAnimation(motion) { stage = .confirm }
         } else {
-            d.remaining = total
+            dismiss()
         }
-        if let level = d.perUseLevel { d.perUse = level.amount(total: total) }
+    }
+
+    private func retake() {
+        cameraFromConfirm = true
+        withAnimation(motion) { stage = .camera }
+    }
+
+    /// 重新抠图：在"全部主体 / 第 1 个 / 第 2 个…"之间轮换
+    private func recut() {
+        guard let photo = photoImage ?? d.photo.flatMap({ UIImage(data: $0) }) else { return }
+        let next: Int
+        if let cutout { next = cutout.variant + 1 } else { next = cutoutImage == nil ? 0 : 1 }
+        isRecutting = true
+        recutStatus = nil
+        work?.cancel()
+        work = Task { @MainActor in
+            let c = await CaptureService.cutout(from: photo, variant: next)
+            guard !Task.isCancelled else { return }
+            isRecutting = false
+            if let c {
+                withAnimation(motion) {
+                    cutout = c
+                    cutoutImage = c.image
+                    d.cutout = c.png
+                }
+                recutTick += 1
+                if c.instanceCount <= 1 {
+                    recutStatus = "照片里只找到一个主体"
+                } else if c.variant == 0 {
+                    recutStatus = "全部 \(c.instanceCount) 个主体"
+                } else {
+                    recutStatus = "第 \(c.variant) 个，共 \(c.instanceCount) 个主体"
+                }
+            } else {
+                recutStatus = "没找到能抠出来的主体，先用原图"
+            }
+        }
+    }
+
+    private func useOriginal() {
+        withAnimation(motion) {
+            cutout = nil
+            cutoutImage = nil
+            d.cutout = nil
+        }
+        recutStatus = nil
     }
 
     // MARK: 保存
 
-    private var parsedPrice: Double? {
-        let s = d.priceText.replacingOccurrences(of: ",", with: ".").trimmingCharacters(in: .whitespaces)
-        guard let v = Double(s), v > 0 else { return nil }
-        return v
-    }
-
     private func save() {
-        let name = trimmedName
-        guard !name.isEmpty else { return }
-
-        let product: Product
-        var isNew = false
+        guard !d.trimmedName.isEmpty else { return }
         switch target {
         case .new:
-            product = Product(name: name, kind: d.kind, expiryDate: expValue)
-            isNew = true
-        case .edit(let p):
-            product = p
-        }
-
-        product.name = name
-        product.brand = d.brand.trimmingCharacters(in: .whitespacesAndNewlines)
-        product.category = d.category
-        product.kind = d.kind
-        switch mode {
-        case .volume:
-            product.totalAmount = d.total
-            product.unit = d.unit
-            product.amountPerUse = d.perUse
-        case .count:
-            product.totalAmount = d.total.rounded()
-            product.unit = "片"
-            product.amountPerUse = 1
-        case .estimate:
-            product.totalAmount = 100
-            product.unit = "%"
-            product.amountPerUse = 0
-        }
-        product.remainingAmount = min(max(0, d.remaining), product.totalAmount)
-        product.openedDate = openedValue
-        product.paoMonths = d.pao
-        product.expiryDate = expValue
-        product.price = parsedPrice
-        product.backupStock = d.backup
-        product.tintHex = d.tint
-        product.inMorning = d.morning
-        product.inEvening = d.evening
-        product.photo = d.photo
-        if product.level >= 0.15 { product.lowStockAlertAt = nil }
-
-        if isNew {
-            withAnimation(Theme.spring) { context.insert(product) }
+            let product = Product(name: d.trimmedName, kind: d.kind, expiryDate: d.expValue)
+            d.write(to: product)
+            withAnimation(EditorMotion.spring) { context.insert(product) }
+        case .edit(let product):
+            d.write(to: product)
         }
         dismiss()
     }

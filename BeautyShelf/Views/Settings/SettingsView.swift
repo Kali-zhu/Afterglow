@@ -42,6 +42,15 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    Label("今晚该用：当前流程，在桌面上直接勾选", systemImage: "checklist")
+                    Label("快过期：最快过期的几件，也可放在锁屏", systemImage: "hourglass")
+                } header: {
+                    Text("小组件")
+                } footer: {
+                    Text("长按主屏幕空白处 → 左上角「＋」→ 搜索「妆台」。在小组件里勾掉的，回到 App 会同步。")
+                }
+
+                Section {
                     Button(role: .destructive) { confirmClear = true } label: {
                         Text(sampleCount > 0 ? "清除示例数据（\(sampleCount) 件）" : "没有示例数据")
                             .frame(minHeight: 44)

@@ -7,6 +7,7 @@ struct FinishedView: View {
     @Query(sort: \Product.createdAt, order: .forward, animation: .spring(response: 0.42, dampingFraction: 0.82))
     private var all: [Product]
     @State private var restockTick = 0
+    @State private var showShareCard = false
 
     private var finished: [Product] {
         all.filter { $0.isFinished }
@@ -30,6 +31,7 @@ struct FinishedView: View {
                 VStack(alignment: .leading, spacing: 28) {
                     if !restock.isEmpty { restockList }
                     yearBanner
+                    if !finished.isEmpty { shareButton }
                     if finished.isEmpty {
                         emptyState
                     } else {
@@ -48,6 +50,9 @@ struct FinishedView: View {
             .navigationTitle("空瓶")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) { SettingsButton() }
+            }
+            .sheet(isPresented: $showShareCard) {
+                EmptiesShareSheet(finished: finished)
             }
         }
         .sensoryFeedback(.success, trigger: restockTick)
@@ -74,6 +79,23 @@ struct FinishedView: View {
         }
         .padding(.top, 4)
         .accessibilityElement(children: .combine)
+    }
+
+    // MARK: 空瓶记分享图
+
+    private var shareButton: some View {
+        Button {
+            showShareCard = true
+        } label: {
+            Label("生成空瓶记", systemImage: "photo.on.rectangle.angled")
+                .font(.headline)
+                .frame(maxWidth: .infinity, minHeight: 50)
+        }
+        .buttonStyle(.borderedProminent)
+        .buttonBorderShape(.capsule)
+        .tint(.primary)
+        .foregroundStyle(Color(uiColor: .systemBackground))
+        .accessibilityHint("把这个月或今年的空瓶做成一张可以分享的图")
     }
 
     // MARK: 待补货

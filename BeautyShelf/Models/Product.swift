@@ -107,6 +107,36 @@ enum VesselKind: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+// MARK: - 盖子与材质（插画兜底时用；有抠图时只影响细节光影）
+
+enum CapStyle: String, Codable, CaseIterable, Identifiable {
+    case screw, dropper, pump, spray, flip, none
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .screw: "旋盖"
+        case .dropper: "滴管"
+        case .pump: "按压泵"
+        case .spray: "喷头"
+        case .flip: "翻盖"
+        case .none: "无"
+        }
+    }
+}
+
+enum GlassFinish: String, Codable, CaseIterable, Identifiable {
+    case clear, frosted, amber, opaque
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .clear: "透明"
+        case .frosted: "磨砂"
+        case .amber: "茶色"
+        case .opaque: "不透明"
+        }
+    }
+}
+
 enum MeasureMode: String, Codable {
     /// 容量（ml / g），每次扣减用量
     case volume
@@ -172,6 +202,10 @@ final class Product {
     var backupStock: Int = 0
     var tintHex: String = "E7B873"
     @Attribute(.externalStorage) var photo: Data? = nil
+    /// 抠好的透明底 PNG（主体抠图）。有它时妆台上显示实物而不是插画。
+    @Attribute(.externalStorage) var cutout: Data? = nil
+    var capRaw: String = "screw"
+    var finishRaw: String = "clear"
     var inMorning: Bool = false
     var inEvening: Bool = false
     var morningDoneOn: Date? = nil
@@ -226,6 +260,26 @@ final class Product {
         set {
             kindRaw = newValue.rawValue
             measureRaw = newValue.measureMode.rawValue
+        }
+    }
+
+    var capStyle: CapStyle {
+        get { CapStyle(rawValue: capRaw) ?? .screw }
+        set { capRaw = newValue.rawValue }
+    }
+
+    var finish: GlassFinish {
+        get { GlassFinish(rawValue: finishRaw) ?? .clear }
+        set { finishRaw = newValue.rawValue }
+    }
+
+    /// 妆台上的相对高度（0.62...1.0），让 15 ml 和 200 ml 有高低错落
+    var shelfScale: Double {
+        let t = max(1, totalAmount)
+        switch measureMode {
+        case .volume: return min(1.0, max(0.62, 0.55 + 0.17 * log10(t)))
+        case .count: return 0.8
+        case .estimate: return kind == .stick ? 0.72 : 0.66
         }
     }
 
@@ -377,6 +431,9 @@ final class Product {
                         openedDate: openNow ? .now : nil, paoMonths: paoMonths, tintHex: tintHex)
         p.price = price
         p.photo = photo
+        p.cutout = cutout
+        p.capRaw = capRaw
+        p.finishRaw = finishRaw
         p.inMorning = inMorning
         p.inEvening = inEvening
         p.isSample = isSample

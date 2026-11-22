@@ -1,33 +1,51 @@
 import SwiftUI
 import SwiftData
 
-/// 点开容器：容器从架子上放大到中央（matchedGeometryEffect），
-/// 下方是数据、日期、最近 14 天使用点阵，以及唯一的主操作"用了一次"。
-/// 估算型产品（口红、粉盒）可以直接用手指拖动液面设置剩余量。
+/// 点开 = 把它从架子上"拿起来"：放大、带一点 3D 倾斜、投影变大变柔，背景压暗成磨砂。
+/// iOS 18 由系统缩放转场带过来（ShelfView 的 DetailPresenter），iOS 17 用 matchedGeometryEffect。
+/// 实物本身可以按形状操作来记一次使用（见 UseGestureHero），下方保留大按钮"用了一次"。
+/// 估算型产品（口红、粉盒）用滑块调整剩余量。
 struct ProductDetailView: View {
     @Bindable var product: Product
     var ns: Namespace.ID
+    /// iOS 18 全屏缩放转场呈现（不用 matchedGeometryEffect）
+    var zoomed: Bool
     var close: () -> Void
 
     @Environment(AppCoordinator.self) var coordinator
     @Environment(\.modelContext) var context
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
+    /// 每记一次（手势或按钮）+1：液面晃动、触感
     @State var uses = 0
+    /// 只有按钮触发时 +1：实物自动演示一遍动作
+    @State var buttonUses = 0
     @State var revealed = false
-    @State var dragLevel: Double? = nil
+    @State var lifted = false
+    @State var tilt: Double = 0
     @State var confirmDelete = false
 
-    let containerSize = CGSize(width: 150, height: 244)
+    init(product: Product, ns: Namespace.ID, zoomed: Bool = false, close: @escaping () -> Void) {
+        self.product = product
+        self.ns = ns
+        self.zoomed = zoomed
+        self.close = close
+    }
+
+    private var heroSize: CGSize {
+        product.cutout != nil ? CGSize(width: 230, height: 270) : CGSize(width: 150, height: 244)
+    }
 
     var body: some View {
         ZStack {
             Rectangle().fill(.regularMaterial).ignoresSafeArea()
+                .opacity(zoomed || revealed ? 1 : 0.0001)
                 .onTapGesture(perform: close)
                 .accessibilityHidden(true)
 
             ScrollView {
                 VStack(spacing: 22) {
-                    container
-                        .padding(.top, 56)
+                    hero
+                        .padding(.top, 60)
 
                     VStack(spacing: 4) {
                         Text(product.name)
@@ -42,9 +60,7 @@ struct ProductDetailView: View {
 
                     stats
                     if product.measureMode == .estimate {
-                        Label("上下拖动液面，调整估算的剩余量", systemImage: "hand.draw")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
+                        estimateSlider
                     }
                     datesCard
                     usageDots
@@ -58,9 +74,14 @@ struct ProductDetailView: View {
 
             topBar
         }
-        .onAppear { withAnimation(.easeOut(duration: 0.25).delay(0.12)) { revealed = true } }
+        .onAppear {
+            MotionService.shared.begin()
+            withAnimation(.easeOut(duration: 0.25).delay(0.12)) { revealed = true }
+            pickUp()
+        }
+        .onDisappear { MotionService.shared.end() }
         .sensoryFeedback(.impact(weight: .light), trigger: uses)
-        .sensoryFeedback(.selection, trigger: dragStep)
+        .sensoryFeedback(.selection, trigger: estimateStep)
         .confirmationDialog("删除「\(product.name)」？", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("删除", role: .destructive) {
                 let p = product
@@ -72,48 +93,87 @@ struct ProductDetailView: View {
         }
     }
 
-    // MARK: 容器 + 拖动液面
+    // MARK: 拿起来
 
-    private var container: some View {
-        ZStack(alignment: .top) {
-            ContainerView(product: product, level: dragLevel, slosh: uses)
-                .frame(width: containerSize.width, height: containerSize.height)
-                .matchedGeometryEffect(id: "container-\(product.uid)", in: ns)
-                .contentShape(Rectangle())
-                .gesture(levelDrag, including: product.measureMode == .estimate ? GestureMask.all : GestureMask.subviews)
-                .accessibilityValue(product.remainingText)
-                .accessibilityAdjustableAction { direction in
-                    guard product.measureMode == .estimate else { return }
-                    switch direction {
-                    case .increment: product.setEstimatedLevel(product.level + 0.05)
-                    case .decrement: product.setEstimatedLevel(product.level - 0.05)
-                    @unknown default: break
-                    }
-                }
-            // 记录一次使用时，一滴液体从上方落入容器
-            FallingDrop(tint: product.tint, trigger: uses, distance: containerSize.height * 0.55, size: 12)
-                .offset(y: -10)
+    /// 先倾斜得多一点（被拿起的一瞬间），再落定在 2°
+    private func pickUp() {
+        guard !reduceMotion else {
+            lifted = true
+            return
+        }
+        withAnimation(Theme.lift) {
+            lifted = true
+            tilt = 9
+        } completion: {
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) { tilt = 2 }
         }
     }
 
-    private var levelDrag: some Gesture {
-        DragGesture(minimumDistance: 0)
-            .onChanged { value in
-                let rect = ContainerGeometry.make(product.kind, in: CGRect(origin: .zero, size: containerSize)).vesselRect
-                guard rect.height > 0 else { return }
-                let l = (rect.maxY - value.location.y) / rect.height
-                dragLevel = max(0, min(1, Double(l)))
+    private var hero: some View {
+        VStack(spacing: 14) {
+            UseGestureHero(product: product, size: heroSize, slosh: uses, demoTrigger: buttonUses) {
+                logUse(fromGesture: true)
             }
-            .onEnded { _ in
-                if let l = dragLevel {
-                    withAnimation(Theme.spring) { product.setEstimatedLevel(l) }
-                }
-                dragLevel = nil
+            .modifier(HeroMatch(id: product.uid, ns: ns, enabled: !zoomed))
+            .rotation3DEffect(.degrees(tilt), axis: (x: 1, y: -0.4, z: 0), anchor: .bottom, perspective: 0.55)
+            .background(alignment: .bottom) {
+                // 投影：拿起来后变大、变柔、离得更远
+                Ellipse()
+                    .fill(Color.black.opacity(lifted ? 0.16 : 0.3))
+                    .frame(width: heroSize.width * (lifted ? 0.85 : 0.65), height: lifted ? 26 : 8)
+                    .blur(radius: lifted ? 16 : 3)
+                    .offset(y: lifted ? 30 : 4)
+                    .accessibilityHidden(true)
             }
+            .scaleEffect(lifted ? 1 : 0.96, anchor: .bottom)
+
+            if !product.isFinished {
+                Text(gestureHint)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 18)
+                    .accessibilityHidden(true)
+            }
+        }
     }
 
-    /// 拖动时每跨过 5% 轻触一下
-    private var dragStep: Int { dragLevel.map { Int($0 * 20) } ?? -1 }
+    private var gestureHint: String {
+        UseGestureHero.hint(for: product)
+    }
+
+    // MARK: 估算剩余
+
+    private var estimateBinding: Binding<Double> {
+        Binding(get: { product.level },
+                set: { product.setEstimatedLevel($0) })
+    }
+
+    /// 每跨过 5% 轻触一下
+    private var estimateStep: Int { product.measureMode == .estimate ? Int((product.level * 20).rounded()) : -1 }
+
+    private var estimateSlider: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text("估算剩余").font(.subheadline.weight(.semibold))
+                Spacer()
+                Text("\(Int((product.level * 100).rounded()))%")
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .monospacedDigit()
+                    .contentTransition(.numericText())
+            }
+            Slider(value: estimateBinding, in: 0...1, step: 0.05) {
+                Text("估算剩余")
+            } minimumValueLabel: {
+                Image(systemName: "circle.dotted").accessibilityHidden(true)
+            } maximumValueLabel: {
+                Image(systemName: "circle.fill").accessibilityHidden(true)
+            }
+            .tint(product.tint.mixed(with: .black, 0.15))
+            .accessibilityValue("约剩 \(Int((product.level * 100).rounded()))%")
+        }
+        .padding(16)
+        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Theme.card))
+    }
 
     // MARK: 数据
 
@@ -138,7 +198,6 @@ struct ProductDetailView: View {
     }
 
     private var remainingValue: String {
-        if let dragLevel { return "\(Int((dragLevel * 100).rounded()))" }
         switch product.measureMode {
         case .volume: return Fmt.amount(product.remainingAmount)
         case .count: return "\(Int(product.remainingAmount.rounded()))"
@@ -240,7 +299,7 @@ struct ProductDetailView: View {
     // MARK: 操作
 
     private var useButton: some View {
-        Button(action: logUse) {
+        Button { logUse(fromGesture: false) } label: {
             Text("用了一次")
                 .font(.headline)
                 .frame(maxWidth: .infinity, minHeight: 54)
@@ -296,12 +355,30 @@ struct ProductDetailView: View {
         .padding(.top, 8)
     }
 
-    private func logUse() {
+    private func logUse(fromGesture: Bool) {
+        guard !product.isFinished else { return }
         withAnimation(Theme.spring) { coordinator.logUse(product) }
         uses += 1
+        if !fromGesture { buttonUses += 1 }
         // 用到见底：关闭详情，交给"倒空"动画
         if coordinator.finishing === product {
             close()
+        }
+    }
+}
+
+/// iOS 17 浮层模式：和架子上那件共用 matchedGeometryEffect；iOS 18 缩放转场时关闭
+struct HeroMatch: ViewModifier {
+    let id: UUID
+    let ns: Namespace.ID
+    var enabled: Bool
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if enabled {
+            content.matchedGeometryEffect(id: "container-\(id)", in: ns)
+        } else {
+            content
         }
     }
 }

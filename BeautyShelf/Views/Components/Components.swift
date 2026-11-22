@@ -133,14 +133,222 @@ struct ProgressRing: View {
     }
 }
 
-/// 有厚度的一条架板
+/// v3 架板：浅色磨砂玻璃。顶面亮、细细一道高光边，正面带一点玻璃断面的青绿，下方一层柔和的投影。
 struct ShelfPlank: View {
+    @Environment(\.colorScheme) private var scheme
+    static let height: CGFloat = 12
+    /// 顶面（物件站立的那一面）的深度
+    static let surface: CGFloat = 5
+
     var body: some View {
-        RoundedRectangle(cornerRadius: 3, style: .continuous)
-            .fill(Theme.shelf)
-            .frame(height: 6)
-            .shadow(color: .black.opacity(0.08), radius: 4, y: 3)
+        let dark = scheme == .dark
+        VStack(spacing: 0) {
+            // 顶面：从上往下看到的那一条
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .overlay(LinearGradient(colors: [Theme.plankSurface.opacity(dark ? 0.18 : 0.75),
+                                                 Theme.plankSurface.opacity(dark ? 0.08 : 0.35)],
+                                        startPoint: .top, endPoint: .bottom))
+                .frame(height: Self.surface)
+            // 前缘高光线
+            Rectangle()
+                .fill(Color.white.opacity(dark ? 0.35 : 0.95))
+                .frame(height: 0.75)
+            // 正面：玻璃断面
+            Rectangle()
+                .fill(.thinMaterial)
+                .overlay(LinearGradient(colors: [Theme.plankEdge.opacity(dark ? 0.55 : 0.7),
+                                                 Theme.plankEdge.opacity(dark ? 0.25 : 0.35)],
+                                        startPoint: .top, endPoint: .bottom))
+                .overlay(alignment: .bottom) {
+                    Rectangle().fill(Color.black.opacity(dark ? 0.4 : 0.08)).frame(height: 0.5)
+                }
+                .frame(height: Self.height - Self.surface - 0.75)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 2.5, style: .continuous))
+        .background(alignment: .top) {
+            // 架板下方的深度投影
+            LinearGradient(colors: [Theme.plankShadow.opacity(dark ? 0.55 : 0.13), .clear],
+                           startPoint: .top, endPoint: .bottom)
+                .frame(height: 18)
+                .blur(radius: 3)
+                .offset(y: Self.height + 1)
+                .padding(.horizontal, 6)
+        }
+        .frame(height: Self.height)
+        .accessibilityHidden(true)
+    }
+}
+
+/// 物件和架子之间的接触阴影：一层紧贴的深影 + 一层柔和的环境影
+struct ContactShadow: View {
+    var width: CGFloat
+    @Environment(\.colorScheme) private var scheme
+
+    var body: some View {
+        let dark = scheme == .dark
+        ZStack {
+            Ellipse()
+                .fill(Color.black.opacity(dark ? 0.35 : 0.10))
+                .frame(width: width * 1.15, height: 10)
+                .blur(radius: 5)
+            Ellipse()
+                .fill(Color.black.opacity(dark ? 0.6 : 0.26))
+                .frame(width: width * 0.78, height: 4)
+                .blur(radius: 1.8)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+/// 透明有色玻璃在架板上投下的彩色焦散光
+struct CausticGlow: View {
+    var tint: Color
+    var width: CGFloat
+    var strength: Double
+    @Environment(\.colorScheme) private var scheme
+
+    var body: some View {
+        Ellipse()
+            .fill(RadialGradient(colors: [tint.opacity(0.9), tint.opacity(0.35), tint.opacity(0)],
+                                 center: .center, startRadius: 0, endRadius: width * 0.6))
+            .frame(width: width * 1.2, height: 12)
+            .scaleEffect(x: 1, y: 0.8)
+            .opacity((scheme == .dark ? 0.55 : 0.45) * strength)
+            .blendMode(scheme == .dark ? .plusLighter : .normal)
+            .blur(radius: 1.5)
+            .allowsHitTesting(false)
             .accessibilityHidden(true)
+    }
+}
+
+/// 名字前的小圆点：只在快到期 / 已过期 / 剩余不多时出现
+enum ShelfStatus {
+    case expired, soon, low
+
+    static func of(_ p: Product) -> ShelfStatus? {
+        switch p.expiryState {
+        case .expired: return .expired
+        case .soon: return .soon
+        case .fresh: return p.isLow ? .low : nil
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .expired: Theme.rouge
+        case .soon: Theme.honey
+        case .low: Theme.low
+        }
+    }
+
+    var spoken: String {
+        switch self {
+        case .expired: "已过期"
+        case .soon: "快到期"
+        case .low: "快用完了"
+        }
+    }
+}
+
+struct StatusDot: View {
+    let status: ShelfStatus
+    @ScaledMetric(relativeTo: .footnote) private var size: CGFloat = 6
+
+    var body: some View {
+        Circle()
+            .fill(status.color)
+            .frame(width: size, height: size)
+            .accessibilityHidden(true)
+    }
+}
+
+/// 用一次时的粒子反馈：液滴（下落）、喷雾（向外扩散）、粉雾（向上飘散）
+struct UseEmission: View {
+    enum Kind { case drop, mist, puff, none }
+    var kind: Kind
+    var tint: Color
+    var trigger: Int
+    /// 发射点（本视图坐标系）
+    var origin: CGPoint
+    var direction: CGVector = CGVector(dx: 0, dy: 1)
+    /// 液滴落下的距离
+    var fall: CGFloat = 80
+    var scale: CGFloat = 1
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var start: Date? = nil
+
+    var body: some View {
+        TimelineView(.animation(paused: start == nil)) { tl in
+            Canvas { ctx, _ in
+                guard let start else { return }
+                let t = tl.date.timeIntervalSince(start)
+                draw(ctx, t: t)
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+        .onChange(of: trigger) {
+            guard !reduceMotion, kind != .none else { return }
+            let now = Date.now
+            start = now
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(1000))
+                if start == now { start = nil }
+            }
+        }
+    }
+
+    private func draw(_ ctx: GraphicsContext, t: Double) {
+        let T = CGFloat(t)
+        switch kind {
+        case .drop:
+            guard t < 0.75 else { return }
+            let dur: CGFloat = 0.6
+            let k = min(1, T / dur)
+            let s = 7 * scale
+            let x = origin.x + direction.dx * 14 * scale * k
+            let y = origin.y + direction.dy * 6 * scale * k + fall * k * k
+            let a = Double(1 - max(0, (T - dur) / 0.15))
+            var c = ctx
+            c.opacity = a
+            let rect = CGRect(x: x - s / 2, y: y - s * 0.35, width: s, height: s * 1.35)
+            c.fill(DropShape().path(in: rect), with: .color(tint))
+            c.fill(Path(ellipseIn: CGRect(x: rect.minX + s * 0.25, y: rect.minY + s * 0.55, width: s * 0.22, height: s * 0.3)),
+                   with: .color(.white.opacity(0.7)))
+        case .mist:
+            guard t < 0.9 else { return }
+            for i in 0..<14 {
+                let seed = Double(i) * 1.618
+                let spread = (seed.truncatingRemainder(dividingBy: 1) - 0.5) * 0.9
+                let speed = 50 + 40 * ((seed * 3.1).truncatingRemainder(dividingBy: 1))
+                let ang = atan2(Double(direction.dy), Double(direction.dx)) + spread
+                let d = CGFloat(speed * t) * scale
+                let p = CGPoint(x: origin.x + CGFloat(cos(ang)) * d, y: origin.y + CGFloat(sin(ang)) * d - CGFloat(t * t * 10))
+                let r = (1.2 + T * 5) * scale
+                var c = ctx
+                c.opacity = max(0, 0.55 - t * 0.6)
+                c.fill(Path(ellipseIn: CGRect(x: p.x - r, y: p.y - r, width: r * 2, height: r * 2)),
+                       with: .color(tint.mixed(with: .white, 0.6)))
+            }
+        case .puff:
+            guard t < 1.0 else { return }
+            for i in 0..<12 {
+                let seed = Double(i) * 2.399
+                let ang = -Double.pi / 2 + sin(seed) * 1.2
+                let d = CGFloat(20 + 30 * t) * scale * CGFloat(0.6 + 0.4 * abs(cos(seed)))
+                let p = CGPoint(x: origin.x + CGFloat(cos(ang)) * d, y: origin.y + CGFloat(sin(ang)) * d)
+                let r = (2 + T * 7) * scale
+                var c = ctx
+                c.opacity = max(0, 0.45 - t * 0.45)
+                c.addFilter(.blur(radius: 2))
+                c.fill(Path(ellipseIn: CGRect(x: p.x - r, y: p.y - r, width: r * 2, height: r * 2)), with: .color(tint))
+            }
+        case .none:
+            break
+        }
     }
 }
 
