@@ -448,9 +448,59 @@ const GEO={
     extra:`<rect x="1" y="38" width="62" height="66" rx="16" class="lid" opacity=".9"/>`,label:null,pans:true},
   sheet:{top:0,bot:104,body:"",extra:"",label:null}
 };
+/* 示例产品的真实抠图：[文件名, 宽, 高, 液面区顶部比例, 液面区底部比例] */
+const CUTS={
+  "小棕瓶精华":["serum",163,520,.34,.965],"神仙水":["toner",168,520,.13,.965],"权力粉底液":["foundation",146,520,.31,.94],
+  "精华面霜":["cream",360,306,.33,.965],"氨基酸洁面":["cleanser",230,520,.05,.84],"小金瓶防晒":["sunscreen",185,520,.13,.965],
+  "补水面膜":["mask",360,500,0,1],"999 哑光":["lipstick",120,520,.03,.29],"四色眼影 #1":["palette",360,477,.18,.95],
+  "英国梨与小苍兰":["perfume",333,520,.31,.965],"维C精华":["vitc",159,520,.39,.965],"护发精油":["hairoil",203,520,.29,.97],
+  "修护身体乳":["bodylotion",224,520,.04,.84],"卸妆膏":["balm",360,295,.4,.95]
+};
+const CUT_BY_SHAPE={bottle:"小棕瓶精华",jar:"精华面霜",tube:"氨基酸洁面"};
+function cutOf(p){
+  if(p.photo)return null;
+  const c=Array.isArray(p.cut)?p.cut:CUTS[p.name]||(p.demoCut&&CUTS[CUT_BY_SHAPE[p.shape]]);
+  return c?{src:"img/"+c[0]+".webp",w:c[1],h:c[2],top:c[3],bot:c[4]}:null;
+}
+const shadowFilter=uid=>`<filter id="${uid}s" x="-30%" y="-300%" width="160%" height="700%"><feGaussianBlur stdDeviation="1.3"/></filter>`;
+
+/* 有抠图：液面以下原色，以上去饱和 + 磨砂 + 35% 白；分界沿波浪走一道白色高光 */
+function cutoutSVG(p,c,w,h,uid){
+  const vw=+(104*c.w/c.h).toFixed(2),top=+(104*c.top).toFixed(2),bot=+(104*c.bot).toFixed(2),L=level(p);
+  const img=`href="${c.src}" x="0" y="0" width="${vw}" height="104" preserveAspectRatio="none"`;
+  const shadow=`<ellipse cx="${vw/2}" cy="103.4" rx="${(vw*.44).toFixed(2)}" ry="2.1" fill="#000" opacity=".32" filter="url(#${uid}s)"/>`;
+  if(p.mode==="count"){
+    const n=Math.max(0,Math.round(p.left)),bw=Math.max(28,vw*.42);
+    return `<svg class="c cut" viewBox="0 0 ${vw} 104" width="${w}" height="${h}" preserveAspectRatio="xMidYMax meet" role="img" aria-label="剩 ${n} 片，共 ${fmtN(p.total)} 片">
+      <defs>${shadowFilter(uid)}</defs>${shadow}<image ${img} opacity="${n?1:.45}"/>
+      <rect x="${(vw-bw)/2}" y="80" width="${bw}" height="15" rx="7.5" fill="rgba(0,0,0,.55)"/>
+      <text x="${vw/2}" y="90.6" text-anchor="middle" class="r" font-size="9.5" font-weight="700" fill="#fff">${n}/${fmtN(p.total)}</text></svg>`;
+  }
+  const ph=performance.now()/1000;
+  return `<svg class="c cut" viewBox="0 0 ${vw} 104" width="${w}" height="${h}" preserveAspectRatio="xMidYMax meet" data-wave="${p.id}" data-shape="${p.shape}" data-level="${L}" data-top="${top}" data-bot="${bot}" data-vw="${vw}" role="img" aria-label="剩余 ${Math.round(L*100)}%">
+    <defs>${shadowFilter(uid)}
+      <filter id="${uid}f" x="-10%" y="-5%" width="120%" height="110%" color-interpolation-filters="sRGB">
+        <feColorMatrix type="saturate" values="0"/><feGaussianBlur stdDeviation="1.15"/>
+        <feComponentTransfer><feFuncR type="linear" slope=".68" intercept=".32"/><feFuncG type="linear" slope=".68" intercept=".32"/><feFuncB type="linear" slope=".68" intercept=".32"/></feComponentTransfer>
+      </filter>
+      <filter id="${uid}a" color-interpolation-filters="sRGB"><feColorMatrix values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0"/></filter>
+      <mask id="${uid}m" maskUnits="userSpaceOnUse" x="-4" y="-4" width="${vw+8}" height="112"><image ${img} filter="url(#${uid}a)"/></mask>
+      <clipPath id="${uid}b"><rect x="-4" y="-4" width="${vw+8}" height="${top+4}"/><path class="w2" d="${wavePath(top,bot,L,1.2,1.2,vw)}"/></clipPath>
+    </defs>
+    ${shadow}
+    <g mask="url(#${uid}m)"><image ${img} filter="url(#${uid}f)" opacity=".88"/></g>
+    <image ${img} clip-path="url(#${uid}b)"/>
+    <g mask="url(#${uid}m)" fill="none" stroke="#fff" stroke-linecap="round">
+      <path class="wl" d="${waveLine(top,bot,L,1.2,1.2,vw)}" stroke-width="2.6" opacity=".35"/>
+      <path class="wl" d="${waveLine(top,bot,L,1.2,1.2,vw)}" stroke-width=".75" opacity=".95"/>
+    </g>
+  </svg>`;
+}
+
 function containerSVG(p,w,h,opts={}){
-  const g=GEO[p.shape]||GEO.bottle,uid=`c${p.id}_${w}_${Math.random().toString(36).slice(2,6)}`;
+  const g=GEO[p.shape]||GEO.bottle,uid=`c${String(p.id).replace("-","m")}_${w}_${Math.random().toString(36).slice(2,6)}`;
   const tint=p.tint||LIQUIDS[0];
+  const cut=cutOf(p);if(cut)return cutoutSVG(p,cut,w,h,uid);
   if(p.shape==="sheet"){
     const n=Math.max(0,Math.round(p.left)),stack=Math.min(Math.max(n,1),4)-1;
     let back="";for(let i=stack;i>=1;i--)back+=`<rect x="${6+i*3}" y="${26-i*5}" width="52" height="76" rx="7" fill="${tint}" opacity="${.35+.12*(4-i)}" stroke="var(--glass-stroke)" stroke-width=".8"/>`;
@@ -465,26 +515,54 @@ function containerSVG(p,w,h,opts={}){
   const label=p.photo&&g.label?`<defs><clipPath id="${uid}p"><circle cx="${g.label[0]}" cy="${g.label[1]}" r="${g.label[2]}"/></clipPath></defs>
     <circle cx="${g.label[0]}" cy="${g.label[1]}" r="${g.label[2]+1.6}" fill="#fff" opacity=".9"/>
     <image href="${p.photo}" x="${g.label[0]-g.label[2]}" y="${g.label[1]-g.label[2]}" width="${g.label[2]*2}" height="${g.label[2]*2}" clip-path="url(#${uid}p)" preserveAspectRatio="xMidYMid slice"/>`:"";
-  const lidFill=p.shape==="stick"?"#2B2B2E":"var(--ink)";
-  return `<svg class="c" viewBox="0 0 64 104" width="${w}" height="${h}" data-wave="${p.id}" data-shape="${p.shape}" data-level="${level(p)}" data-top="${g.top}" data-bot="${g.bot}" role="img" aria-label="剩余 ${Math.round(level(p)*100)}%">
-    <style>.lid{fill:${lidFill};opacity:.82}.neck{fill:var(--glass);stroke:var(--glass-stroke);stroke-width:.5}</style>
-    ${g.extra}
-    <defs><clipPath id="${uid}"><path d="${g.body}"/></clipPath></defs>
+  const glass=p.shape==="bottle"||p.shape==="jar";
+  const base=p.shape==="bottle"?6:p.shape==="jar"?4:0;           // 厚玻璃底
+  const top=g.top+(glass?1.5:0),bot=g.bot-base-(glass?1:0),L=level(p);
+  const capFill=p.shape==="stick"?"#2B2B2E":`url(#${uid}cap)`;
+  const hl=!g.pans&&p.shape!=="stick";
+  const hlX=p.shape==="tube"?13:6.5,hlY=g.top+(g.bot-g.top)*.1,hlH=(g.bot-g.top)*.62;
+  return `<svg class="c" viewBox="0 0 64 104" width="${w}" height="${h}" preserveAspectRatio="xMidYMax meet" data-wave="${p.id}" data-shape="${p.shape}" data-level="${L}" data-top="${top}" data-bot="${bot}" data-vw="64" role="img" aria-label="剩余 ${Math.round(L*100)}%">
+    <defs>${shadowFilter(uid)}
+      <linearGradient id="${uid}cap" x1="0" x2="1"><stop offset="0" stop-color="#1b1b1d"/><stop offset=".22" stop-color="#55555a"/><stop offset=".42" stop-color="#2a2a2d"/><stop offset=".8" stop-color="#18181a"/><stop offset="1" stop-color="#3a3a3e"/></linearGradient>
+      <linearGradient id="${uid}lq" x1="0" y1="${top}" x2="0" y2="${bot}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${tint}" stop-opacity=".82"/><stop offset="1" stop-color="${tint}"/></linearGradient>
+      <linearGradient id="${uid}sh" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".26"/><stop offset=".18" stop-color="#000" stop-opacity="0"/><stop offset=".7" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></linearGradient>
+      <linearGradient id="${uid}gl" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".12" stop-color="#fff" stop-opacity=".04"/><stop offset=".85" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity=".2"/></linearGradient>
+      <linearGradient id="${uid}hl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".2" stop-color="#fff" stop-opacity=".75"/><stop offset=".75" stop-color="#fff" stop-opacity=".45"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+      <clipPath id="${uid}"><path d="${g.body}"/></clipPath>
+      <clipPath id="${uid}l"><path class="w2" d="${wavePath(top,bot,L,1.2,1.2,64)}"/></clipPath>
+    </defs>
+    <ellipse cx="32" cy="103.6" rx="27" ry="2.2" fill="#000" opacity=".3" filter="url(#${uid}s)"/>
+    <style>#${uid}w .lid{fill:${capFill};stroke:var(--edge);stroke-width:.6}#${uid}w .neck{fill:var(--glass);stroke:var(--glass-stroke);stroke-width:.5}</style>
+    <g id="${uid}w">${g.extra}${p.shape==="bottle"?`<path d="M23,2 V14 M27,2 V14 M31,2 V14 M35,2 V14 M39,2 V14 M43,2 V14" stroke="#fff" stroke-width=".5" opacity=".1"/><rect x="21" y="18.2" width="22" height="1" fill="#fff" opacity=".3"/>`:""}</g>
     <path d="${g.body}" fill="${g.pans?"var(--porcelain)":"var(--glass)"}" ${g.pans?'opacity=".9"':""}/>
-    <g clip-path="url(#${uid})"><path class="w1" fill="${tint}" opacity=".5"/><path class="w2" fill="${tint}"/></g>
-    ${!g.pans&&p.shape!=="stick"?`<rect x="${p.shape==="tube"?13:7}" y="${g.top+(g.bot-g.top)*.14}" width="3.5" height="${(g.bot-g.top)*.45}" rx="1.75" fill="#fff" opacity=".4"/>`:""}
+    <g clip-path="url(#${uid})">
+      <path class="w1" fill="${tint}" opacity=".45" d="${wavePath(top,bot,L,0,1.6,64)}"/>
+      <path class="w2" fill="url(#${uid}lq)" d="${wavePath(top,bot,L,1.2,1.2,64)}"/>
+      ${g.pans?"":`<rect x="-2" y="0" width="68" height="106" fill="url(#${uid}sh)" clip-path="url(#${uid}l)"/>`}
+      ${g.pans?"":`<path class="wl" d="${waveLine(top,bot,L,1.2,1.2,64)}" fill="none" stroke="#fff" stroke-width=".9" opacity=".6"/>`}
+      ${base?`<rect x="0" y="${g.bot-base}" width="64" height="${base}" fill="${tint}" opacity="${L>0?.28:.06}"/><rect x="0" y="${g.bot-base}" width="64" height=".8" fill="#fff" opacity=".35"/>`:""}
+      ${glass?`<rect x="0" y="${g.top}" width="64" height="${g.bot-g.top}" fill="url(#${uid}gl)"/><path d="${g.body}" fill="none" stroke="#fff" stroke-width="5" opacity=".13"/>`:""}
+    </g>
+    ${hl?`<rect x="${hlX}" y="${hlY}" width="3.2" height="${hlH}" rx="1.6" fill="url(#${uid}hl)"/><rect x="${p.shape==="tube"?48:57.5}" y="${hlY+6}" width="1.1" height="${hlH*.7}" rx=".55" fill="#fff" opacity=".3"/>`:""}
     ${label}
-    <path d="${g.body}" fill="none" stroke="var(--edge)" stroke-width="1.6"/>
-    <path d="${g.body}" fill="none" stroke="var(--glass-stroke)" stroke-width=".8"/>
+    <path d="${g.body}" fill="none" stroke="var(--edge)" stroke-width="1.4"/>
+    <path d="${g.body}" fill="none" stroke="var(--glass-stroke)" stroke-width=".6"/>
   </svg>`;
 }
+for(const k in CUTS){const i=new Image();i.src="img/"+CUTS[k][0]+".webp"}
 /* wave engine */
 const live=new Map();
 function lv(id){let L=live.get(id);if(!L){const p=byId(id);L={lv:p?level(p):0,v:0,e:0};live.set(id,L)}return L}
-function wavePath(top,bot,l,ph,amp){
-  const y=top+(bot-top)*(1-l);let d=`M-2,${y.toFixed(2)}`;
-  for(let x=-2;x<=66;x+=2)d+=` L${x},${(y+Math.sin(x/64*Math.PI*2+ph)*amp).toFixed(2)}`;
-  return d+` L66,${bot+2} L-2,${bot+2}Z`;
+function wavePath(top,bot,l,ph,amp,W=64){
+  const y=top+(bot-top)*(1-l),st=W/32;let d=`M-2,${y.toFixed(2)}`;
+  for(let x=-2;x<=W+2;x+=st)d+=` L${x.toFixed(2)},${(y+Math.sin(x/W*Math.PI*2+ph)*amp).toFixed(2)}`;
+  return d+` L${W+2},${bot+4} L-2,${bot+4}Z`;
+}
+function waveLine(top,bot,l,ph,amp,W=64){
+  if(l<=.004||l>=.996)return "";
+  const y=top+(bot-top)*(1-l),st=W/32;let d="";
+  for(let x=-2;x<=W+2;x+=st)d+=`${d?" L":"M"}${x.toFixed(2)},${(y+Math.sin(x/W*Math.PI*2+ph)*amp).toFixed(2)}`;
+  return d;
 }
 function tick(t){
   const s=reduce?0:t/1000;
@@ -493,9 +571,11 @@ function tick(t){
     const id=+svg.dataset.wave,p=id>0?byId(id):{shape:svg.dataset.shape,total:1,left:+svg.dataset.level};if(!p)continue;
     const L=id>0?lv(id):(svg._L||(svg._L={lv:svg._override!=null?0:level(p),v:0,e:0})),target=svg._override!=null?svg._override:level(p);
     L.v=(L.v+(target-L.lv)*.09)*.8;L.lv+=L.v;L.e*=.972;
-    const top=+svg.dataset.top,bot=+svg.dataset.bot,amp=p.shape==="compact"||p.shape==="stick"?.4:1;
-    svg.querySelector(".w1").setAttribute("d",wavePath(top,bot,L.lv,s*1.4,(1.6+L.e*6)*amp));
-    svg.querySelector(".w2").setAttribute("d",wavePath(top,bot,L.lv,s*1.9+1.2,(1.2+L.e*4)*amp));
+    const top=+svg.dataset.top,bot=+svg.dataset.bot,W=+svg.dataset.vw||64,amp=(p.shape==="compact"||p.shape==="stick"?.4:1)*(svg.classList.contains("cut")?.85:1);
+    const w1=svg.querySelector(".w1");if(w1)w1.setAttribute("d",wavePath(top,bot,L.lv,s*1.4,(1.6+L.e*6)*amp,W));
+    const ph=s*1.9+1.2,a2=(1.2+L.e*4)*amp,d2=wavePath(top,bot,L.lv,ph,a2,W),dl=waveLine(top,bot,L.lv,ph,a2,W);
+    for(const e of svg.querySelectorAll(".w2"))e.setAttribute("d",d2);
+    for(const e of svg.querySelectorAll(".wl"))e.setAttribute("d",dl);
   }
   requestAnimationFrame(tick);
 }
@@ -543,7 +623,7 @@ function renderShelves(){
     for(let i=0;i<arr.length;i+=3)html+=`<div class="row">${arr.slice(i,i+3).map(tileHTML).join("")}</div><div class="plank"></div>`;html+=`</section>`};
   if(first.length)sec("该先用掉",first,"快过期或快用完");
   if(rest.length)sec(first.length?"其他":"全部",rest);
-  if(!n)html=`<div class="empty">${containerSVG({id:-1,shape:"bottle",total:1,left:.12,tint:LIQUIDS[0]},64,104)}<b>架子还是空的</b>拍一下你手边那瓶，十几秒就加好。<br><button class="primary" style="margin-top:18px" onclick="openForm()">添加第一件</button></div>`;
+  if(!n)html=`<div class="empty">${containerSVG({id:-1,shape:"bottle",total:1,left:.12,tint:LIQUIDS[0],demoCut:1},64,104)}<b>架子还是空的</b>拍一下你手边那瓶，十几秒就加好。<br><button class="primary" style="margin-top:18px" onclick="openForm()">添加第一件</button></div>`;
   else if(!shown.length)html=`<div class="empty"><b>没有找到</b>换个关键词或分类试试。</div>`;
   $("#shelves").innerHTML=html;
   bindTiles($("#shelves"));
@@ -640,8 +720,8 @@ $("#editBtn").onclick=()=>{const p=cur;openForm(p)};
 $$("#detail [data-close]").forEach(e=>e.onclick=()=>closeDetail());
 /* drag liquid for estimate items */
 (()=>{const st=$("#stage");let drag=false;
-  const setFrom=e=>{if(!cur||cur.mode!=="est")return;const svg=st.querySelector("svg[data-wave]");const r=svg.getBoundingClientRect();const g=GEO[cur.shape];
-    const top=r.top+r.height*g.top/104,bot=r.top+r.height*g.bot/104;const l=Math.max(0,Math.min(1,(bot-e.clientY)/(bot-top)));
+  const setFrom=e=>{if(!cur||cur.mode!=="est")return;const svg=st.querySelector("svg[data-wave]");const r=svg.getBoundingClientRect();const vw=+svg.dataset.vw||64,k=Math.min(r.width/vw,r.height/104),y0=r.bottom-104*k;
+    const top=y0+k*(+svg.dataset.top),bot=y0+k*(+svg.dataset.bot);const l=Math.max(0,Math.min(1,(bot-e.clientY)/(bot-top)));
     const v=Math.round(l*100);if(v!==Math.round(cur.left)&&v%5===0)haptic(4);cur.left=v;fillDetail(false)};
   st.addEventListener("pointerdown",e=>{if(!cur||cur.mode!=="est")return;drag=true;st.setPointerCapture(e.pointerId);setFrom(e)});
   st.addEventListener("pointermove",e=>drag&&setFrom(e));
@@ -656,7 +736,7 @@ function finishFlow(p){
   const L=lv(p.id);L.e=reduce?0:1.4;
   const prevLeft=p.left;p.left=0;
   setTimeout(()=>{
-    openSheet(`<div class="finish">${containerSVG({id:-2,shape:p.shape,total:1,left:0,tint:p.tint,photo:p.photo},64,104)}
+    openSheet(`<div class="finish">${containerSVG({id:-2,name:p.name,cut:p.cut,mode:p.mode,shape:p.shape,total:1,left:0,tint:p.tint,photo:p.photo},64,104)}
       <h3>又空了一瓶</h3><p>${esc(p.name)} 陪了你${days?` ${days} 天`:"一阵子"}，一共用了 ${p.uses} ${p.mode==="count"?"片":"次"}${p.price&&p.uses?`，平均每次 ¥${(p.price/p.uses).toFixed(1)}`:""}。</p>
       <button class="primary" id="finR">放进空瓶，并加入补货</button>
       <button class="secondary" id="finN">放进空瓶</button>
@@ -852,7 +932,7 @@ $("#setBtn").onclick=()=>{
 function welcome(){
   if(db.seen||db.items.length)return;
   const w=$("#welcome");w.classList.remove("gone");w.setAttribute("aria-hidden","false");
-  const demo=[{id:-11,shape:"jar",total:1,left:0,tint:LIQUIDS[1]},{id:-12,shape:"bottle",total:1,left:0,tint:LIQUIDS[0]},{id:-13,shape:"tube",total:1,left:0,tint:LIQUIDS[4]}];
+  const demo=[{id:-11,shape:"jar",total:1,left:0,tint:LIQUIDS[1],demoCut:1},{id:-12,shape:"bottle",total:1,left:0,tint:LIQUIDS[0],demoCut:1},{id:-13,shape:"tube",total:1,left:0,tint:LIQUIDS[4],demoCut:1}];
   $("#wTrio").innerHTML=demo.map((p,i)=>containerSVG(p,[54,84,48][i],[88,136,78][i])).join("");
   $$("#wTrio svg[data-wave]").forEach((s,i)=>{s._L={lv:0,v:0,e:0};setTimeout(()=>{s._override=[.55,.78,.4][i]},reduce?0:350+i*220)});
   const go=()=>{db.seen=true;save();w.classList.add("gone");w.setAttribute("aria-hidden","true")};
