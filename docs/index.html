@@ -85,7 +85,7 @@ svg.c{display:block;overflow:visible}
 .bay::before{content:"";position:absolute;left:0;right:0;top:28px;height:150px;pointer-events:none;
   background:radial-gradient(52% 42% at 50% 55%,rgba(255,255,255,.6),transparent 100%)}
 @media (prefers-color-scheme:dark){.bay::before{background:radial-gradient(52% 42% at 50% 55%,rgba(255,255,255,.08),transparent 100%)}}
-.rail{position:relative;display:flex;align-items:flex-end;gap:6px;overflow-x:auto;scroll-snap-type:x proximity;padding:14px 20px 0;scroll-padding:0 20px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.rail{position:relative;display:flex;align-items:flex-end;gap:14px;overflow-x:auto;scroll-snap-type:x proximity;padding:14px 20px 0;scroll-padding:0 20px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .rail::-webkit-scrollbar{display:none}
 .rail::after{content:"";flex:0 0 14px}
 .cab .item{flex:none;width:84px;scroll-snap-align:start;gap:6px;padding:0}
@@ -106,6 +106,61 @@ svg.c{display:block;overflow:visible}
 .cw .stackn{position:absolute;left:-6px;top:-4px;min-width:22px;height:20px;padding:0 6px;border-radius:10px;font-size:11px;font-weight:700;background:var(--card);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.18),0 0 0 .5px var(--edge);display:grid;place-items:center;z-index:2}
 .more-end{flex:none;align-self:center;font-size:13px;color:var(--ink2);padding:0 6px 40px;white-space:nowrap}
 
+
+/* stacks: count chip instead of ghosts */
+.item .name .qty{display:inline-block;margin-left:4px;padding:0 6px;border-radius:8px;background:var(--fill);font-size:11px;font-weight:600;color:var(--ink2);vertical-align:1px}
+/* today v2 */
+.eyebrow{font-size:13px;font-weight:600;color:var(--ink2);letter-spacing:.02em;margin:0 0 2px}
+.seg{position:relative;display:flex;background:var(--fill);border-radius:12px;padding:3px;margin:14px 0 16px}
+.seg button{flex:1;position:relative;z-index:1;height:36px;font-size:15px;font-weight:600;color:var(--ink2);display:flex;align-items:center;justify-content:center;gap:6px;transition:color .25s}
+.seg button svg{width:15px;height:15px}
+.seg button[aria-selected=true]{color:var(--ink)}
+.steps .li .t>span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (prefers-color-scheme:dark){.seg .pill{background:rgba(255,255,255,.17)!important}}
+.seg .pill{position:absolute;top:3px;bottom:3px;left:3px;width:calc((100% - 6px)/3);border-radius:9px;background:var(--card);box-shadow:0 1px 4px rgba(0,0,0,.12);transition:transform .45s var(--spring)}
+.ritual{position:relative;border-radius:26px;padding:18px 18px 0;overflow:hidden;color:var(--ink)}
+.ritual.am{background:linear-gradient(160deg,#FFF3E2 0%,#FBE7DA 55%,#F4E9E4 100%)}
+.ritual.pm{background:linear-gradient(160deg,#E9E8F6 0%,#DCDDEE 55%,#E6E3EE 100%)}
+.ritual.mk{background:linear-gradient(160deg,#FBE9EC 0%,#F5DDE2 55%,#F1E6E8 100%)}
+@media (prefers-color-scheme:dark){
+ .ritual.am{background:linear-gradient(160deg,#3A2A1C 0%,#2A201B 60%,#1E1A18 100%)}
+ .ritual.pm{background:linear-gradient(160deg,#23243D 0%,#1B1C2C 60%,#16161F 100%)}
+ .ritual.mk{background:linear-gradient(160deg,#3B2228 0%,#2A1C20 60%,#1D1719 100%)}}
+.ritual .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.ritual .top b{display:block;font-size:22px;font-weight:700;letter-spacing:-.01em}
+.ritual .top span{font-size:14px;color:var(--ink2)}
+.ritual .prog{font-family:ui-rounded,"SF Pro Rounded",-apple-system,sans-serif;font-size:15px;font-weight:700;background:rgba(255,255,255,.55);border-radius:14px;padding:5px 11px;white-space:nowrap}
+@media (prefers-color-scheme:dark){.ritual .prog{background:rgba(255,255,255,.1)}}
+.ritual .row{display:flex;align-items:flex-end;justify-content:center;gap:10px;margin:14px -18px 0;padding:6px 18px 0;overflow-x:auto;scrollbar-width:none}
+.ritual .row::-webkit-scrollbar{display:none}
+.ritual .row .pi{position:relative;flex:none;display:flex;align-items:flex-end;transition:opacity .4s,transform .4s var(--spring)}
+.ritual .row .pi.done{opacity:.4;transform:scale(.94)}
+.ritual .row .pi .ok{position:absolute;right:-4px;top:-2px;width:18px;height:18px;border-radius:50%;background:var(--sage);color:#fff;display:grid;place-items:center}
+.ritual .row .pi .ok svg{width:11px;height:11px}
+.ritual .plank{height:9px;margin:0 -18px;background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(255,255,255,.4) 2px,rgba(255,255,255,.2));border-top:1px solid rgba(255,255,255,.9)}
+@media (prefers-color-scheme:dark){.ritual .plank{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.05) 2px,transparent);border-top-color:rgba(255,255,255,.3)}}
+.ritual .next{font-size:14px;color:var(--ink2);padding:12px 0 16px}.ritual .next b{color:var(--ink);font-weight:600}
+.steps{margin-top:14px}
+.steps .li .no{width:22px;font-family:ui-rounded,"SF Pro Rounded",-apple-system,sans-serif;font-size:14px;font-weight:700;color:var(--ink3);text-align:center;flex:none}
+.steps .li .pic{width:34px;display:flex;justify-content:center;flex:none}
+.quick{display:flex;gap:10px;overflow-x:auto;margin:0 -20px;padding:0 20px 4px;scrollbar-width:none}
+.quick::-webkit-scrollbar{display:none}
+.quick button{flex:none;display:flex;align-items:center;gap:10px;background:var(--card);border-radius:16px;padding:10px 14px 10px 10px;text-align:left}
+.quick b{display:block;font-size:14px;font-weight:600;white-space:nowrap}.quick span{font-size:12px}
+/* empties v2 */
+.ehero{background:var(--card);border-radius:24px;padding:20px 18px 16px;margin-top:6px}
+.ehero .big{font-family:ui-rounded,"SF Pro Rounded",-apple-system,sans-serif;font-size:52px;font-weight:700;line-height:1;letter-spacing:-.02em}
+.ehero .big small{font-size:16px;font-weight:600;color:var(--ink2);margin-left:6px;letter-spacing:0}
+.ehero .three{display:grid;grid-template-columns:repeat(3,1fr);margin-top:16px;padding-top:14px;border-top:.5px solid var(--sep)}
+.ehero .three div{font-size:12px;color:var(--ink2)}.ehero .three b{display:block;font-family:ui-rounded,"SF Pro Rounded",-apple-system,sans-serif;font-size:19px;font-weight:700;color:var(--ink);margin-bottom:2px}
+.restock{display:flex;gap:10px;overflow-x:auto;margin:0 -20px;padding:0 20px 4px;scrollbar-width:none}
+.restock::-webkit-scrollbar{display:none}
+.rcard{flex:none;width:136px;background:var(--card);border-radius:20px;padding:14px 12px 12px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.rcard b{font-size:14px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rcard span{font-size:12px;color:var(--ink2)}
+.rcard .buy{min-height:32px;margin-top:4px;padding:0 14px;border-radius:16px;background:var(--fill);font-size:14px}
+.ewall .item{cursor:default}
+.ewall .rail{padding-top:4px}.ewall .bay{margin-bottom:10px}
+.ewall .item .meta{white-space:normal;line-height:1.35}
 /* tab bar */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;justify-content:center;background:var(--bar);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);border-top:.5px solid var(--sep);padding-bottom:env(safe-area-inset-bottom)}
 .tabbar nav{display:flex;width:100%;max-width:440px}
@@ -209,6 +264,8 @@ svg.c{display:block;overflow:visible}
 .photo-row{display:flex;gap:14px;align-items:center;padding:14px 16px}
 .photo{width:84px;height:84px;border-radius:20px;background:var(--fill);flex:none;overflow:hidden;display:grid;place-items:center;position:relative}
 .photo img{width:100%;height:100%;object-fit:cover}
+.photo.busy::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);background-size:220% 100%;animation:shim 1.2s linear infinite}
+@keyframes shim{from{background-position:120% 0}to{background-position:-120% 0}}
 .photo-btns{display:flex;flex-direction:column;gap:8px;flex:1}
 .photo-btns label,.photo-btns button{display:flex;align-items:center;gap:8px;min-height:38px;border-radius:10px;background:var(--fill);padding:0 12px;font-size:15px;cursor:pointer;color:var(--ink)}
 .photo-btns svg{width:18px;height:18px;color:var(--blue)}
@@ -267,39 +324,40 @@ svg.c{display:block;overflow:visible}
 </head>
 <body>
 <main class="app">
+  <!-- 今日 -->
+  <div class="tab on" id="t-today" role="tabpanel" aria-label="今日">
+    <div class="nav"></div>
+    <p class="eyebrow" id="todaySub"></p>
+    <h1 id="hello">今日</h1>
+    <div class="seg" id="seg" role="tablist" aria-label="流程"><span class="pill"></span></div>
+    <div id="ritual"></div>
+    <div id="routines"></div>
+  </div>
   <!-- 妆台 -->
-  <div class="tab on" id="t-shelf" role="tabpanel" aria-label="妆台">
+  <div class="tab" id="t-shelf" role="tabpanel" aria-label="藏品">
     <div class="nav">
       <button class="icon-btn" id="setBtn" aria-label="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/></svg></button>
       <button class="icon-btn" id="addBtn" aria-label="添加产品"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 4v16M4 12h16"/></svg></button>
     </div>
-    <h1>妆台</h1>
+    <h1>藏品</h1>
     <div class="worth" id="shelfSub"></div>
     <label class="search"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="q" type="search" placeholder="搜索名称或品牌" aria-label="搜索名称或品牌" enterkeyhint="search"></label>
     <div class="chips" id="chips" role="toolbar" aria-label="分类"><span class="chip-pill" id="pill"></span></div>
     <div id="shelves"></div>
     <p class="foot">网页预览版，数据只保存在这台设备的浏览器里 · <a href="https://github.com/LLM-zhu/BeautyShelf">GitHub</a></p>
   </div>
-  <!-- 今日 -->
-  <div class="tab" id="t-today" role="tabpanel" aria-label="今日">
-    <div class="nav"></div>
-    <h1>今日</h1>
-    <p class="sub" id="todaySub"></p>
-    <div class="ring-row" id="rings"></div>
-    <div id="routines"></div>
-  </div>
   <!-- 空瓶 -->
   <div class="tab" id="t-empty" role="tabpanel" aria-label="空瓶">
     <div class="nav"></div>
     <h1>空瓶</h1>
-    <p class="sub">用完的每一瓶都算数。</p>
+    <p class="sub" style="margin-bottom:10px">用完的每一瓶都算数。</p>
     <div id="empties"></div>
   </div>
 </main>
 
 <div class="tabbar"><nav role="tablist">
-  <button role="tab" aria-selected="true" data-tab="shelf"><svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="5" y="4" width="6" height="12" rx="2"/><rect x="15" y="8" width="7" height="8" rx="2"/><path d="M2.5 19.5h21" stroke-linecap="round" stroke-width="2.2"/></svg>妆台</button>
-  <button role="tab" aria-selected="false" data-tab="today"><svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="13" cy="13" r="9"/><path d="M9 13.2l2.8 2.8L17.5 10"/></svg>今日</button>
+  <button role="tab" aria-selected="true" data-tab="today"><svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="13" cy="13" r="9"/><path d="M9 13.2l2.8 2.8L17.5 10"/></svg>今日</button>
+  <button role="tab" aria-selected="false" data-tab="shelf"><svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="5" y="4" width="6" height="12" rx="2"/><rect x="15" y="8" width="7" height="8" rx="2"/><path d="M2.5 19.5h21" stroke-linecap="round" stroke-width="2.2"/></svg>藏品</button>
   <button role="tab" aria-selected="false" data-tab="empty"><svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="9" y="3" width="8" height="4" rx="1.2"/><path d="M8 9.5Q8 8 9.5 8h7Q18 8 18 9.5V21q0 2-2 2h-6q-2 0-2-2z"/><path d="M8 17h10" stroke-dasharray="2 2"/></svg>空瓶</button>
 </nav></div>
 
@@ -445,6 +503,7 @@ function state(p){const d=daysTo(effExp(p).date);return d<0?"expired":d<=30?"soo
 const stateColor=s=>`var(--${s==="expired"?"rouge":s==="soon"?"honey":"sage"})`;
 const level=p=>p.total?Math.max(0,Math.min(1,p.left/p.total)):0;
 const isLow=p=>level(p)<.15;
+const inR=(p,k)=>k==="mk"?(p.mk??p.cat==="彩妆"):!!p[k];
 const usedToday=(p,r)=>p.log.some(l=>l.d===todayISO()&&(!r||l.r===r));
 
 function seed(){
@@ -466,6 +525,10 @@ function seed(){
     mk({name:"维C精华",brand:"Skinceuticals",shape:"bottle",total:30,left:12,per:.5,uses:36,log:logs(3,"am"),opened:ago(190),pao:6,exp:plusDays(200),tint:LIQUIDS[0],price:1390}),
     mk({name:"护发精油",brand:"Moroccanoil",cat:"头发",shape:"bottle",total:100,left:63,per:1,uses:37,log:logs(4,null),opened:ago(120),pao:12,exp:plusDays(300),tint:LIQUIDS[0],price:330}),
     mk({name:"修护身体乳",brand:"Aesop",cat:"身体",shape:"tube",total:120,left:0,per:4,uses:31,log:[],opened:ago(150),pao:12,exp:plusDays(200),tint:LIQUIDS[4],price:350,finished:ago(20),restock:true}),
+    mk({name:"神仙水",brand:"SK-II",shape:"bottle",total:230,left:0,per:3,uses:74,log:[],opened:ago(260),pao:12,exp:plusDays(300),tint:LIQUIDS[2],price:1540,finished:ago(70)}),
+    mk({name:"小棕瓶精华",brand:"Estée Lauder",shape:"bottle",total:50,left:0,per:.6,uses:83,log:[],opened:ago(200),pao:6,exp:plusDays(300),tint:LIQUIDS[3],price:760,finished:ago(95)}),
+    mk({name:"补水面膜",brand:"Dr.Jart+",shape:"sheet",total:5,left:0,per:1,uses:5,log:[],opened:ago(40),exp:plusDays(300),tint:LIQUIDS[2],price:99,finished:ago(12)}),
+    mk({name:"氨基酸洁面",brand:"Freeplus",shape:"tube",total:100,left:0,per:1.5,uses:66,log:[],opened:ago(170),pao:12,exp:plusDays(300),tint:LIQUIDS[4],price:150,finished:ago(72)}),
     mk({name:"卸妆膏",brand:"Banila Co",shape:"jar",total:100,left:0,per:2,uses:52,log:[],opened:ago(130),pao:12,exp:plusDays(200),tint:LIQUIDS[5],price:160,finished:ago(41)}),
   ];
   db.items.push(...list);db.seen=true;save();
@@ -494,7 +557,9 @@ const CUTS={
   "修护身体乳":["bodylotion",224,520,.04,.84],"卸妆膏":["balm",360,295,.4,.95]
 };
 const CUT_BY_SHAPE={bottle:"小棕瓶精华",jar:"精华面霜",tube:"氨基酸洁面"};
+const LIQ={bottle:[.3,.95],tube:[.06,.86],jar:[.36,.95],stick:[.05,.35],compact:[.2,.9],sheet:[0,1]};
 function cutOf(p){
+  if(p.cutImg){const q=LIQ[p.shape]||LIQ.bottle;return{src:p.cutImg.src,w:p.cutImg.w,h:p.cutImg.h,top:q[0],bot:q[1]}}
   if(p.photo)return null;
   const c=Array.isArray(p.cut)?p.cut:CUTS[p.name]||(p.demoCut&&CUTS[CUT_BY_SHAPE[p.shape]]);
   return c?{src:"img/"+c[0]+".webp",w:c[1],h:c[2],top:c[3],bot:c[4]}:null;
@@ -618,7 +683,7 @@ function tick(t){
 }
 
 /* ================= tabs ================= */
-let tab="shelf";
+let tab="today";
 $$(".tabbar button").forEach(b=>b.onclick=()=>{tab=b.dataset.tab;$$(".tabbar button").forEach(x=>x.setAttribute("aria-selected",x===b));$$(".tab").forEach(x=>x.classList.toggle("on",x.id==="t-"+tab));render();scrollTo({top:0});haptic()});
 function render(){if(tab==="shelf")renderShelf();else if(tab==="today")renderToday();else renderEmpties()}
 
@@ -644,16 +709,12 @@ function metaFor(p){
 const SIZE={bottle:[64,104],tube:[64,104],jar:[76,74],stick:[46,96],compact:[66,76],sheet:[60,84]};
 function tileHTML(p,group=[p]){
   const s=state(p),[meta,cls]=metaFor(p),[w,h]=SIZE[p.shape]||[64,104];
-  const extra=group.length-1+(p.backup||0),c=cutOf(p);
-  let ghosts="";
-  if(extra&&c){const gh=Math.round(Math.min(h,w*c.h/c.w));
-    for(let k=Math.min(extra,2);k>=1;k--)ghosts+=`<img class="ghost g${k}" src="${c.src}" alt="" style="height:${gh}px">`;}
+  const extra=group.length-1+(p.backup||0);
   const badge=s!=="fresh"?`<span class="badge" style="background:${stateColor(s)}">!</span>`:"";
-  const stackn=extra?`<span class="stackn r">×${extra+1}</span>`:"";
   const narrow=(p.shape==="stick"||p.shape==="sheet")?" narrow":"";
   return `<button class="item${narrow}" data-id="${p.id}" aria-label="${esc(p.name)}，${esc(meta)}${extra?`，共 ${extra+1} 件`:""}，剩余 ${p.mode==="count"?fmtN(p.left)+" 片":Math.round(level(p)*100)+"%"}">
-    <span class="cw">${ghosts}${containerSVG(p,w,h)}${badge}${stackn}</span>
-    <span class="name">${esc(p.name)}</span><span class="meta ${cls}">${esc(meta)}</span></button>`;
+    <span class="cw">${containerSVG(p,w,h)}${badge}</span>
+    <span class="name">${esc(p.name)}${extra?`<i class="qty r">×${extra+1}</i>`:""}</span><span class="meta ${cls}">${esc(meta)}</span></button>`;
 }
 function groupSame(arr){const m=new Map();arr.forEach(p=>{const k=(p.brand+"|"+p.name).toLowerCase();m.has(k)?m.get(k).push(p):m.set(k,[p])});return[...m.values()]}
 function renderShelves(){
@@ -753,8 +814,8 @@ function fillDetail(anim){
   $("#expLine").textContent=`${fmtDate(e.date)} 到期`+(e.why==="pao"?`（开封后 ${p.pao} 个月）`:p.opened?"（包装到期日）":"（还没开封，按包装到期日）");
   // 14-day dots
   const days=new Set(p.log.map(l=>l.d));let dots="";for(let i=13;i>=0;i--)dots+=`<i class="${days.has(plusDays(-i))?"on":""}"></i>`;$("#dots").innerHTML=dots;
-  $("#toggles").innerHTML=`<button class="tg" aria-pressed="${p.am}" data-rt="am">${SUN}早间</button><button class="tg" aria-pressed="${p.pm}" data-rt="pm">${MOON}晚间</button>`;
-  $$("#toggles .tg").forEach(b=>b.onclick=()=>{const k=b.dataset.rt;p[k]=!p[k];save();b.setAttribute("aria-pressed",p[k]);haptic();toast(p[k]?`已加入${k==="am"?"早间":"晚间"}流程`:`已移出${k==="am"?"早间":"晚间"}流程`)});
+  $("#toggles").innerHTML=`<button class="tg" aria-pressed="${p.am}" data-rt="am">${SUN}早间</button><button class="tg" aria-pressed="${p.pm}" data-rt="pm">${MOON}晚间</button><button class="tg" aria-pressed="${inR(p,"mk")}" data-rt="mk">${BRUSH}化妆</button>`;
+  $$("#toggles .tg").forEach(b=>b.onclick=()=>{const k=b.dataset.rt;p[k]=!inR(p,k);save();b.setAttribute("aria-pressed",p[k]);haptic();const nm={am:"早间",pm:"晚间",mk:"化妆"}[k];toast(p[k]?`已加入${nm}流程`:`已移出${nm}流程`)});
   const u=$("#useBtn");u.disabled=p.left<=0;u.textContent=p.left<=0?"已经用完":p.mode==="count"?"用了一片":"用了一次";
   $("#restockBtn").textContent=p.restock?"已在补货清单":"加入补货";
 }
@@ -827,26 +888,37 @@ function cancelSheet(){const c=sheetCancel;closeSheet();c?.()}
 $("#sheetOv .bd").onclick=cancelSheet;
 
 /* ================= today ================= */
+const RT=[["am","早间",()=>SUN,"早间护理"],["pm","晚间",()=>MOON,"晚间护理"],["mk","化妆",()=>BRUSH,"今日妆容"]];
+let rsel=null;
+function stepRank(p){const n=p.name;const K=[["卸妆",0],["洁面",1],["洗面",1],["水",2],["精华",3],["面膜",4],["眼",5],["乳",6],["霜",6],["油",7],["防晒",8],["隔离",9],["妆前",9],["粉底",10],["遮瑕",11],["粉",12],["眉",13],["眼影",14],["睫毛",15],["腮红",16],["口红",17],["唇",17],["香",18]];
+  for(const[k,r]of K)if(n.includes(k))return r;return{tube:1,bottle:3,sheet:4,jar:6,compact:12,stick:17}[p.shape]??8}
+const fmtLeft=p=>p.mode==="count"?`剩 ${fmtN(p.left)} 片`:p.mode==="est"?`约 ${Math.round(p.left)}%`:`剩 ${fmtN(p.left)} ${p.unit}`;
 function renderToday(){
-  const d=new Date();$("#todaySub").textContent=d.toLocaleDateString("zh-CN",{month:"long",day:"numeric",weekday:"long"});
-  const R=[["am","早间",SUN],["pm","晚间",MOON]];
-  $("#rings").innerHTML=R.map(([k,n])=>{const l=active().filter(p=>p[k]),done=l.filter(p=>usedToday(p,k)).length,tot=l.length,C=2*Math.PI*20,off=tot?C*(1-done/tot):C;
-    return `<div class="ring-card"><svg class="ring" viewBox="0 0 46 46"><circle class="bg" cx="23" cy="23" r="20"/><circle class="fg" cx="23" cy="23" r="20" stroke-dasharray="${C}" stroke-dashoffset="${off}"/></svg><div><b>${n}</b><span class="r">${tot?`${done} / ${tot}${done===tot?" · 完成":""}`:"还没设置"}</span></div></div>`}).join("");
+  const d=new Date(),hour=d.getHours();
+  $("#todaySub").textContent=d.toLocaleDateString("zh-CN",{month:"long",day:"numeric",weekday:"long"});
+  $("#hello").textContent=hour<5?"夜深了":hour<11?"早上好":hour<14?"中午好":hour<18?"下午好":"晚上好";
+  if(!rsel)rsel=hour>=16||hour<4?"pm":"am";
+  const ix=RT.findIndex(r=>r[0]===rsel);
+  $("#seg").innerHTML=`<span class="pill" style="transform:translateX(${ix*100}%)"></span>`+RT.map(([k,n,ic])=>`<button role="tab" aria-selected="${k===rsel}" data-k="${k}">${ic()}${n}</button>`).join("");
+  $$("#seg button").forEach(b=>b.onclick=()=>{if(rsel===b.dataset.k)return;rsel=b.dataset.k;haptic(4);renderToday()});
+  const [k,,,title]=RT[ix],l=active().filter(p=>inR(p,k)).sort((a,b)=>stepRank(a)-stepRank(b)),done=l.filter(p=>usedToday(p,k)).length,next=l.find(p=>!usedToday(p,k));
+  const okI=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg>`;
+  const SZ={bottle:[40,64],tube:[40,64],jar:[52,48],stick:[28,58],compact:[46,52],sheet:[40,56]};
+  $("#ritual").innerHTML=`<div class="ritual ${k}"><div class="top"><div><b>${title}</b><span>${l.length?`${l.length} 步`:"还没有产品"}</span></div>${l.length?`<span class="prog">${done===l.length?"完成 ✓":`${done} / ${l.length}`}</span>`:""}</div>
+    ${l.length?`<div class="row">${l.map(p=>{const[w,h]=SZ[p.shape]||SZ.bottle,u=usedToday(p,k);return `<span class="pi ${u?"done":""}">${containerSVG(p,w,h)}${u?`<i class="ok">${okI}</i>`:""}</span>`}).join("")}</div><div class="plank"></div>`:""}
+    <div class="next">${!l.length?`去藏品里打开任意产品，点「${RT[ix][1]}」加进来。`:next?`下一步 <b>${esc(next.name)}</b>`:k==="mk"?"妆好了，出门吧。":`${RT[ix][1]}的步骤都做完了。`}</div></div>`;
   let html="";
-  const hour=d.getHours(),order=hour>=15||hour<4?["pm","am"]:["am","pm"];
-  order.forEach(k=>{const [,n]=R.find(r=>r[0]===k),l=active().filter(p=>p[k]);
-    html+=`<section><h2>${n}<small>${l.length?"点一下记一次":""}</small></h2>`;
-    if(!l.length){html+=`<div class="list"><div class="li" style="color:var(--ink2);font-size:15px">打开任意产品，点「${n}」把它加进来。</div></div>`}
-    else html+=`<div class="list">${l.map(p=>{const done=usedToday(p,k);return `<button class="li ${done?"done":""}" data-id="${p.id}" data-r="${k}" aria-pressed="${done}">${containerSVG(p,26,42)}<span class="t"><b>${esc(p.name)}</b><span>${p.mode==="count"?`剩 ${fmtN(p.left)} 片`:p.mode==="est"?`约 ${Math.round(p.left)}%`:`剩 ${fmtN(p.left)} ${p.unit}`}${state(p)!=="fresh"?` · <span style="color:${stateColor(state(p))}">${metaFor(p)[0]}</span>`:""}</span></span><span class="check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg></span></button>`}).join("")}</div>`;
-    html+=`</section>`});
-  html+=`<p class="hint">流程里的产品每天各记一次。不在流程里的，在妆台长按就能快速记录。</p>`;
+  if(l.length)html+=`<div class="list steps">${l.map((p,i)=>{const u=usedToday(p,k);return `<button class="li ${u?"done":""}" data-id="${p.id}" data-r="${k}" aria-pressed="${u}"><span class="no">${i+1}</span><span class="pic">${containerSVG(p,26,42)}</span><span class="t"><b>${esc(p.name)}</b><span>${esc(p.brand?p.brand+" · ":"")}${fmtLeft(p)}${state(p)!=="fresh"?` · <span style="color:${stateColor(state(p))}">${metaFor(p)[0]}</span>`:""}</span></span><span class="check">${okI.replace('stroke-width="2.6"','stroke-width="2.4"')}</span></button>`}).join("")}</div>`;
+  const pri=active().filter(p=>!inR(p,k)&&state(p)!=="fresh").slice(0,6);
+  if(pri.length)html+=`<section><h2>今天也可以用<small>快到期了</small></h2><div class="quick">${pri.map(p=>`<button data-open="${p.id}">${containerSVG(p,22,36)}<span><b>${esc(p.name)}</b><span style="color:${stateColor(state(p))}">${metaFor(p)[0]}</span></span></button>`).join("")}</div></section>`;
   $("#routines").innerHTML=html;
   $$("#routines .li[data-id]").forEach(b=>b.onclick=()=>{
     const p=byId(+b.dataset.id),k=b.dataset.r;
     if(usedToday(p,k)){undoUse(p,k);haptic(4)}
-    else{if(p.left<=0){toast("这件已经用完了");return}const r=logUse(p,k);const c=b.querySelector(".check");const m=document.createElement("i");m.className="mini-drop";m.style.background=p.tint;c.appendChild(m);if(r.msg)toast(r.msg)}
-    setTimeout(()=>{renderToday();if(p.left<=0)toast(`${p.name} 用完了，去妆台把它放进空瓶吧`)},reduce?0:380);
+    else{if(p.left<=0){toast("这件已经用完了");return}const r=logUse(p,k);const c=b.querySelector(".check");const m=document.createElement("i");m.className="mini-drop";m.style.background=p.tint;c.appendChild(m);b.classList.add("done");if(r.msg)toast(r.msg)}
+    setTimeout(()=>{renderToday();if(p.left<=0)toast(`${p.name} 用完了，去藏品把它放进空瓶吧`)},reduce?0:380);
   });
+  $$("#routines [data-open]").forEach(b=>b.onclick=()=>openDetail(+b.dataset.open,b));
 }
 
 /* ================= empties ================= */
@@ -854,17 +926,24 @@ function renderEmpties(){
   const fin=db.items.filter(p=>p.finished).sort((a,b)=>b.finished.localeCompare(a.finished));
   const yr=String(new Date().getFullYear()),thisYear=fin.filter(p=>p.finished.startsWith(yr)).length;
   const restock=db.items.filter(p=>p.restock);
-  const spent=fin.reduce((s,p)=>s+(p.price||0),0);
-  let html=`<div class="stat-hero"><div><div class="big r">${thisYear}</div><div class="lbl">${yr} 年空瓶</div></div><div style="text-align:right"><div class="r" style="font-size:20px;font-weight:600">${fin.length}</div><div class="lbl">累计</div></div></div>`;
-  if(restock.length){html+=`<section><h2>待补货<small>${restock.length} 件</small></h2><div class="list">${restock.map(p=>`<div class="li">${containerSVG(Object.assign({},p,{id:-3,left:p.finished?0:p.left}),26,42)}<span class="t"><b>${esc(p.name)}</b><span>${esc(p.brand||p.cat)}${p.price?` · 上次 ¥${p.price}`:""}</span></span><button class="buy" data-buy="${p.id}">买到了</button></div>`).join("")}</div></section>`}
-  html+=`<section><h2>空瓶墙</h2>`;
+  const spent=fin.reduce((s,p)=>s+(+p.price||0),0),uses=fin.reduce((s,p)=>s+(p.price?p.uses:0),0);
+  const days=p=>p.opened?Math.max(1,Math.round((dParse(p.finished)-dParse(p.opened))/DAY)):null;
+  const dl=fin.map(days).filter(Boolean),avgD=dl.length?Math.round(dl.reduce((a,b)=>a+b,0)/dl.length):null;
+  let html=`<div class="ehero"><div class="big">${thisYear}<small>${yr} 年用空</small></div>
+    <div class="three"><div><b class="r">${spent?"¥"+spent.toLocaleString("en-US"):"—"}</b>用完的价值</div><div><b class="r">${uses?"¥"+(spent/uses).toFixed(1):"—"}</b>平均每次</div><div><b class="r">${avgD?(avgD>=60?Math.round(avgD/30)+" 个月":avgD+" 天"):"—"}</b>平均用多久</div></div></div>`;
+  if(restock.length)html+=`<section><h2>待补货<small>${restock.length} 件</small></h2><div class="restock">${restock.map(p=>`<div class="rcard">${containerSVG(Object.assign({},p,{id:-3,left:p.finished?0:p.left}),44,70)}<b>${esc(p.name)}</b><span>${esc(p.brand||p.cat)}${p.price?` · ¥${p.price}`:""}</span><button class="buy" data-buy="${p.id}">买到了</button></div>`).join("")}</div></section>`;
+  html+=`<section><h2>空瓶墙<small>${fin.length?`累计 ${fin.length} 件`:""}</small></h2>`;
   if(!fin.length)html+=`<div class="empty" style="padding-top:20px">用完的产品会出现在这里，<br>附上用了多少次、多久、每次多少钱。</div>`;
-  else html+=`<div class="grid2">${fin.map(p=>{const days=p.opened?Math.max(1,Math.round((dParse(p.finished)-dParse(p.opened))/DAY)):null;
-    return `<div class="etile">${containerSVG(Object.assign({},p,{id:-3,left:0}),48,78)}<b>${esc(p.name)}</b><span class="r">${p.uses} ${p.mode==="count"?"片":"次"}${days?` · ${days>=60?Math.round(days/30)+" 个月":days+" 天"}`:""}${p.price&&p.uses?`<br>每次 ¥${(p.price/p.uses).toFixed(1)}`:""}<br>${fmtShort(p.finished)} 用完</span></div>`}).join("")}</div>`;
+  else{
+    html+=`<div class="cab ewall" style="margin-top:4px">`;
+    for(let i=0;i<fin.length;i+=4){const arr=fin.slice(i,i+4);
+      html+=`<section class="bay"><div class="railwrap"><div class="glass"></div><div class="rail" style="justify-content:flex-start;overflow:hidden">${arr.map(p=>{const dd=days(p),[w,h]=SIZE[p.shape]||[64,104],dt=dParse(p.finished);
+        return `<div class="item"><span class="cw">${containerSVG(Object.assign({},p,{id:-3,left:0}),w,h)}</span><span class="name">${esc(p.name)}</span><span class="meta r">${p.uses} ${p.mode==="count"?"片":"次"}${dd?` · ${dd>=60?Math.round(dd/30)+" 个月":dd+" 天"}`:""}<br>${dt.getMonth()+1} 月用完</span></div>`}).join("")}</div></div></section>`}
+    html+=`</div>`}
   html+=`</section>`;
   $("#empties").innerHTML=html;
   $$("#empties [data-buy]").forEach(b=>b.onclick=()=>{const p=byId(+b.dataset.buy);p.restock=false;
-    if(p.finished){const n=clone(p);db.items.push(n);save();renderEmpties();toast(`新的 ${p.name} 已放上妆台`)}
+    if(p.finished){const n=clone(p);db.items.push(n);save();renderEmpties();toast(`新的 ${p.name} 已放上藏品架`)}
     else{p.backup=(p.backup||0)+1;save();renderEmpties();toast(`${p.name} 备用库存 +1`)}haptic()});
 }
 
@@ -873,8 +952,8 @@ let F=null,editing=null;
 function defaultPao(shape,cat){if(shape==="sheet")return null;if(cat==="香氛")return 36;if(shape==="stick"||shape==="compact")return 24;if(shape==="bottle"&&cat==="护肤")return 6;return 12}
 function openForm(p=null){
   editing=p;
-  F=p?{name:p.name,brand:p.brand,cat:p.cat,shape:p.shape,total:p.total,per:p.per,openMode:p.opened?(p.opened===todayISO()?"today":"pick"):"no",opened:p.opened||todayISO(),pao:p.pao,paoTouched:true,expMode:"pick",exp:p.exp,price:p.price,backup:p.backup||0,tint:p.tint,photo:p.photo,am:p.am,pm:p.pm,left:p.left}
-     :{name:"",brand:"",cat:"护肤",shape:"bottle",total:50,per:1,openMode:"no",opened:todayISO(),pao:6,paoTouched:false,expMode:24,exp:plusMonths(todayISO(),24),price:null,backup:0,tint:LIQUIDS[0],photo:null,am:false,pm:false};
+  F=p?{name:p.name,brand:p.brand,cat:p.cat,shape:p.shape,total:p.total,per:p.per,openMode:p.opened?(p.opened===todayISO()?"today":"pick"):"no",opened:p.opened||todayISO(),pao:p.pao,paoTouched:true,expMode:"pick",exp:p.exp,price:p.price,backup:p.backup||0,tint:p.tint,photo:p.photo,cutImg:p.cutImg||null,am:p.am,pm:p.pm,left:p.left}
+     :{name:"",brand:"",cat:"护肤",shape:"bottle",total:50,per:1,openMode:"no",opened:todayISO(),pao:6,paoTouched:false,expMode:24,exp:plusMonths(todayISO(),24),price:null,backup:0,tint:LIQUIDS[0],photo:null,cutImg:null,am:false,pm:false};
   $("#fTitle").textContent=p?"编辑":"添加产品";$("#saveBtn").textContent=p?"完成":"保存";
   $("#fName").value=F.name;$("#fBrand").value=F.brand;$("#fPrice").value=F.price??"";
   $("#fDelGrp").style.display=p?"":"none";
@@ -887,7 +966,7 @@ function closeForm(){const o=$("#formOv");o.classList.remove("open");o.setAttrib
 function capsHTML(list,cur,attr){return list.map(([v,l])=>`<button type="button" class="cap" data-${attr}="${v}" aria-pressed="${String(cur)===String(v)}">${l}</button>`).join("")}
 function renderForm(){
   const S=SHAPES[F.shape];
-  $("#fPhoto").innerHTML=F.photo?`<img src="${F.photo}" alt="产品照片">`:containerSVG({id:-4,shape:F.shape,total:1,left:.7,tint:F.tint},34,56);
+  $("#fPhoto").innerHTML=F.cutImg?`<img src="${F.cutImg.src}" alt="抠好的产品" style="object-fit:contain;padding:6px">`:F.photo?`<img src="${F.photo}" alt="产品照片">`:containerSVG({id:-4,shape:F.shape,total:1,left:.7,tint:F.tint},34,56);
   $("#fShapes").innerHTML=Object.entries(SHAPES).map(([k,s])=>`<button type="button" class="shp" role="radio" aria-checked="${k===F.shape}" aria-pressed="${k===F.shape}" data-shape="${k}">${miniShape(k)}${s.n}</button>`).join("");
   $("#fShapeHint").textContent=S.hint;
   $("#fCat").innerHTML=CATS.map(c=>`<option ${c===F.cat?"selected":""}>${c}</option>`).join("");
@@ -949,13 +1028,15 @@ $("#fExpDate").onchange=e=>{if(e.target.value){F.exp=e.target.value;renderForm()
 $("#moreBtn").onclick=()=>{const on=!$("#moreBox").classList.contains("on");$("#moreBox").classList.toggle("on",on);$("#moreBtn").setAttribute("aria-expanded",on)};
 $$("[data-fcancel]").forEach(b=>b.onclick=closeForm);
 $("#fDel").onclick=()=>{const p=editing;closeForm();closeDetail(()=>delItem(p))};
-["fCam","fLib"].forEach(id=>$("#"+id).onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;try{F.photo=await squareJPEG(f,320);renderForm();haptic()}catch{toast("这张照片读不了，换一张试试")}});
+["fCam","fLib"].forEach(id=>$("#"+id).onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
+  try{F.photo=await squareJPEG(f,320);F.cutImg=null;renderForm();haptic()}catch{toast("这张照片读不了，换一张试试");return}
+  });
 function squareJPEG(file,size){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{const s=Math.min(img.width,img.height),c=document.createElement("canvas");c.width=c.height=size;c.getContext("2d").drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,size,size);URL.revokeObjectURL(img.src);res(c.toDataURL("image/jpeg",.78))};img.onerror=rej;img.src=URL.createObjectURL(file)})}
 $("#form").onsubmit=e=>{
   e.preventDefault();const name=$("#fName").value.trim();if(!name)return;
   const S=SHAPES[F.shape],price=parseFloat($("#fPrice").value);
   const data={name,brand:$("#fBrand").value.trim(),cat:F.cat,shape:F.shape,mode:S.mode,unit:S.unit,total:S.mode==="est"?100:F.total,per:S.mode==="est"?S.per[0]:F.per,
-    opened:F.openMode==="no"?null:F.opened,pao:S.mode==="count"?null:F.pao,exp:F.exp,price:isNaN(price)?null:price,backup:F.backup,tint:F.tint,photo:F.photo,am:F.am,pm:F.pm};
+    opened:F.openMode==="no"?null:F.opened,pao:S.mode==="count"?null:F.pao,exp:F.exp,price:isNaN(price)?null:price,backup:F.backup,tint:F.tint,photo:F.photo,cutImg:F.cutImg,am:F.am,pm:F.pm};
   if(editing){
     const left=S.mode==="est"?F.left:Math.min(F.left,data.total);
     Object.assign(editing,data,{left});save();closeForm();if(cur===editing){$("#stage .fly").innerHTML=containerSVG(cur,150,244);fillDetail()}else render();toast("已保存修改");
@@ -988,11 +1069,12 @@ function welcome(){
   $$("#wTrio svg[data-wave]").forEach((s,i)=>{s._L={lv:0,v:0,e:0};setTimeout(()=>{s._override=[.55,.78,.4][i]},reduce?0:350+i*220)});
   const go=()=>{db.seen=true;save();w.classList.add("gone");w.setAttribute("aria-hidden","true")};
   $("#wAdd").onclick=()=>{go();setTimeout(()=>openForm(),300)};
-  $("#wDemo").onclick=()=>{seed();go();renderShelf()};
+  $("#wDemo").onclick=()=>{seed();go();render()};
 }
 
 /* ================= misc ================= */
 const SUN=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1"/></svg>`;
+const BRUSH=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 2.5l3 3-5.2 5.2-3-3z"/><path d="M5.3 7.7C3 8 2.6 10.2 2.4 13.6c3.4-.2 5.6-.6 5.9-2.9"/></svg>`;
 const MOON=`<svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.5 10.2A6 6 0 0 1 5.8 2.5a6 6 0 1 0 7.7 7.7z"/></svg>`;
 const DROP=`<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 2.5S4.5 9 4.5 12.5a5.5 5.5 0 0 0 11 0C15.5 9 10 2.5 10 2.5z"/></svg>`;
 const PEN=`<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M13.5 3.5l3 3L7 16H4v-3z"/></svg>`;
