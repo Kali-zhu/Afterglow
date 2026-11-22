@@ -70,6 +70,42 @@ svg.c{display:block;overflow:visible}
 .secondary:active{transform:scale(.96)}
 .link{color:var(--blue);font-size:15px;min-height:44px;padding:0 6px}
 
+
+/* cabinet (v3 shelf) */
+.worth{margin:0 0 14px}
+.worth .v{font-family:ui-rounded,"SF Pro Rounded",-apple-system,sans-serif;font-variant-numeric:tabular-nums;font-size:30px;font-weight:700;letter-spacing:-.01em;line-height:1.1}
+.worth .v small{font-size:15px;font-weight:500;color:var(--ink2);margin-left:6px;letter-spacing:0}
+.worth .m{font-size:14px;color:var(--ink2);margin-top:3px}.worth .m b{color:var(--ink);font-weight:600}
+.cab{margin:22px -20px 0;padding:0}
+.shelfhd{display:flex;align-items:baseline;justify-content:space-between;padding:0 20px;margin:0 0 2px}
+.shelfhd h2{font-size:20px;font-weight:600;margin:0}
+.shelfhd h2 .n{font-size:15px;font-weight:500;color:var(--ink2);margin-left:6px}
+.shelfhd small{font-size:13px;color:var(--ink2)}
+.bay{position:relative;margin-bottom:22px}
+.bay::before{content:"";position:absolute;left:0;right:0;top:28px;height:150px;pointer-events:none;
+  background:radial-gradient(52% 42% at 50% 55%,rgba(255,255,255,.6),transparent 100%)}
+@media (prefers-color-scheme:dark){.bay::before{background:radial-gradient(52% 42% at 50% 55%,rgba(255,255,255,.08),transparent 100%)}}
+.rail{position:relative;display:flex;align-items:flex-end;gap:6px;overflow-x:auto;scroll-snap-type:x proximity;padding:14px 20px 0;scroll-padding:0 20px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.rail::-webkit-scrollbar{display:none}
+.rail::after{content:"";flex:0 0 14px}
+.cab .item{flex:none;width:84px;scroll-snap-align:start;gap:6px;padding:0}
+.cab .item.narrow{width:62px}
+.cab .item .cw{height:118px;display:flex;align-items:flex-end;justify-content:center}
+.cab .item svg.c[data-wave]{-webkit-box-reflect:below 2px linear-gradient(transparent 74%,rgba(255,255,255,.18))}
+.cab .item .name{margin-top:14px;font-size:12.5px}
+.cab .item .meta{font-size:11px}
+.railwrap{position:relative}
+.glass{position:absolute;left:0;right:0;top:130px;height:10px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(255,255,255,.35) 2px,rgba(200,208,216,.35) 60%,rgba(0,0,0,.04));
+  border-top:1px solid rgba(255,255,255,.9);box-shadow:0 8px 12px -6px rgba(30,40,60,.18)}
+@media (prefers-color-scheme:dark){.glass{background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,.06) 2px,rgba(255,255,255,.03) 60%,transparent);border-top-color:rgba(255,255,255,.35);box-shadow:0 8px 14px -6px rgba(0,0,0,.6)}}
+.labels{display:flex;gap:6px;overflow:hidden;padding:30px 20px 0}
+.ghost{position:absolute;bottom:0;pointer-events:none;opacity:.55;filter:saturate(.6) brightness(1.05)}
+.ghost.g1{transform:translateX(12px) scale(.93);transform-origin:bottom center}
+.ghost.g2{transform:translateX(22px) scale(.86);transform-origin:bottom center;opacity:.35}
+.cw .stackn{position:absolute;left:-6px;top:-4px;min-width:22px;height:20px;padding:0 6px;border-radius:10px;font-size:11px;font-weight:700;background:var(--card);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.18),0 0 0 .5px var(--edge);display:grid;place-items:center;z-index:2}
+.more-end{flex:none;align-self:center;font-size:13px;color:var(--ink2);padding:0 6px 40px;white-space:nowrap}
+
 /* tab bar */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;justify-content:center;background:var(--bar);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);border-top:.5px solid var(--sep);padding-bottom:env(safe-area-inset-bottom)}
 .tabbar nav{display:flex;width:100%;max-width:440px}
@@ -238,7 +274,7 @@ svg.c{display:block;overflow:visible}
       <button class="icon-btn" id="addBtn" aria-label="添加产品"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 4v16M4 12h16"/></svg></button>
     </div>
     <h1>妆台</h1>
-    <p class="sub" id="shelfSub"></p>
+    <div class="worth" id="shelfSub"></div>
     <label class="search"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="q" type="search" placeholder="搜索名称或品牌" aria-label="搜索名称或品牌" enterkeyhint="search"></label>
     <div class="chips" id="chips" role="toolbar" aria-label="分类"><span class="chip-pill" id="pill"></span></div>
     <div id="shelves"></div>
@@ -421,8 +457,9 @@ function seed(){
     mk({name:"权力粉底液",brand:"Armani",cat:"彩妆",shape:"bottle",total:30,left:19,per:.4,uses:22,log:logs(6,"am"),opened:ago(400),pao:12,exp:plusDays(300),tint:LIQUIDS[6],price:590}),
     mk({name:"精华面霜",brand:"La Mer",shape:"jar",total:60,left:44,per:.6,uses:26,log:logs(9,"pm"),opened:ago(45),pao:12,exp:plusDays(800),tint:LIQUIDS[1],price:2800,pm:true}),
     mk({name:"氨基酸洁面",brand:"Freeplus",shape:"tube",total:100,left:38,per:1.5,uses:41,log:logs(14,"am"),opened:ago(70),pao:12,exp:plusDays(420),tint:LIQUIDS[4],price:150,am:true,pm:true}),
-    mk({name:"小金瓶防晒",brand:"Anessa",shape:"bottle",total:60,left:52,per:1,uses:8,log:logs(8,"am"),opened:ago(10),pao:12,exp:plusDays(26),tint:LIQUIDS[1],price:298,am:true}),
-    mk({name:"补水面膜",brand:"Dr.Jart+",shape:"sheet",total:10,left:7,per:1,uses:3,log:[{d:ago(2),r:"pm"},{d:ago(6),r:"pm"}],exp:plusDays(340),tint:LIQUIDS[2],price:199}),
+    mk({name:"小金瓶防晒",brand:"Anessa",shape:"bottle",total:60,left:52,per:1,uses:8,log:logs(8,"am"),opened:ago(10),pao:12,exp:plusDays(26),tint:LIQUIDS[1],price:298,am:true,backup:1}),
+    mk({name:"补水面膜",brand:"Dr.Jart+",shape:"sheet",total:10,left:7,per:1,uses:3,log:[{d:ago(2),r:"pm"},{d:ago(6),r:"pm"}],exp:plusDays(340),tint:LIQUIDS[2],price:199,backup:2}),
+    mk({name:"持妆粉底液",brand:"Estée Lauder",cat:"彩妆",shape:"bottle",total:30,left:24,per:.4,uses:9,log:logs(4,"am"),opened:ago(50),pao:12,exp:plusDays(500),tint:LIQUIDS[6],price:470,cut:["foundation",146,520,.31,.94]}),
     mk({name:"999 哑光",brand:"Dior",cat:"彩妆",shape:"stick",total:100,left:62,per:2,uses:30,log:logs(5,null),opened:ago(200),pao:24,exp:plusDays(600),tint:LIQUIDS[7],price:350}),
     mk({name:"四色眼影 #1",brand:"Tom Ford",cat:"彩妆",shape:"compact",total:100,left:70,per:1,uses:18,log:logs(4,null),opened:ago(260),pao:24,exp:plusDays(500),tint:LIQUIDS[6],price:720}),
     mk({name:"英国梨与小苍兰",brand:"Jo Malone",cat:"香氛",shape:"bottle",total:100,left:71,per:.3,uses:95,log:logs(7,null),opened:ago(300),pao:36,exp:plusDays(900),tint:LIQUIDS[3],price:1150}),
@@ -604,25 +641,39 @@ function metaFor(p){
   if(isLow(p))return[p.mode==="count"?`只剩 ${fmtN(p.left)} 片`:"快用完了","warn"];
   return[p.brand||SHAPES[p.shape].n,""];
 }
-function tileHTML(p){
-  const s=state(p),[meta,cls]=metaFor(p);
-  const badge=s!=="fresh"?`<span class="badge" style="background:${stateColor(s)}">!</span>`:p.backup?`<span class="badge r" style="background:var(--ink);color:var(--porcelain)">+${p.backup}</span>`:"";
-  return `<button class="item" data-id="${p.id}" aria-label="${esc(p.name)}，${esc(meta)}，剩余 ${p.mode==="count"?fmtN(p.left)+" 片":Math.round(level(p)*100)+"%"}">
-    <span class="cw">${containerSVG(p,64,104)}${badge}</span>
+const SIZE={bottle:[64,104],tube:[64,104],jar:[76,74],stick:[46,96],compact:[66,76],sheet:[60,84]};
+function tileHTML(p,group=[p]){
+  const s=state(p),[meta,cls]=metaFor(p),[w,h]=SIZE[p.shape]||[64,104];
+  const extra=group.length-1+(p.backup||0),c=cutOf(p);
+  let ghosts="";
+  if(extra&&c){const gh=Math.round(Math.min(h,w*c.h/c.w));
+    for(let k=Math.min(extra,2);k>=1;k--)ghosts+=`<img class="ghost g${k}" src="${c.src}" alt="" style="height:${gh}px">`;}
+  const badge=s!=="fresh"?`<span class="badge" style="background:${stateColor(s)}">!</span>`:"";
+  const stackn=extra?`<span class="stackn r">×${extra+1}</span>`:"";
+  const narrow=(p.shape==="stick"||p.shape==="sheet")?" narrow":"";
+  return `<button class="item${narrow}" data-id="${p.id}" aria-label="${esc(p.name)}，${esc(meta)}${extra?`，共 ${extra+1} 件`:""}，剩余 ${p.mode==="count"?fmtN(p.left)+" 片":Math.round(level(p)*100)+"%"}">
+    <span class="cw">${ghosts}${containerSVG(p,w,h)}${badge}${stackn}</span>
     <span class="name">${esc(p.name)}</span><span class="meta ${cls}">${esc(meta)}</span></button>`;
 }
+function groupSame(arr){const m=new Map();arr.forEach(p=>{const k=(p.brand+"|"+p.name).toLowerCase();m.has(k)?m.get(k).push(p):m.set(k,[p])});return[...m.values()]}
 function renderShelves(){
   const list=active();
   const n=list.length,urgent=list.filter(p=>state(p)!=="fresh").length;
-  $("#shelfSub").textContent=n?`${n} 件在用${urgent?`，${urgent} 件该先用掉`:"，都在保质期内"}`:"";
+  const worth=list.reduce((a,p)=>a+(+p.price||0)*(1+(p.backup||0)),0),brands=new Set(list.map(p=>p.brand).filter(Boolean)).size;
+  $("#shelfSub").innerHTML=n?`${worth?`<div class="v">¥${worth.toLocaleString("en-US")}<small>藏品总值</small></div>`:""}<div class="m"><b>${n}</b> 件在用${brands?` · <b>${brands}</b> 个品牌`:""}${urgent?` · <b>${urgent}</b> 件该先用掉`:" · 都在保质期内"}</div>`:"";
   const shown=list.filter(p=>(!filter||p.cat===filter)&&(!query||(p.name+" "+p.brand).toLowerCase().includes(query)))
     .sort((a,b)=>effExp(a).date.localeCompare(effExp(b).date));
   const first=shown.filter(p=>state(p)!=="fresh"||isLow(p)),rest=shown.filter(p=>!first.includes(p));
   let html="";
-  const sec=(t,arr,note)=>{html+=`<section><h2>${t}${note?`<small>${note}</small>`:""}</h2>`;
-    for(let i=0;i<arr.length;i+=3)html+=`<div class="row">${arr.slice(i,i+3).map(tileHTML).join("")}</div><div class="plank"></div>`;html+=`</section>`};
-  if(first.length)sec("该先用掉",first,"快过期或快用完");
-  if(rest.length)sec(first.length?"其他":"全部",rest);
+  const bay=(t,arr,note)=>{const groups=groupSame(arr),cnt=arr.length;
+    html+=`<section class="bay"><div class="shelfhd"><h2>${t}<span class="n r">${cnt}</span></h2>${note?`<small>${note}</small>`:""}</div>
+      <div class="railwrap"><div class="glass"></div><div class="rail">${groups.map(g=>tileHTML(g[0],g)).join("")}${groups.length>4?`<span class="more-end">共 ${cnt} 件</span>`:""}</div></div></section>`};
+  if(first.length)bay("该先用掉",first,"快过期或快用完");
+  const val=a=>{const v=a.reduce((x,p)=>x+(+p.price||0),0);return v?`¥${v.toLocaleString("en-US")}`:""};
+  const small=[],smallCats=[];
+  CATS.forEach(cat=>{const a=rest.filter(p=>p.cat===cat);if(!a.length)return;if(a.length<3&&!filter){small.push(...a);smallCats.push(cat)}else bay(cat,a,val(a))});
+  if(small.length)bay(smallCats.length>1?smallCats.join(" · "):smallCats[0],small,val(small));
+  if(n&&shown.length)html=`<div class="cab">${html}</div>`;
   if(!n)html=`<div class="empty">${containerSVG({id:-1,shape:"bottle",total:1,left:.12,tint:LIQUIDS[0],demoCut:1},64,104)}<b>架子还是空的</b>拍一下你手边那瓶，十几秒就加好。<br><button class="primary" style="margin-top:18px" onclick="openForm()">添加第一件</button></div>`;
   else if(!shown.length)html=`<div class="empty"><b>没有找到</b>换个关键词或分类试试。</div>`;
   $("#shelves").innerHTML=html;
