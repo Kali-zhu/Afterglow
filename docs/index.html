@@ -161,6 +161,30 @@ svg.c{display:block;overflow:visible}
 .ewall .item{cursor:default}
 .ewall .rail{padding-top:4px}.ewall .bay{margin-bottom:10px}
 .ewall .item .meta{white-space:normal;line-height:1.35}
+/* home v3 */
+.ritual{cursor:pointer;transition:transform .3s var(--spring)}
+.ritual:active{transform:scale(.98)}
+.ritual .cta{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0 18px}
+.ritual .cta .next{padding:0}
+.ritual .go{flex:none;height:40px;padding:0 18px;border-radius:20px;background:var(--ink);color:var(--porcelain);font-size:15px;font-weight:600;display:flex;align-items:center;gap:4px}
+.others{display:flex;gap:10px;margin-top:12px}
+.others button{flex:1;display:flex;align-items:center;gap:10px;background:var(--card);border-radius:18px;padding:12px 14px;text-align:left}
+.others svg{width:18px;height:18px;flex:none;color:var(--ink2)}
+.others b{display:block;font-size:15px;font-weight:600}.others span{font-size:12px;color:var(--ink2)}
+.nudge{display:flex;align-items:center;gap:14px;background:var(--card);border-radius:22px;padding:14px 16px;margin-top:22px}
+.nudge .t{flex:1;min-width:0}
+.nudge .t p{margin:0;font-size:15px;line-height:1.45}.nudge .t p b{font-weight:600}
+.nudge .acts{display:flex;gap:8px;margin-top:10px}
+.nudge .acts button{height:32px;padding:0 14px;border-radius:16px;background:var(--fill);font-size:14px;font-weight:600}
+.nudge .acts button.pri{background:var(--ink);color:var(--porcelain)}
+/* ritual page */
+.rpage{position:fixed;inset:0;z-index:9;background:var(--porcelain);overflow-y:auto;transform:translateX(100%);transition:transform .45s var(--spring);padding:0 20px calc(40px + env(safe-area-inset-bottom))}
+.rpage.open{transform:none}
+.rpage .rnav{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;height:52px;margin:0 -20px;padding:env(safe-area-inset-top) 12px 0;background:var(--bar);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-sizing:content-box}
+.rpage .rnav button{color:var(--blue);font-size:17px;min-height:44px;padding:0 8px;display:flex;align-items:center;gap:2px}
+.rpage h1{margin-top:8px}
+.pick .li .check{border-radius:8px}
+.pick .li.done .t b{color:var(--ink)}
 /* tab bar */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;justify-content:center;background:var(--bar);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);border-top:.5px solid var(--sep);padding-bottom:env(safe-area-inset-bottom)}
 .tabbar nav{display:flex;width:100%;max-width:440px}
@@ -329,9 +353,9 @@ svg.c{display:block;overflow:visible}
     <div class="nav"></div>
     <p class="eyebrow" id="todaySub"></p>
     <h1 id="hello">今日</h1>
-    <div class="seg" id="seg" role="tablist" aria-label="流程"><span class="pill"></span></div>
-    <div id="ritual"></div>
-    <div id="routines"></div>
+    <div id="ritual" style="margin-top:16px"></div>
+    <div class="others" id="others"></div>
+    <div id="nudge"></div>
   </div>
   <!-- 妆台 -->
   <div class="tab" id="t-shelf" role="tabpanel" aria-label="藏品">
@@ -361,6 +385,13 @@ svg.c{display:block;overflow:visible}
   <button role="tab" aria-selected="false" data-tab="empty"><svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="9" y="3" width="8" height="4" rx="1.2"/><path d="M8 9.5Q8 8 9.5 8h7Q18 8 18 9.5V21q0 2-2 2h-6q-2 0-2-2z"/><path d="M8 17h10" stroke-dasharray="2 2"/></svg>空瓶</button>
 </nav></div>
 
+<!-- ritual page -->
+<div class="rpage" id="rpage" aria-hidden="true" role="dialog" aria-label="流程">
+  <div class="rnav"><button id="rBack"><svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2L2 10l8 8"/></svg>今日</button><button id="rEdit">调整</button></div>
+  <h1 id="rTitle"></h1>
+  <div class="seg" id="rseg" role="tablist" aria-label="流程"></div>
+  <div id="rbody"></div>
+</div>
 <!-- detail -->
 <div class="ov detail" id="detail" aria-hidden="true">
   <div class="bd" data-close></div>
@@ -520,7 +551,7 @@ function seed(){
     mk({name:"补水面膜",brand:"Dr.Jart+",shape:"sheet",total:10,left:7,per:1,uses:3,log:[{d:ago(2),r:"pm"},{d:ago(6),r:"pm"}],exp:plusDays(340),tint:LIQUIDS[2],price:199,backup:2}),
     mk({name:"持妆粉底液",brand:"Estée Lauder",cat:"彩妆",shape:"bottle",total:30,left:24,per:.4,uses:9,log:logs(4,"am"),opened:ago(50),pao:12,exp:plusDays(500),tint:LIQUIDS[6],price:470,cut:["foundation",146,520,.31,.94]}),
     mk({name:"999 哑光",brand:"Dior",cat:"彩妆",shape:"stick",total:100,left:62,per:2,uses:30,log:logs(5,null),opened:ago(200),pao:24,exp:plusDays(600),tint:LIQUIDS[7],price:350}),
-    mk({name:"四色眼影 #1",brand:"Tom Ford",cat:"彩妆",shape:"compact",total:100,left:70,per:1,uses:18,log:logs(4,null),opened:ago(260),pao:24,exp:plusDays(500),tint:LIQUIDS[6],price:720}),
+    mk({name:"四色眼影 #1",brand:"Tom Ford",cat:"彩妆",shape:"compact",total:100,left:70,per:1,uses:18,log:[{d:ago(12),r:"mk"},{d:ago(16),r:"mk"}],opened:ago(260),pao:24,exp:plusDays(500),tint:LIQUIDS[6],price:720}),
     mk({name:"英国梨与小苍兰",brand:"Jo Malone",cat:"香氛",shape:"bottle",total:100,left:71,per:.3,uses:95,log:logs(7,null),opened:ago(300),pao:36,exp:plusDays(900),tint:LIQUIDS[3],price:1150}),
     mk({name:"维C精华",brand:"Skinceuticals",shape:"bottle",total:30,left:12,per:.5,uses:36,log:logs(3,"am"),opened:ago(190),pao:6,exp:plusDays(200),tint:LIQUIDS[0],price:1390}),
     mk({name:"护发精油",brand:"Moroccanoil",cat:"头发",shape:"bottle",total:100,left:63,per:1,uses:37,log:logs(4,null),opened:ago(120),pao:12,exp:plusDays(300),tint:LIQUIDS[0],price:330}),
@@ -893,32 +924,62 @@ let rsel=null;
 function stepRank(p){const n=p.name;const K=[["卸妆",0],["洁面",1],["洗面",1],["水",2],["精华",3],["面膜",4],["眼",5],["乳",6],["霜",6],["油",7],["防晒",8],["隔离",9],["妆前",9],["粉底",10],["遮瑕",11],["粉",12],["眉",13],["眼影",14],["睫毛",15],["腮红",16],["口红",17],["唇",17],["香",18]];
   for(const[k,r]of K)if(n.includes(k))return r;return{tube:1,bottle:3,sheet:4,jar:6,compact:12,stick:17}[p.shape]??8}
 const fmtLeft=p=>p.mode==="count"?`剩 ${fmtN(p.left)} 片`:p.mode==="est"?`约 ${Math.round(p.left)}%`:`剩 ${fmtN(p.left)} ${p.unit}`;
+const OK_I=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg>`;
+const rItems=k=>active().filter(p=>inR(p,k)).sort((a,b)=>stepRank(a)-stepRank(b));
+const lastUsed=p=>p.log.length?p.log.reduce((m,l)=>l.d>m?l.d:m,p.log[0].d):null;
+function pickNudge(){
+  if(db.nudgeOff===todayISO())return null;
+  const c=active().filter(p=>p.left>0&&p.opened&&!usedToday(p)).map(p=>{const lu=lastUsed(p),gap=lu?-daysTo(lu):null;return{p,gap}})
+    .filter(x=>x.gap!==null&&x.gap>=7).sort((a,b)=>(state(b.p)!=="fresh")-(state(a.p)!=="fresh")||b.gap-a.gap);
+  if(c.length)return c[0];
+  const soon=active().filter(p=>p.left>0&&state(p)==="soon"&&!usedToday(p));
+  return soon.length?{p:soon[0],gap:null}:null;
+}
 function renderToday(){
   const d=new Date(),hour=d.getHours();
   $("#todaySub").textContent=d.toLocaleDateString("zh-CN",{month:"long",day:"numeric",weekday:"long"});
   $("#hello").textContent=hour<5?"夜深了":hour<11?"早上好":hour<14?"中午好":hour<18?"下午好":"晚上好";
-  if(!rsel)rsel=hour>=16||hour<4?"pm":"am";
-  const ix=RT.findIndex(r=>r[0]===rsel);
-  $("#seg").innerHTML=`<span class="pill" style="transform:translateX(${ix*100}%)"></span>`+RT.map(([k,n,ic])=>`<button role="tab" aria-selected="${k===rsel}" data-k="${k}">${ic()}${n}</button>`).join("");
-  $$("#seg button").forEach(b=>b.onclick=()=>{if(rsel===b.dataset.k)return;rsel=b.dataset.k;haptic(4);renderToday()});
-  const [k,,,title]=RT[ix],l=active().filter(p=>inR(p,k)).sort((a,b)=>stepRank(a)-stepRank(b)),done=l.filter(p=>usedToday(p,k)).length,next=l.find(p=>!usedToday(p,k));
-  const okI=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg>`;
+  const now=hour>=16||hour<4?"pm":"am";
+  const ix=RT.findIndex(r=>r[0]===now),[k,nm,,title]=RT[ix];
+  const l=rItems(k),done=l.filter(p=>usedToday(p,k)).length,next=l.find(p=>!usedToday(p,k));
   const SZ={bottle:[40,64],tube:[40,64],jar:[52,48],stick:[28,58],compact:[46,52],sheet:[40,56]};
-  $("#ritual").innerHTML=`<div class="ritual ${k}"><div class="top"><div><b>${title}</b><span>${l.length?`${l.length} 步`:"还没有产品"}</span></div>${l.length?`<span class="prog">${done===l.length?"完成 ✓":`${done} / ${l.length}`}</span>`:""}</div>
-    ${l.length?`<div class="row">${l.map(p=>{const[w,h]=SZ[p.shape]||SZ.bottle,u=usedToday(p,k);return `<span class="pi ${u?"done":""}">${containerSVG(p,w,h)}${u?`<i class="ok">${okI}</i>`:""}</span>`}).join("")}</div><div class="plank"></div>`:""}
-    <div class="next">${!l.length?`去藏品里打开任意产品，点「${RT[ix][1]}」加进来。`:next?`下一步 <b>${esc(next.name)}</b>`:k==="mk"?"妆好了，出门吧。":`${RT[ix][1]}的步骤都做完了。`}</div></div>`;
+  const all=l.length&&done===l.length;
+  $("#ritual").innerHTML=`<div class="ritual ${k}" data-open-r="${k}" role="button" aria-label="打开${title}"><div class="top"><div><b>${title}</b><span>${l.length?`${l.length} 步${done?` · 已完成 ${done}`:""}`:"还没挑产品"}</span></div>${l.length?`<span class="prog">${all?"完成 ✓":`${done} / ${l.length}`}</span>`:""}</div>
+    ${l.length?`<div class="row">${l.map(p=>{const[w,h]=SZ[p.shape]||SZ.bottle,u=usedToday(p,k);return `<span class="pi ${u?"done":""}">${containerSVG(p,w,h)}${u?`<i class="ok">${OK_I}</i>`:""}</span>`}).join("")}</div><div class="plank"></div>`:""}
+    <div class="cta"><div class="next">${!l.length?"挑几件今天要用的":all?`${nm}都做完了${k==="pm"?"，晚安":""}`:`下一步 <b>${esc(next.name)}</b>`}</div><span class="go">${!l.length?"去挑选":all?"查看":done?"继续":"开始"}</span></div></div>`;
+  $("#others").innerHTML=RT.filter(r=>r[0]!==k).map(([kk,n,ic])=>{const ll=rItems(kk),dd=ll.filter(p=>usedToday(p,kk)).length;
+    return `<button data-open-r="${kk}">${ic()}<span><b>${n}</b><span>${ll.length?(dd===ll.length?"已完成":`${ll.length} 步${dd?` · 完成 ${dd}`:""}`):"未设置"}</span></span></button>`}).join("");
+  const nd=pickNudge();
+  $("#nudge").innerHTML=nd?`<div class="nudge">${containerSVG(nd.p,34,54)}<div class="t"><p>${nd.gap!==null?`很久没用 <b>${esc(nd.p.name)}</b> 啦，已经 ${nd.gap} 天了，今天要不要试试～`:`<b>${esc(nd.p.name)}</b> ${metaFor(nd.p)[0]}，趁还新鲜多用用吧～`}</p>
+    <div class="acts"><button class="pri" data-nuse="${nd.p.id}">今天用了</button><button data-nskip>改天吧</button></div></div></div>`:"";
+  $$("#t-today [data-open-r]").forEach(b=>b.onclick=()=>openRitual(b.dataset.openR));
+  const nu=$("#nudge [data-nuse]");if(nu)nu.onclick=()=>{const p=byId(+nu.dataset.nuse);const r=logUse(p);toast(`记好了，${p.name} 用了一次`);renderToday()};
+  const ns=$("#nudge [data-nskip]");if(ns)ns.onclick=()=>{db.nudgeOff=todayISO();save();haptic(4);renderToday()};
+}
+let rcur="am",redit=false;
+function openRitual(k){rcur=k;redit=!rItems(k).length;renderRitual();const r=$("#rpage");r.classList.add("open");r.setAttribute("aria-hidden","false");r.scrollTop=0;haptic(4)}
+function closeRitual(){const r=$("#rpage");r.classList.remove("open");r.setAttribute("aria-hidden","true");renderToday()}
+$("#rBack").onclick=closeRitual;
+$("#rEdit").onclick=()=>{redit=!redit;renderRitual();haptic(4)};
+function renderRitual(){
+  const ix=RT.findIndex(r=>r[0]===rcur),[k,nm,,title]=RT[ix];
+  $("#rTitle").textContent=title;$("#rEdit").textContent=redit?"完成":"调整";
+  $("#rseg").innerHTML=`<span class="pill" style="transform:translateX(${ix*100}%)"></span>`+RT.map(([kk,n,ic])=>`<button role="tab" aria-selected="${kk===k}" data-k="${kk}">${ic()}${n}</button>`).join("");
+  $$("#rseg button").forEach(b=>b.onclick=()=>{if(rcur===b.dataset.k)return;rcur=b.dataset.k;redit=!rItems(rcur).length;haptic(4);renderRitual()});
   let html="";
-  if(l.length)html+=`<div class="list steps">${l.map((p,i)=>{const u=usedToday(p,k);return `<button class="li ${u?"done":""}" data-id="${p.id}" data-r="${k}" aria-pressed="${u}"><span class="no">${i+1}</span><span class="pic">${containerSVG(p,26,42)}</span><span class="t"><b>${esc(p.name)}</b><span>${esc(p.brand?p.brand+" · ":"")}${fmtLeft(p)}${state(p)!=="fresh"?` · <span style="color:${stateColor(state(p))}">${metaFor(p)[0]}</span>`:""}</span></span><span class="check">${okI.replace('stroke-width="2.6"','stroke-width="2.4"')}</span></button>`}).join("")}</div>`;
-  const pri=active().filter(p=>!inR(p,k)&&state(p)!=="fresh").slice(0,6);
-  if(pri.length)html+=`<section><h2>今天也可以用<small>快到期了</small></h2><div class="quick">${pri.map(p=>`<button data-open="${p.id}">${containerSVG(p,22,36)}<span><b>${esc(p.name)}</b><span style="color:${stateColor(state(p))}">${metaFor(p)[0]}</span></span></button>`).join("")}</div></section>`;
-  $("#routines").innerHTML=html;
-  $$("#routines .li[data-id]").forEach(b=>b.onclick=()=>{
-    const p=byId(+b.dataset.id),k=b.dataset.r;
-    if(usedToday(p,k)){undoUse(p,k);haptic(4)}
-    else{if(p.left<=0){toast("这件已经用完了");return}const r=logUse(p,k);const c=b.querySelector(".check");const m=document.createElement("i");m.className="mini-drop";m.style.background=p.tint;c.appendChild(m);b.classList.add("done");if(r.msg)toast(r.msg)}
-    setTimeout(()=>{renderToday();if(p.left<=0)toast(`${p.name} 用完了，去藏品把它放进空瓶吧`)},reduce?0:380);
-  });
-  $$("#routines [data-open]").forEach(b=>b.onclick=()=>openDetail(+b.dataset.open,b));
+  if(redit){
+    const all=active().slice().sort((a,b)=>(inR(b,k)-inR(a,k))||stepRank(a)-stepRank(b));
+    html+=`<p class="sub" style="margin:0 0 10px">勾选${nm}要用的产品，顺序会自动排好。</p><div class="list pick">${all.map(p=>{const on=inR(p,k);return `<button class="li ${on?"done":""}" data-tg="${p.id}" aria-pressed="${on}"><span class="pic" style="width:34px;display:flex;justify-content:center">${containerSVG(p,26,42)}</span><span class="t"><b>${esc(p.name)}</b><span>${esc(p.brand||p.cat)}</span></span><span class="check">${OK_I}</span></button>`}).join("")}</div>`;
+  }else{
+    const l=rItems(k);
+    html+=`<div class="list steps">${l.map((p,i)=>{const u=usedToday(p,k);return `<button class="li ${u?"done":""}" data-id="${p.id}" aria-pressed="${u}"><span class="no">${i+1}</span><span class="pic">${containerSVG(p,26,42)}</span><span class="t"><b>${esc(p.name)}</b><span>${esc(p.brand?p.brand+" · ":"")}${fmtLeft(p)}${state(p)!=="fresh"?` · <span style="color:${stateColor(state(p))}">${metaFor(p)[0]}</span>`:""}</span></span><span class="check">${OK_I}</span></button>`}).join("")}</div>
+      <p class="hint">点一下记一次，再点撤销。右上角「调整」增减产品。</p>`;
+  }
+  $("#rbody").innerHTML=html;
+  $$("#rbody [data-tg]").forEach(b=>b.onclick=()=>{const p=byId(+b.dataset.tg);p[k]=!inR(p,k);save();haptic(4);renderRitual()});
+  $$("#rbody .li[data-id]").forEach(b=>b.onclick=()=>{const p=byId(+b.dataset.id);
+    if(usedToday(p,k)){undoUse(p,k);haptic(4)}else{if(p.left<=0){toast("这件已经用完了");return}const r=logUse(p,k);b.classList.add("done");if(r.msg)toast(r.msg)}
+    setTimeout(()=>{renderRitual();if(p.left<=0)toast(`${p.name} 用完了，去藏品把它放进空瓶吧`)},reduce?0:300)});
 }
 
 /* ================= empties ================= */
