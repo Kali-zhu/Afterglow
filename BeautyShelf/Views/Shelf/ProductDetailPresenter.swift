@@ -60,11 +60,15 @@ struct DetailTransitionSource: ViewModifier {
 
     @ViewBuilder
     func body(content: Content) -> some View {
+        #if compiler(>=6.0)
         if #available(iOS 18.0, *), let ns {
             content.matchedTransitionSource(id: id, in: ns)
         } else {
             content
         }
+        #else
+        content
+        #endif
     }
 }
 
