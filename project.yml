@@ -5,7 +5,7 @@ options:
     iOS: "17.0"
 settings:
   base:
-    MARKETING_VERSION: "0.2.0"
+    MARKETING_VERSION: "0.3.0"
     CURRENT_PROJECT_VERSION: "1"
     SWIFT_VERSION: "5.9"
 targets:
@@ -27,6 +27,7 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_CFBundleDisplayName: 妆台
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         INFOPLIST_KEY_NSCameraUsageDescription: "拍一张产品照片：自动把产品从背景里抠出来放上妆台，并识别保质期和容量。"
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "从相册选一张产品照片：自动抠图放上妆台，并识别保质期和容量。"
         INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: "把生成的空瓶记图片存到相册。"
