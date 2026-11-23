@@ -15,6 +15,7 @@ struct ProductDetailView: View {
     @Environment(AppCoordinator.self) var coordinator
     @Environment(\.modelContext) var context
     @Environment(\.accessibilityReduceMotion) var reduceMotion
+    @Environment(\.colorScheme) var scheme
     /// 每记一次（手势或按钮）+1：液面晃动、触感
     @State var uses = 0
     /// 只有按钮触发时 +1：实物自动演示一遍动作
@@ -64,17 +65,17 @@ struct ProductDetailView: View {
                     }
                     usageDots
                     slotToggles
+                    actions
+                        .padding(.top, 8)
                 }
                 .padding(.horizontal, 24)
-                .padding(.bottom, 24)
+                .padding(.bottom, 32)
                 .opacity(revealed ? 1 : 0)
             }
             .scrollIndicators(.hidden)
-            .safeAreaInset(edge: .bottom) { useButton }
 
             topBar
         }
-        .environment(\.colorScheme, .dark)
         .onAppear {
             MotionService.shared.begin()
             withAnimation(.easeOut(duration: 0.25).delay(0.12)) { revealed = true }
@@ -274,8 +275,8 @@ struct ProductDetailView: View {
                         .font(.body.weight(.semibold))
                         .padding(.horizontal, 22)
                         .frame(minHeight: 46)
-                        .foregroundStyle(on ? Color.black : Color.white.opacity(0.85))
-                        .background(Capsule().fill(on ? Color.white.opacity(0.95) : Color.white.opacity(0.1)))
+                        .foregroundStyle(on ? inkReverse : Color.primary.opacity(0.85))
+                        .background(Capsule().fill(on ? ink : soft))
                 }
                 .buttonStyle(.plain)
                 .accessibilityValue(on ? "已加入" : "未加入")
@@ -284,57 +285,25 @@ struct ProductDetailView: View {
         .padding(.top, 4)
     }
 
-    // MARK: 背景：近黑 + 产品色的柔光
+    // MARK: 配色：白天瓷白、夜间近黑，跟随系统
+
+    private var dark: Bool { scheme == .dark }
+    private var stage: Color { dark ? Color(hex: "0E0F12") : Color(hex: "F6F6F7") }
+    /// 主色：夜间白、白天黑
+    private var ink: Color { dark ? Color.white.opacity(0.95) : Color(hex: "1C1C1E") }
+    private var inkReverse: Color { dark ? .black : .white }
+    private var soft: Color { Color.primary.opacity(dark ? 0.1 : 0.07) }
+
+    // MARK: 背景：产品色的柔光
 
     private var backdrop: some View {
         ZStack {
-            Color(hex: "0E0F12")
-            RadialGradient(colors: [product.tint.opacity(0.22), .clear], center: UnitPoint(x: 0.15, y: 0.28), startRadius: 0, endRadius: 260)
-            RadialGradient(colors: [product.tint.opacity(0.14), .clear], center: UnitPoint(x: 0.85, y: 0.48), startRadius: 0, endRadius: 240)
-            RadialGradient(colors: [Color.white.opacity(0.06), .clear], center: UnitPoint(x: 0.5, y: 0.32), startRadius: 0, endRadius: 300)
+            stage
+            RadialGradient(colors: [product.tint.opacity(dark ? 0.22 : 0.16), .clear], center: UnitPoint(x: 0.15, y: 0.28), startRadius: 0, endRadius: 260)
+            RadialGradient(colors: [product.tint.opacity(dark ? 0.14 : 0.1), .clear], center: UnitPoint(x: 0.85, y: 0.48), startRadius: 0, endRadius: 240)
+            RadialGradient(colors: [Color.white.opacity(dark ? 0.06 : 0.7), .clear], center: UnitPoint(x: 0.5, y: 0.32), startRadius: 0, endRadius: 300)
         }
         .ignoresSafeArea()
-    }
-
-    // MARK: 日期
-
-    private var datesCard: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            row("开封", product.openedDate.map { Fmt.day($0) } ?? "还没开封（第一次使用时自动记录）")
-            Divider()
-            row("开封后保质", product.paoMonths.map { "\($0) 个月" } ?? "未填")
-            Divider()
-            row("包装到期日", Fmt.day(product.expiryDate))
-            Divider()
-            HStack(alignment: .firstTextBaseline) {
-                Circle().fill(product.expiryState.color).frame(width: 8, height: 8)
-                Text("会在 \(Fmt.day(product.effectiveExpiry)) 过期（\(product.expiryBasis.text)）")
-                    .font(.subheadline.weight(.medium))
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .padding(.vertical, 12)
-            if let price = product.price {
-                Divider()
-                row("价格", product.costPerUse.map { "\(Fmt.money(price)) · 每次 \(Fmt.money($0))" } ?? Fmt.money(price))
-            }
-            if product.backupStock > 0 {
-                Divider()
-                row("备用库存", "\(product.backupStock) 件")
-            }
-        }
-        .padding(.horizontal, 16)
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Theme.card))
-    }
-
-    private func row(_ title: String, _ value: String) -> some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text(title).foregroundStyle(.secondary)
-            Spacer(minLength: 12)
-            Text(value).multilineTextAlignment(.trailing)
-        }
-        .font(.subheadline)
-        .padding(.vertical, 12)
-        .accessibilityElement(children: .combine)
     }
 
     // MARK: 最近 14 天
@@ -348,7 +317,7 @@ struct ProductDetailView: View {
             HStack(spacing: 7) {
                 ForEach(days, id: \.self) { day in
                     Circle()
-                        .fill(product.used(on: day) ? Color.white : Color.white.opacity(0.14))
+                        .fill(product.used(on: day) ? ink : Color.primary.opacity(0.12))
                         .frame(width: 10, height: 10)
                 }
             }
@@ -362,14 +331,14 @@ struct ProductDetailView: View {
 
     // MARK: 操作
 
-    private var useButton: some View {
+    private var actions: some View {
         VStack(spacing: 12) {
             Button { logUse(fromGesture: false) } label: {
                 Text("用了一次")
                     .font(.title3.weight(.semibold))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(inkReverse)
                     .frame(maxWidth: .infinity, minHeight: 56)
-                    .background(Capsule().fill(Color.white.opacity(0.95)))
+                    .background(Capsule().fill(ink))
             }
             .buttonStyle(ShelfPressStyle())
             .disabled(product.isFinished)
@@ -385,23 +354,15 @@ struct ProductDetailView: View {
             }
             .disabled(product.isFinished)
         }
-        .padding(.horizontal, 24)
-        .padding(.top, 10)
-        .padding(.bottom, 8)
-        .background(alignment: .bottom) {
-            LinearGradient(colors: [Color(hex: "0E0F12").opacity(0), Color(hex: "0E0F12")], startPoint: .top, endPoint: .center)
-                .ignoresSafeArea()
-        }
-        .opacity(revealed ? 1 : 0)
     }
 
     private func darkPill(_ title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
                 .font(.title3.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
                 .frame(maxWidth: .infinity, minHeight: 56)
-                .background(Capsule().fill(Color.white.opacity(0.1)))
+                .background(Capsule().fill(soft))
         }
         .buttonStyle(ShelfPressStyle())
     }
@@ -412,9 +373,9 @@ struct ProductDetailView: View {
                 Button(action: close) {
                     Image(systemName: "xmark")
                         .font(.title3.weight(.semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(.primary)
                         .frame(width: 50, height: 50)
-                        .background(Circle().fill(Color.white.opacity(0.1)))
+                        .background(Circle().fill(soft))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("关闭")
@@ -431,19 +392,19 @@ struct ProductDetailView: View {
                 } label: {
                     Image(systemName: product.isPinned ? "star.fill" : "ellipsis")
                         .font(.body.weight(.semibold))
-                        .foregroundStyle(product.isPinned ? Theme.honey : .white)
+                        .foregroundStyle(product.isPinned ? Theme.honey : .primary)
                         .frame(width: 50, height: 50)
-                        .background(Circle().fill(Color.white.opacity(0.1)))
+                        .background(Circle().fill(soft))
                 }
                 .accessibilityLabel("更多操作")
 
                 Button { coordinator.editor = .edit(product) } label: {
                     Text("编辑")
                         .font(.title3.weight(.semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(.primary)
                         .padding(.horizontal, 20)
                         .frame(height: 50)
-                        .background(Capsule().fill(Color.white.opacity(0.1)))
+                        .background(Capsule().fill(soft))
                 }
                 .buttonStyle(.plain)
             }

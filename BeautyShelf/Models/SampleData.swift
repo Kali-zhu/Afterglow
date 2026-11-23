@@ -39,6 +39,7 @@ enum SampleData {
         serum.inEvening = true
         serum.pinnedAt = now.addingTimeInterval(-2)
         fillLog(serum, hour: 22, skipEvery: 4, extraUses: 30)
+        serum.cutout = cutout("serum")
         items.append(serum)
 
         // 2. 化妆水
@@ -51,6 +52,7 @@ enum SampleData {
         toner.pinnedAt = now
         toner.inEvening = true
         fillLog(toner, hour: 8, skipEvery: 6, extraUses: 18)
+        toner.cutout = cutout("toner")
         items.append(toner)
 
         // 3. 洁面
@@ -64,6 +66,7 @@ enum SampleData {
         cleanser.pinnedAt = now.addingTimeInterval(-3)
         cleanser.inEvening = true
         fillLog(cleanser, hour: 8, skipEvery: 7, extraUses: 30)
+        cleanser.cutout = cutout("cleanser")
         items.append(cleanser)
 
         // 4. 防晒
@@ -75,6 +78,7 @@ enum SampleData {
         sunscreen.inMorning = true
         sunscreen.pinnedAt = now.addingTimeInterval(-1)
         fillLog(sunscreen, hour: 8, skipEvery: 5, extraUses: 0)
+        sunscreen.cutout = cutout("sunscreen")
         items.append(sunscreen)
 
         // 5. 面霜
@@ -86,6 +90,7 @@ enum SampleData {
         cream.inEvening = true
         cream.pinnedAt = now.addingTimeInterval(-4)
         fillLog(cream, hour: 22, skipEvery: 5, extraUses: 25)
+        cream.cutout = cutout("cream")
         items.append(cream)
 
         // 6. 面膜：剩 7 / 共 10 片
@@ -96,6 +101,7 @@ enum SampleData {
         masks.price = 99
         masks.useLog = [ago(days: 9), ago(days: 6), ago(days: 2)]
         masks.useCount = 3
+        masks.cutout = cutout("mask")
         items.append(masks)
 
         // 7. 口红：估算剩余
@@ -106,6 +112,7 @@ enum SampleData {
         lipstick.price = 350
         lipstick.useCount = 46
         lipstick.useLog = [ago(days: 11), ago(days: 8), ago(days: 5), ago(days: 3), ago(days: 1)]
+        lipstick.cutout = cutout("lipstick")
         items.append(lipstick)
 
         // 8. 眼影盘：估算剩余
@@ -116,6 +123,7 @@ enum SampleData {
         palette.price = 189
         palette.useCount = 21
         palette.useLog = [ago(days: 12), ago(days: 7), ago(days: 4)]
+        palette.cutout = cutout("palette")
         items.append(palette)
 
         // 9. 已过期：粉底液开封 13 个月，PAO 12M
@@ -125,6 +133,7 @@ enum SampleData {
                                  tintHex: "D9B38C")
         foundation.price = 420
         foundation.useCount = 66
+        foundation.cutout = cutout("foundation")
         items.append(foundation)
 
         // 10. 快到期：还没开封的眼霜，包装到期日 18 天后
@@ -133,6 +142,7 @@ enum SampleData {
                                expiryDate: ahead(days: 18), openedDate: nil, paoMonths: 12,
                                tintHex: "F2C4C9")
         eyeCream.price = 520
+        eyeCream.cutout = cutout("balm")
         items.append(eyeCream)
 
         // 11. 香水
@@ -142,6 +152,7 @@ enum SampleData {
                               tintHex: "D5C6E8")
         perfume.price = 1150
         perfume.useCount = 73
+        perfume.cutout = cutout("perfume")
         items.append(perfume)
 
         // 12、13. 空瓶
@@ -153,6 +164,7 @@ enum SampleData {
         emptySerum.useCount = 58
         emptySerum.finishedDate = ago(days: 20)
         emptySerum.needsRestock = true
+        emptySerum.cutout = cutout("vitc")
         items.append(emptySerum)
 
         let handCream = Product(name: "乳木果护手霜", brand: "欧舒丹", category: .body, kind: .tube,
@@ -162,6 +174,7 @@ enum SampleData {
         handCream.price = 85
         handCream.useCount = 41
         handCream.finishedDate = ago(months: 2)
+        handCream.cutout = cutout("bodylotion")
         items.append(handCream)
 
         for p in items {
@@ -169,6 +182,32 @@ enum SampleData {
             context.insert(p)
         }
         try? context.save()
+    }
+
+    /// 网页预览里那套真实产品抠图（打包在 App 里）
+    static func cutout(_ name: String) -> Data? {
+        guard let url = Bundle.main.url(forResource: name, withExtension: "webp") else { return nil }
+        return try? Data(contentsOf: url)
+    }
+
+    /// 名字 → 抠图。老版本装进去的示例没有图，启动时补上
+    static let cutoutByName: [String: String] = [
+        "小棕瓶精华": "serum", "护肤精华露 神仙水": "toner", "氨基酸洁面乳": "cleanser",
+        "水感防晒精华": "sunscreen", "高保湿面霜": "cream", "补水修护面膜": "mask",
+        "烈艳蓝金唇膏 999": "lipstick", "四色眼影盘 裸杏": "palette", "DW 持妆粉底液": "foundation",
+        "抗蓝光眼霜": "balm", "英国梨与小苍兰": "perfume", "玻尿酸 B5 精华": "vitc", "乳木果护手霜": "bodylotion"
+    ]
+
+    static func attachMissingCutouts(in context: ModelContext) {
+        guard let samples = try? context.fetch(FetchDescriptor<Product>(predicate: #Predicate { $0.isSample })) else { return }
+        var changed = false
+        for p in samples where p.cutout == nil {
+            if let name = cutoutByName[p.name], let data = cutout(name) {
+                p.cutout = data
+                changed = true
+            }
+        }
+        if changed { try? context.save() }
     }
 
     static func clear(from context: ModelContext, products: [Product]) {

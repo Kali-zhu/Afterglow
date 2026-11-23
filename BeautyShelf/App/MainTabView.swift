@@ -74,6 +74,7 @@ struct MainTabView: View {
         }
         .task {
             coordinator.context = context
+            SampleData.attachMissingCutouts(in: context)
             SharedStore.consumeExternalChange()
             coordinator.finishDrainedProducts(products)
             onboarded = true
