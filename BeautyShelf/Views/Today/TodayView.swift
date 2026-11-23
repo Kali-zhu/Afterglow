@@ -5,7 +5,7 @@ import SwiftData
 /// 当前时段（15:00 前早间，之后晚间）的产品按顺序排成一排"托盘"大卡片，
 /// 点「拿起来用」或上滑 = 记一次使用，卡片滑进下方"已用"一摞；全部用完时进度环合拢。
 /// 右上角可切换成紧凑清单（大字号时默认清单）。
-struct TodayView: View {
+struct RoutineTodayView: View {
     @Environment(AppCoordinator.self) private var coordinator
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize

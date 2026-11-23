@@ -318,6 +318,10 @@ struct ProductDetailView: View {
         VStack {
             HStack {
                 Menu {
+                    Button(product.isPinned ? "从首页拿下" : "放到首页", systemImage: product.isPinned ? "star.slash" : "star") {
+                        product.togglePin()
+                        coordinator.dataChanged()
+                    }
                     Button("编辑", systemImage: "pencil") { coordinator.editor = .edit(product) }
                     Button(product.needsRestock ? "移出补货清单" : "加入补货清单", systemImage: "cart") {
                         product.needsRestock.toggle()

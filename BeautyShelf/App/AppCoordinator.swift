@@ -21,7 +21,7 @@ enum EditorTarget: Identifiable {
 final class AppCoordinator {
     enum Tab: Hashable { case shelf, today, finished }
 
-    var tab: Tab = .shelf
+    var tab: Tab = .today
     var editor: EditorTarget? = nil
     /// 正在播放"倒空"动画的产品
     var finishing: Product? = nil

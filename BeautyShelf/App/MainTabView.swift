@@ -17,12 +17,12 @@ struct MainTabView: View {
 
     var body: some View {
         TabView(selection: $coordinator.tab) {
-            ShelfView()
-                .tabItem { Label("妆台", systemImage: "square.stack.3d.up") }
-                .tag(AppCoordinator.Tab.shelf)
             TodayView()
                 .tabItem { Label("今日", systemImage: "sun.max") }
                 .tag(AppCoordinator.Tab.today)
+            ShelfView()
+                .tabItem { Label("藏品", systemImage: "square.stack.3d.up") }
+                .tag(AppCoordinator.Tab.shelf)
             FinishedView()
                 .tabItem { Label("空瓶", systemImage: "archivebox") }
                 .tag(AppCoordinator.Tab.finished)

@@ -58,7 +58,7 @@ struct ShelfView: View {
                 .padding(.bottom, 40)
             }
             .background(Theme.porcelain.ignoresSafeArea())
-            .navigationTitle("妆台")
+            .navigationTitle("藏品")
             .searchable(text: $search, prompt: "搜索名称或品牌")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) { SettingsButton() }
@@ -172,6 +172,10 @@ struct ShelfView: View {
 
     @ViewBuilder
     private func menu(for p: Product) -> some View {
+        Button(p.isPinned ? "从首页拿下" : "放到首页", systemImage: p.isPinned ? "star.slash" : "star") {
+            withAnimation(Theme.spring) { p.togglePin() }
+            coordinator.dataChanged()
+        }
         Button("用了一次", systemImage: "drop") { quickUse(p) }
         Button("编辑", systemImage: "pencil") { coordinator.editor = .edit(p) }
         Button("用完了", systemImage: "checkmark.circle") { coordinator.finish(p) }

@@ -213,6 +213,8 @@ final class Product {
     var finishedDate: Date? = nil
     var needsRestock: Bool = false
     var isSample: Bool = false
+    /// 放到首页的时间；nil = 不在首页
+    var pinnedAt: Date? = nil
     var lowStockAlertAt: Date? = nil
     var createdAt: Date = Date.now
 
@@ -290,6 +292,9 @@ final class Product {
     var isFinished: Bool { finishedDate != nil }
     /// 剩余不足 15%
     var isLow: Bool { !isFinished && level < 0.15 }
+    var isPinned: Bool { pinnedAt != nil }
+    func togglePin() { pinnedAt = pinnedAt == nil ? .now : nil }
+    var usedToday: Bool { useLog.contains { Calendar.current.isDateInToday($0) } }
 
     var remainingText: String {
         switch measureMode {

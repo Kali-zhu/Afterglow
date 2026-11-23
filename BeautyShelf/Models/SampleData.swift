@@ -37,6 +37,7 @@ enum SampleData {
                             tintHex: "E7B873")
         serum.price = 780
         serum.inEvening = true
+        serum.pinnedAt = now.addingTimeInterval(-2)
         fillLog(serum, hour: 22, skipEvery: 4, extraUses: 30)
         items.append(serum)
 
@@ -47,6 +48,7 @@ enum SampleData {
                             tintHex: "BFD7EA")
         toner.price = 1540
         toner.inMorning = true
+        toner.pinnedAt = now
         toner.inEvening = true
         fillLog(toner, hour: 8, skipEvery: 6, extraUses: 18)
         items.append(toner)
@@ -59,6 +61,7 @@ enum SampleData {
         cleanser.remainingAmount = 58
         cleanser.price = 118
         cleanser.inMorning = true
+        cleanser.pinnedAt = now.addingTimeInterval(-3)
         cleanser.inEvening = true
         fillLog(cleanser, hour: 8, skipEvery: 7, extraUses: 30)
         items.append(cleanser)
@@ -70,6 +73,7 @@ enum SampleData {
                                 tintHex: "F1E6D8")
         sunscreen.price = 79
         sunscreen.inMorning = true
+        sunscreen.pinnedAt = now.addingTimeInterval(-1)
         fillLog(sunscreen, hour: 8, skipEvery: 5, extraUses: 0)
         items.append(sunscreen)
 
@@ -80,6 +84,7 @@ enum SampleData {
                             tintHex: "F1E6D8")
         cream.price = 320
         cream.inEvening = true
+        cream.pinnedAt = now.addingTimeInterval(-4)
         fillLog(cream, hour: 22, skipEvery: 5, extraUses: 25)
         items.append(cream)
 
