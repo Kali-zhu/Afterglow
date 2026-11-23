@@ -8,6 +8,7 @@ import SwiftData
 /// 每一瓶下面写着它陪了你多久、用了几次、每次多少钱。
 struct FinishedView: View {
     @Environment(\.modelContext) private var context
+    @Environment(AppCoordinator.self) private var coordinator
     @Environment(\.horizontalSizeClass) private var widthClass
     @Query(sort: \Product.createdAt, order: .forward, animation: .spring(response: 0.42, dampingFraction: 0.82))
     private var all: [Product]
@@ -257,8 +258,11 @@ struct FinishedView: View {
     private func emptyRow(_ row: [Product]) -> some View {
         HStack(alignment: .top, spacing: 10) {
             ForEach(row) { p in
-                EmptyBottleCell(product: p)
-                    .contextMenu { menu(for: p) }
+                Button { coordinator.openDetail(p) } label: {
+                    EmptyBottleCell(product: p)
+                }
+                .buttonStyle(ShelfPressStyle())
+                .contextMenu { menu(for: p) }
             }
             ForEach(0..<(columns - row.count), id: \.self) { _ in
                 Color.clear.frame(maxWidth: .infinity, maxHeight: 1)

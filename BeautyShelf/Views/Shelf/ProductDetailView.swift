@@ -2,14 +2,16 @@ import SwiftUI
 import SwiftData
 
 /// 点开 = 把它从架子上"拿起来"：放大、带一点 3D 倾斜、投影变大变柔，背景压暗成磨砂。
-/// iOS 18 由系统缩放转场带过来（ShelfView 的 DetailPresenter），iOS 17 用 matchedGeometryEffect。
+/// 这是全 App 唯一的"使用页"：首页、藏品、空瓶、近期记录点任何一件产品都打开它。
+/// iOS 18 由 ProductDetailPresenter 的系统缩放转场带过来，iOS 17 用 matchedGeometryEffect。
 /// 实物本身可以按形状操作来记一次使用（见 UseGestureHero），下方保留大按钮"用了一次"。
 /// 估算型产品（口红、粉盒）用滑块调整剩余量。
 struct ProductDetailView: View {
     @Bindable var product: Product
-    var ns: Namespace.ID
+    /// iOS 17 的 matchedGeometryEffect 用；iOS 18 走系统缩放转场，这里可以为 nil
+    var ns: Namespace.ID? = nil
     /// iOS 18 全屏缩放转场呈现（不用 matchedGeometryEffect）
-    var zoomed: Bool
+    var zoomed: Bool = false
     var close: () -> Void
 
     @Environment(AppCoordinator.self) var coordinator
@@ -24,8 +26,13 @@ struct ProductDetailView: View {
     @State var lifted = false
     @State var tilt: Double = 0
     @State var confirmDelete = false
+    /// 这一次记给哪个时段：默认当前时段（15:00 前早间，之后晚间）
+    @State var slot: RoutineSlot = SharedStore.currentSlot()
+    /// 刚记下：按钮短暂变成"已记下"，并给出撤销
+    @State var recorded = false
+    @State var resetTask: Task<Void, Never>? = nil
 
-    init(product: Product, ns: Namespace.ID, zoomed: Bool = false, close: @escaping () -> Void) {
+    init(product: Product, ns: Namespace.ID? = nil, zoomed: Bool = false, close: @escaping () -> Void) {
         self.product = product
         self.ns = ns
         self.zoomed = zoomed
@@ -65,14 +72,25 @@ struct ProductDetailView: View {
                     }
                     usageDots
                     slotToggles
-                    actions
-                        .padding(.top, 8)
                 }
                 .padding(.horizontal, 24)
-                .padding(.bottom, 32)
+                .padding(.bottom, 24)
                 .opacity(revealed ? 1 : 0)
             }
             .scrollIndicators(.hidden)
+            // 底部按钮自己一块安全区：不会被 Home Indicator 挡住，也不跟着内容滚走
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                actions
+                    .padding(.horizontal, 24)
+                    .padding(.top, 16)
+                    .padding(.bottom, 8)
+                    .background {
+                        LinearGradient(colors: [stage.opacity(0), stage.opacity(0.9), stage],
+                                       startPoint: .top, endPoint: .bottom)
+                            .ignoresSafeArea(edges: .bottom)
+                    }
+                    .opacity(revealed ? 1 : 0)
+            }
 
             topBar
         }
@@ -81,7 +99,10 @@ struct ProductDetailView: View {
             withAnimation(.easeOut(duration: 0.25).delay(0.12)) { revealed = true }
             pickUp()
         }
-        .onDisappear { MotionService.shared.end() }
+        .onDisappear {
+            MotionService.shared.end()
+            resetTask?.cancel()
+        }
         .sensoryFeedback(.impact(weight: .light), trigger: uses)
         .sensoryFeedback(.selection, trigger: estimateStep)
         .confirmationDialog("删除「\(product.name)」？", isPresented: $confirmDelete, titleVisibility: .visible) {
@@ -276,10 +297,9 @@ struct ProductDetailView: View {
     }
 
     private func routineToggle(_ slot: RoutineSlot) -> some View {
-        let on = product.inRoutine(slot)
+        let on = self.slot == slot
         return Button {
-            withAnimation(Theme.snappy) { product.setRoutine(slot, !on) }
-            coordinator.dataChanged()
+            withAnimation(Theme.snappy) { self.slot = slot }
         } label: {
             Label(slot.title, systemImage: slot.symbol)
                 .font(.body.weight(.semibold))
@@ -289,7 +309,9 @@ struct ProductDetailView: View {
                 .background(Capsule().fill(on ? ink : soft))
         }
         .buttonStyle(.plain)
-        .accessibilityValue(on ? "已加入" : "未加入")
+        .accessibilityLabel("这一次记给\(slot.title)")
+        .accessibilityValue(on ? "已选中" : "未选中")
+        .accessibilityAddTraits(on ? .isSelected : [])
     }
 
     // MARK: 配色：白天瓷白、夜间近黑，跟随系统
@@ -339,13 +361,31 @@ struct ProductDetailView: View {
     // MARK: 操作
 
     private var actions: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 10) {
+            if recorded {
+                HStack(spacing: 10) {
+                    Label("已记一次 · \(slot.title)", systemImage: "checkmark.circle.fill")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.secondary)
+                    Spacer(minLength: 8)
+                    Button { undoLast() } label: {
+                        Label("撤销", systemImage: "arrow.uturn.backward")
+                            .font(.subheadline.weight(.semibold))
+                            .frame(minHeight: 44)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .transition(.opacity)
+            }
             Button { logUse(fromGesture: false) } label: {
-                Text("用了一次")
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(inkReverse)
-                    .frame(maxWidth: .infinity, minHeight: 56)
-                    .background(Capsule().fill(ink))
+                HStack(spacing: 8) {
+                    if recorded { Image(systemName: "checkmark") }
+                    Text(recorded ? "已记下" : "用了一次")
+                }
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(inkReverse)
+                .frame(maxWidth: .infinity, minHeight: 56)
+                .background(Capsule().fill(ink))
             }
             .buttonStyle(ShelfPressStyle())
             .disabled(product.isFinished)
@@ -394,6 +434,17 @@ struct ProductDetailView: View {
                         product.togglePin()
                         coordinator.dataChanged()
                     }
+                    Menu("日常流程") {
+                        ForEach(RoutineSlot.allCases) { s in
+                            Button {
+                                withAnimation(Theme.snappy) { product.setRoutine(s, !product.inRoutine(s)) }
+                                coordinator.dataChanged()
+                            } label: {
+                                Label(product.inRoutine(s) ? "移出\(s.title)" : "加入\(s.title)",
+                                      systemImage: product.inRoutine(s) ? "checkmark" : s.symbol)
+                            }
+                        }
+                    }
                     Divider()
                     Button("删除", systemImage: "trash", role: .destructive) { confirmDelete = true }
                 } label: {
@@ -423,12 +474,33 @@ struct ProductDetailView: View {
 
     private func logUse(fromGesture: Bool) {
         guard !product.isFinished else { return }
-        withAnimation(Theme.spring) { coordinator.logUse(product) }
+        // 记一次，并标明属于哪个时段（胶囊默认当前时段）
+        withAnimation(Theme.spring) { coordinator.logRoutine(product, slot) }
         uses += 1
         if !fromGesture { buttonUses += 1 }
+        markRecorded()
         // 用到见底：关闭详情，交给"倒空"动画
         if coordinator.finishing === product {
             close()
+        }
+    }
+
+    /// 按钮短暂变成"已记下"，并给出撤销；不自动关闭，让用户看到数字和圆点的变化
+    private func markRecorded() {
+        withAnimation(Theme.snappy) { recorded = true }
+        resetTask?.cancel()
+        resetTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(2600))
+            guard !Task.isCancelled else { return }
+            withAnimation(Theme.snappy) { recorded = false }
+        }
+    }
+
+    private func undoLast() {
+        resetTask?.cancel()
+        withAnimation(Theme.spring) {
+            coordinator.undoRoutine(product, slot)
+            recorded = false
         }
     }
 }
@@ -436,12 +508,12 @@ struct ProductDetailView: View {
 /// iOS 17 浮层模式：和架子上那件共用 matchedGeometryEffect；iOS 18 缩放转场时关闭
 struct HeroMatch: ViewModifier {
     let id: UUID
-    let ns: Namespace.ID
+    var ns: Namespace.ID?
     var enabled: Bool
 
     @ViewBuilder
     func body(content: Content) -> some View {
-        if enabled {
+        if enabled, let ns {
             content.matchedGeometryEffect(id: "container-\(id)", in: ns)
         } else {
             content

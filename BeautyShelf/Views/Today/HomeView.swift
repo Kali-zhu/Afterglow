@@ -209,7 +209,7 @@ struct TodayView: View {
 
     private func action(for items: [Product]) -> (title: String, symbol: String) {
         if items.count > 1 { return ("再记这 \(items.count) 件", "arrow.clockwise") }
-        if let p = items.first { return p.useLog.isEmpty ? ("用了一次", "drop") : ("再记一次", "arrow.clockwise") }
+        if let p = items.first { return p.useLog.isEmpty ? ("去记这一次", "drop") : ("再记一次", "arrow.clockwise") }
         return available.isEmpty ? ("添加产品", "plus") : ("记下用过的产品", "checklist")
     }
 
@@ -220,33 +220,45 @@ struct TodayView: View {
         return VStack(alignment: .leading, spacing: 16) {
             if let p = items.first {
                 let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading)) : AnyLayout(HStackLayout(spacing: 12))
-                layout {
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text(p.useLog.isEmpty ? "在用的产品" : "最近用过").font(.subheadline).foregroundStyle(.secondary)
-                        if let date = p.useLog.last {
-                            Text("\(dayLabel(date))　\(date.formatted(date: .omitted, time: .shortened))")
-                                .font(.headline).monospacedDigit().padding(.bottom, 10)
-                        }
-                        Text(items.count > 1 ? "一起用了 \(items.count) 件" : p.name).font(.title2.bold())
-                        Text(items.count > 1 ? items.map(\.name).joined(separator: "、") :
-                                [p.brand, p.remainingText].filter { !$0.isEmpty }.joined(separator: " · "))
-                            .font(.subheadline).foregroundStyle(.secondary)
-                    }.frame(maxWidth: .infinity, alignment: .leading)
-                    VStack(spacing: 0) {
-                        HStack(alignment: .bottom, spacing: 2) {
-                            ForEach(Array(items.prefix(3))) { item in
-                                ProductFigure(product: item).frame(maxWidth: .infinity, alignment: .bottom)
+                // 单件：点卡片 = 打开这件产品的详情（"使用页"），在那里记一次；多件：一键批量记
+                Button {
+                    if items.count > 1 { record(items) } else { coordinator.openDetail(p) }
+                } label: {
+                    layout {
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(p.useLog.isEmpty ? "在用的产品" : "最近用过").font(.subheadline).foregroundStyle(.secondary)
+                            if let date = p.useLog.last {
+                                Text("\(dayLabel(date))　\(date.formatted(date: .omitted, time: .shortened))")
+                                    .font(.headline).monospacedDigit().padding(.bottom, 10)
                             }
-                        }.frame(height: items.count > 1 ? 100 : 140, alignment: .bottom)
-                        ShelfPlank()
-                    }.frame(width: 98).accessibilityHidden(true)
+                            Text(items.count > 1 ? "一起用了 \(items.count) 件" : p.name).font(.title2.bold())
+                            Text(items.count > 1 ? items.map(\.name).joined(separator: "、") :
+                                    [p.brand, p.remainingText].filter { !$0.isEmpty }.joined(separator: " · "))
+                                .font(.subheadline).foregroundStyle(.secondary)
+                        }.frame(maxWidth: .infinity, alignment: .leading)
+                        VStack(spacing: 0) {
+                            HStack(alignment: .bottom, spacing: 2) {
+                                ForEach(Array(items.prefix(3))) { item in
+                                    ProductFigure(product: item)
+                                        .frame(maxWidth: .infinity, alignment: .bottom)
+                                        .detailTransitionSource(id: item.uid)
+                                }
+                            }.frame(height: items.count > 1 ? 100 : 140, alignment: .bottom)
+                            ShelfPlank()
+                        }.frame(width: 98).accessibilityHidden(true)
+                    }
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
+                .accessibilityHint(items.count > 1 ? "轻点把这几件各记一次" : "打开详情，在详情里记一次")
             } else {
                 Text(available.isEmpty ? "还没有可记录的产品" : "这次用了哪些产品？").font(.title2.bold())
             }
             Button {
-                if !items.isEmpty { record(items) }
-                else if available.isEmpty { coordinator.editor = .new }
+                if !items.isEmpty {
+                    if items.count > 1 { record(items) }
+                    else if let p = items.first { coordinator.openDetail(p) }
+                } else if available.isEmpty { coordinator.editor = .new }
                 else { showPicker() }
             } label: {
                 Label(justRecorded ? "已记下" : button.title, systemImage: justRecorded ? "checkmark" : button.symbol)
@@ -292,6 +304,10 @@ struct TodayView: View {
                         Spacer(minLength: 4)
                         if let p = entry.items.first { ProductFigure(product: p, maxPixel: 120).frame(width: 30, height: 34) }
                     }.font(.subheadline).frame(minHeight: 48).accessibilityElement(children: .combine)
+                    .contentShape(Rectangle())
+                    // 点一条记录 = 打开那件产品的详情，可以接着再记一次
+                    .onTapGesture { if let p = entry.items.first { coordinator.openDetail(p) } }
+                    .accessibilityAddTraits(.isButton)
                     Divider()
                 }
             }

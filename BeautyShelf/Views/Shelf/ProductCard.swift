@@ -7,8 +7,6 @@ import SwiftUI
 /// 架板本身由 ShelfView 画在整行后面，卡片在 `stageHeight` 处留出架板的位置。
 struct ProductCard: View {
     let product: Product
-    var ns: Namespace.ID
-    var isSource: Bool = true
     /// 详情盖在上面时暂停液面动画
     var live: Bool = true
     /// 物件区域的高度（最高的物件 = shelfScale 1.0）
@@ -54,7 +52,7 @@ struct ProductCard: View {
             ContainerView(product: product, animated: live)
                 .frame(width: width, height: itemHeight)
                 .frame(maxWidth: .infinity)
-                .modifier(LiftSource(id: product.uid, ns: ns, isSource: isSource))
+                .modifier(DetailTransitionSource(id: product.uid))
         }
         // 物件底边落在架板顶面的中间
         .offset(y: ShelfPlank.surface * 0.6)

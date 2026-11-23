@@ -16,7 +16,6 @@ struct ShelfView: View {
     private var all: [Product]
     @Namespace private var ns
     @State private var filter: ProductCategory? = nil
-    @State private var selected: Product? = nil
     @State private var search = ""
     @State private var pendingDelete: Product? = nil
     @State private var quickUses = 0
@@ -127,7 +126,6 @@ struct ShelfView: View {
                 }
             }
         }
-        .modifier(DetailPresenter(selected: $selected, ns: ns, coordinator: coordinator, context: context))
         .onAppear { MotionService.shared.begin() }
         .onDisappear { MotionService.shared.end() }
         .sensoryFeedback(.selection, trigger: filter)
@@ -310,18 +308,10 @@ struct ShelfView: View {
     }
 
     private func card(_ p: Product) -> some View {
-        let isSelected = selected?.id == p.id
-        return Button { withAnimation(Theme.lift) { selected = p } } label: {
-            ProductCard(product: p, ns: ns,
-                        isSource: !isSelected,
-                        live: selected == nil,
-                        stageHeight: stageHeight)
+        Button { coordinator.openDetail(p) } label: {
+            ProductCard(product: p, live: coordinator.detail == nil, stageHeight: stageHeight)
         }
         .buttonStyle(ShelfPressStyle())
-        // 浮层模式下，拿起来的那件从架子上"消失"（matchedGeometryEffect 把它带到详情）
-        .opacity(isSelected && !LiftPresentation.usesZoom ? 0 : 1)
-        .transition(.asymmetric(insertion: .offset(y: -220).combined(with: .opacity),
-                                removal: .scale(scale: 0.6).combined(with: .opacity)))
         .overlay(alignment: .topTrailing) {
             if p.backupStock > 0 {
                 // 有备用库存：一眼看出"我有两瓶"
@@ -392,43 +382,5 @@ struct ShelfPressStyle: ButtonStyle {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.96 : 1, anchor: .bottom)
             .animation(Theme.snappy, value: configuration.isPressed)
-    }
-}
-
-/// 详情的呈现：iOS 18 全屏 + 系统缩放转场（.navigationTransition(.zoom)）；
-/// iOS 17 浮层 + matchedGeometryEffect。两种都由详情页自己做"拿起来"的 3D 倾斜与投影。
-struct DetailPresenter: ViewModifier {
-    @Binding var selected: Product?
-    let ns: Namespace.ID
-    let coordinator: AppCoordinator
-    let context: ModelContext
-
-    @ViewBuilder
-    func body(content: Content) -> some View {
-        #if compiler(>=6.0)
-        if #available(iOS 18.0, *) {
-            content.fullScreenCover(item: $selected) { p in
-                ProductDetailView(product: p, ns: ns, zoomed: true) { selected = nil }
-                    .environment(coordinator)
-                    .modelContext(context)
-                    .navigationTransition(.zoom(sourceID: p.uid, in: ns))
-                    .presentationBackground(.clear)
-            }
-        } else {
-            overlayed(content)
-        }
-        #else
-        overlayed(content)
-        #endif
-    }
-
-    private func overlayed(_ content: Content) -> some View {
-        content.overlay {
-            if let p = selected, !p.isDeleted {
-                ProductDetailView(product: p, ns: ns) {
-                    withAnimation(Theme.lift) { selected = nil }
-                }
-            }
-        }
     }
 }

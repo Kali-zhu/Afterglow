@@ -28,6 +28,8 @@ final class AppCoordinator {
     /// 倒空后询问"要加入补货清单吗？"
     var restockPrompt: Product? = nil
     var showSettings = false
+    /// 全屏详情：所有"用一件产品"的入口都打开它，在详情里点"用了一次"才真正记录
+    var detail: Product? = nil
 
     /// 当前界面用的 ModelContext（MainTabView 出现 / 切换时设置），用于保存后刷新小组件
     @ObservationIgnored weak var context: ModelContext?
@@ -77,6 +79,12 @@ final class AppCoordinator {
     func setOrder(_ products: [Product], for slot: RoutineSlot) {
         SharedStore.setOrder(products.map { $0.uid.uuidString }, for: slot)
         dataChanged()
+    }
+
+    /// 打开一件产品的详情（"用一次"的唯一入口）
+    func openDetail(_ p: Product) {
+        guard !p.isDeleted else { return }
+        detail = p
     }
 
     /// 小组件里记到 0 的产品：回到 App 时补上"用完了"流程

@@ -123,7 +123,7 @@ svg.c{display:block;overflow:visible}
 .rcard{flex:none;width:136px;background:var(--card);border-radius:20px;padding:14px 12px 12px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
 .rcard b{font-size:14px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rcard span{font-size:12px;color:var(--ink2)}
 .rcard .buy{min-height:32px;margin-top:4px;padding:0 14px;border-radius:16px;background:var(--fill);font-size:14px}
-.ewall .item{cursor:default}
+.ewall .item{cursor:pointer;width:100%;text-align:center;padding:0}
 .ewall .item .meta{white-space:normal;line-height:1.35}
 /* ritual page */
 .rpage{position:fixed;inset:0;z-index:9;background:var(--porcelain);overflow-y:auto;transform:translateX(100%);transition:transform .45s var(--spring);padding:0 20px calc(40px + env(safe-area-inset-bottom))}
@@ -982,8 +982,12 @@ function undoUse(p,r){
 
 /* ================= detail ================= */
 let cur=null,srcEl=null;
+/// 这一次记给哪个时段：默认当前时段
+var detailSlot=new Date().getHours()<15?"am":"pm";
 function openDetail(id,el){
   cur=byId(id);srcEl=el;if(!cur)return;
+  // 这一次记给当前时段：15:00 前早间，之后晚间
+  detailSlot=new Date().getHours()<15?"am":"pm";
   const d=$("#detail"),stage=$("#stage");
   stage.querySelector(".fly")?.remove();stage.querySelector(".drag-hint")?.remove();
   const fly=document.createElement("div");fly.className="fly";fly.innerHTML=containerSVG(cur,150,244);stage.prepend(fly);
@@ -1024,17 +1028,24 @@ function fillDetail(anim){
   $("#expLine").textContent=`${fmtDate(e.date)} 到期`+(e.why==="pao"?`（开封后 ${p.pao} 个月）`:p.opened?"（包装到期日）":"（还没开封，按包装到期日）");
   // 14-day dots
   const days=new Set(p.log.map(l=>l.d));let dots="";for(let i=13;i>=0;i--)dots+=`<i class="${days.has(plusDays(-i))?"on":""}"></i>`;$("#dots").innerHTML=dots;
-  $("#toggles").innerHTML=RT.map(([k,n,icon])=>`<button class="tg" aria-pressed="${inR(p,k)}" data-rt="${k}">${icon()}${n}</button>`).join("")+`<button class="tg" id="pinDetail" aria-pressed="${!!p.pin}">${PIN_I}常用</button>`;
+  $("#toggles").innerHTML=RT.map(([k,n,icon])=>`<button class="tg" aria-pressed="${detailSlot===k}" data-rt="${k}" aria-label="这一次记给${n}">${icon()}${n}</button>`).join("")+`<button class="tg" id="pinDetail" aria-pressed="${!!p.pin}">${PIN_I}常用</button>`;
   $("#pinDetail").onclick=()=>{togglePin(p);$("#pinDetail").setAttribute("aria-pressed",!!p.pin)};
-  $$("#toggles .tg").forEach(b=>b.onclick=()=>{const k=b.dataset.rt;p[k]=!inR(p,k);save();b.setAttribute("aria-pressed",p[k]);haptic();const nm={am:"早间",pm:"晚间",mk:"化妆"}[k];toast(p[k]?`已加入${nm}流程`:`已移出${nm}流程`)});
+  // 胶囊 = 这一次记给哪个时段（默认当前时段：15:00 前早间，之后晚间）
+  $$("#toggles [data-rt]").forEach(b=>b.onclick=()=>{detailSlot=b.dataset.rt;haptic(4);fillDetail(false);toast(`这一次记给${{am:"早间",pm:"晚间",mk:"化妆"}[detailSlot]}`)});
   const u=$("#useBtn");u.disabled=p.left<=0;u.textContent=p.left<=0?"已经用完":p.mode==="count"?"用了一片":"用了一次";
   $("#restockBtn").textContent=p.restock?"已在补货清单":"加入补货";
 }
 $("#useBtn").onclick=()=>{
-  const p=cur;if(!p)return;const r=logUse(p,null);if(!r)return;
+  const p=cur;if(!p)return;const r=logUse(p,detailSlot);if(!r)return;
   const drop=$("#drop");drop.classList.remove("fall");void drop.offsetWidth;if(p.mode!=="count")drop.classList.add("fall");
   if(p.mode==="count"){const f=$("#stage .fly");f.innerHTML=containerSVG(p,150,244);f.animate([{transform:"translateY(-6px)"},{transform:"none"}],{duration:350,easing:"cubic-bezier(.34,1.56,.64,1)"})}
   fillDetail(true);
+  // 按钮短暂变成「已记下」，不关闭页面：让用户看到数字和圆点变了再自己返回
+  const button=$("#useBtn");
+  if(p.left>0){
+    button.textContent="已记下";button.disabled=true;
+    setTimeout(()=>{if(cur===p){button.disabled=p.left<=0;button.textContent=p.left<=0?"已经用完":p.mode==="count"?"用了一片":"用了一次"}else render()},1200);
+  }
   if(p.left<=0)setTimeout(()=>finishFlow(p),700);else toast(r.msg||(p.mode==="count"?"记好了，用掉一片":"记好了"),()=>{Object.assign(p,r.before);save();if(cur===p){fillDetail(true);if(p.mode==="count")$("#stage .fly").innerHTML=containerSVG(p,150,244)}else render()});
 };
 $("#finBtn").onclick=()=>cur&&finishFlow(cur);
@@ -1175,9 +1186,17 @@ function renderToday(){
       <div class="journal-figure${many?" journal-set":""}" aria-hidden="true">${featured.slice(0,3).map(item=>`<span>${journalFigure(item,100,150)}</span>`).join("")}</div></div>`;
     title=many?`再记这 ${featured.length} 件`:recent?"再记一次":"用了一次";
     symbol=recent?"repeat":"drop";
-    button.onclick=()=>recordJournal(featured);
+    // 单件：不直接记录，打开详情页，在详情里点「用了一次」；多件：一键批量记
+    button.onclick=()=>{if(many)recordJournal(featured);else openDetail(p.id,null)};
+    $("#journalStage").onclick=()=>{if(!many)openDetail(p.id,null)};
+    $("#journalStage").style.cursor="pointer";
+    $("#journalStage").setAttribute("role","button");
+    $("#journalStage").setAttribute("tabindex","0");
+    $("#journalStage").setAttribute("aria-label",`打开 ${p.name} 的详情`);
+    $("#journalStage").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();if(!many)openDetail(p.id,null)}};
   }else{
     $("#journalStage").innerHTML=`<h2 class="journal-name">${available.length?"这次用了哪些产品？":"还没有可记录的产品"}</h2>`;
+    $("#journalStage").onclick=null;$("#journalStage").style.cursor="";
     title=available.length?"记下用过的产品":"添加产品";symbol=available.length?"list":"plus";
     button.onclick=available.length?openJournalPicker:()=>openForm();
   }
@@ -1199,11 +1218,13 @@ function renderToday(){
     }
     const time=journalClock(entry)||({am:"早间",pm:"晚间",mk:"化妆"}[entry.r]||"当日");
     const names=esc(products.map(p=>p.name).join("、"));
-    html+=`<li><span class="r">${time}</span><div>${products.length>1?`<strong>一起用了 ${products.length} 件</strong><small>${names}</small>`:`<strong>${names}</strong>`}</div><span class="journal-thumb" aria-hidden="true">${journalFigure(products[0],28,36)}</span></li>`;
+    html+=`<li data-detail="${products[0].id}"><span class="r">${time}</span><div>${products.length>1?`<strong>一起用了 ${products.length} 件</strong><small>${names}</small>`:`<strong>${names}</strong>`}</div><span class="journal-thumb" aria-hidden="true">${journalFigure(products[0],28,36)}</span></li>`;
   }
   $("#journalEntries").innerHTML=html+(lastDay?"</ul>":"");
   renderStreak();
 }
+/* 近期记录、藏品、空瓶里点任何产品，都打开同一个详情页 */
+$("#journalEntries").onclick=e=>{const li=e.target.closest("[data-detail]");if(li)openDetail(+li.dataset.detail,null)};
 /* 连续记录：今天还没记就从昨天往前数，不清零 */
 function prevDayISO(day){const x=dParse(day);x.setDate(x.getDate()-1);return iso(x)}
 function usedDaysSet(){
@@ -1427,10 +1448,12 @@ function renderEmpties(){
   else{
     html+=`<div class="cab ewall" style="margin-top:4px">`;
     html+=`<div class="shelf-grid">${fin.map(p=>{const dd=days(p),[w,h]=SIZE[p.shape]||[64,104],dt=dParse(p.finished);
-        return `<div class="item"><span class="cw">${containerSVG({...p,id:-3,left:0},w,h)}</span><span class="name" title="${esc(p.name)}">${esc(p.name)}</span><span class="meta r">${p.uses} ${p.mode==="count"?"片":"次"}${dd?` · ${dd>=60?Math.round(dd/30)+" 个月":dd+" 天"}`:""}${p.price&&p.uses?` · ¥${(p.price/p.uses).toFixed(1)}/次`:""}<br>${dt.getMonth()+1} 月用完</span></div>`}).join("")}</div>`;
+        return `<button class="item" data-id="${p.id}"><span class="cw">${containerSVG({...p,id:-3,left:0},w,h)}</span><span class="name" title="${esc(p.name)}">${esc(p.name)}</span><span class="meta r">${p.uses} ${p.mode==="count"?"片":"次"}${dd?` · ${dd>=60?Math.round(dd/30)+" 个月":dd+" 天"}`:""}${p.price&&p.uses?` · ¥${(p.price/p.uses).toFixed(1)}/次`:""}<br>${dt.getMonth()+1} 月用完</span></button>`}).join("")}</div>`;
     html+=`</div>`}
   html+=`</section>`;
   $("#empties").innerHTML=html;
+  // 空瓶墙上的每一瓶也点得开详情（同一个使用页）
+  bindTiles($("#empties"));
   $$("#empties [data-buy]").forEach(b=>b.onclick=()=>{const p=byId(+b.dataset.buy);p.restock=false;
     if(p.finished){const n=clone(p);db.items.push(n);save();renderEmpties();toast(`新的 ${p.name} 已放上藏品架`)}
     else{p.backup=(p.backup||0)+1;save();renderEmpties();toast(`${p.name} 备用库存 +1`)}haptic()});

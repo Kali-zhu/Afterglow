@@ -6,6 +6,8 @@ struct MainTabView: View {
     let startWithAdd: Bool
 
     @State private var coordinator = AppCoordinator()
+    /// 首页 / 藏品 / 空瓶里的产品图，和详情页大图共用同一个命名空间
+    @Namespace private var detailNS
     @Query private var products: [Product]
     @Environment(\.modelContext) private var context
     @Environment(\.scenePhase) private var scenePhase
@@ -37,6 +39,13 @@ struct MainTabView: View {
                 .tag(AppCoordinator.Tab.finished)
         }
         .environment(coordinator)
+        .environment(\.detailNamespace, detailNS)
+        // 唯一的"使用页"：从任何地方点开一件产品，都到这里来
+        .modifier(ProductDetailPresenter(
+            coordinator: coordinator,
+            detail: Binding(get: { coordinator.detail },
+                            set: { coordinator.detail = $0 }),
+            ns: detailNS))
         .overlay {
             if let p = coordinator.finishing {
                 FinishOverlay(product: p) {
