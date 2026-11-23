@@ -34,7 +34,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ipa-latest
-          name: 妆台 测试版 IPA（未签名）
+          name: 余香 测试版 IPA（未签名）
           prerelease: true
           files: BeautyShelf-unsigned.ipa
 permissions:

@@ -54,7 +54,7 @@ struct SettingsView: View {
                 } header: {
                     Text("小组件")
                 } footer: {
-                    Text("长按主屏幕空白处 → 左上角「＋」→ 搜索「妆台」。在小组件里勾掉的，回到 App 会同步。")
+                    Text("长按主屏幕空白处 → 左上角「＋」→ 搜索「余香」。在小组件里勾掉的，回到 App 会同步。")
                 }
 
                 Section {

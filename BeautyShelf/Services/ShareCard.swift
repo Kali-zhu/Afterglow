@@ -270,10 +270,10 @@ struct ShareCardView: View {
                 Image(systemName: "drop.fill")
                     .font(.system(size: 12))
                     .foregroundStyle(Color(hex: "E7B873"))
-                Text("妆台")
+                Text("余香")
                     .font(.system(size: 16, weight: .bold, design: .rounded))
                     .foregroundStyle(ink)
-                Text("BeautyShelf")
+                Text("Afterglow")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(soft)
             }

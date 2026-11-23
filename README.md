@@ -1,4 +1,4 @@
-# BeautyShelf · 妆台
+# 余香 · Afterglow
 
 一个用 SwiftUI + SwiftData 打造的美妆 / 护肤品收纳 App：收纳你拥有的每一件，记录使用次数、剩余量和保质期。
 

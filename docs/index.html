@@ -7,8 +7,8 @@
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="妆台">
-<title>妆台 · BeautyShelf</title>
+<meta name="apple-mobile-web-app-title" content="余香">
+<title>余香 · Afterglow</title>
 <style>
 :root{
   --porcelain:#EEF1F4; --card:#FFFFFF; --shelf:#D9DEE4; --ink:#1C1C1E; --ink2:#575761; --ink3:#666671;
@@ -500,7 +500,7 @@ body:has(.ov.open,.rpage.open,.welcome:not(.gone)){overflow:hidden}
     <div class="chips" id="chips" role="toolbar" aria-label="分类"><span class="chip-pill" id="pill"></span></div>
     <details class="shelf-attention" id="shelfAttention" hidden><summary>要处理的</summary><div class="todo" id="todo"></div></details>
     <div id="shelves"></div>
-    <p class="foot">网页预览版，数据只保存在这台设备的浏览器里 · <a href="https://github.com/LLM-zhu/BeautyShelf">GitHub</a></p>
+    <p class="foot">网页预览版，数据只保存在这台设备的浏览器里 · <a href="https://github.com/Kali-zhu/Afterglow">GitHub</a></p>
   </div>
   <!-- 空瓶 -->
   <div class="tab" id="t-empty" role="tabpanel" aria-label="空瓶">
@@ -1439,7 +1439,7 @@ async function makeEmptiesCard(list,period){
     ctx.fillStyle="#454641";ctx.font="22px sans-serif";
     ctx.fillText(`${p.uses} ${p.mode==="count"?"片":"次"}${p.price&&p.uses?` · ¥${(p.price/p.uses).toFixed(1)}/次`:""}`,x,y+196,218);
   });
-  ctx.textAlign="left";ctx.fillStyle="#454641";ctx.font="27px sans-serif";ctx.fillText("妆台 · BeautyShelf",64,canvas.height-36);
+  ctx.textAlign="left";ctx.fillStyle="#454641";ctx.font="27px sans-serif";ctx.fillText("余香 · Afterglow",64,canvas.height-36);
   return canvas.toDataURL("image/png");
 }
 $("#shareEmpties").onclick=()=>{
@@ -1577,7 +1577,7 @@ $("#form").onsubmit=e=>{
 /* ================= settings ================= */
 $("#setBtn").onclick=$("#todaySettings").onclick=()=>{
   const hasItems=items().length>0,hasDemo=items().some(p=>p.demo);
-  openSheet(`<div class="actions"><div class="head"><div><b>妆台</b><span>网页预览版 · 数据存在本机浏览器</span></div></div>
+  openSheet(`<div class="actions"><div class="head"><div><b>余香</b><span>网页预览版 · 数据存在本机浏览器</span></div></div>
     <div class="grp"><button id="settingsRoutine">日常流程</button><button data-s="demo">${BOTTLE}载入示例数据</button><button data-s="clearDemo" ${hasDemo?"":"disabled"}>${TRASH}移除示例数据</button><button data-s="clear" class="danger" ${hasItems?"":"disabled"}>${TRASH}清空全部数据</button></div>
     <p class="hint">iOS 版会在到期前 30 天、7 天和快用完时提醒你。</p>
     <button class="cancel-btn" data-scancel>完成</button></div>`);
