@@ -4,13 +4,17 @@ import SwiftData
 /// "先看看示例"：一张真实感的梳妆台。全部标记为 isSample，可在设置里一键清除。
 enum SampleData {
     static func insert(into context: ModelContext) {
+        // 先清掉旧的示例，避免重复点「先看看示例」时同一件产品出现多份
+        if let old = try? context.fetch(FetchDescriptor<Product>(predicate: #Predicate { $0.isSample })) {
+            old.forEach { context.delete($0) }
+        }
         let cal = Calendar.current
         let now = Date.now
 
         func ago(days: Int = 0, months: Int = 0) -> Date {
             cal.date(byAdding: DateComponents(month: -months, day: -days), to: now) ?? now
         }
-        func ahead(days: Int = 0, months: Int = 0, years: Int = 0) -> Date {
+        func ahead(years: Int = 0, months: Int = 0, days: Int = 0) -> Date {
             cal.date(byAdding: DateComponents(year: years, month: months, day: days), to: now) ?? now
         }
         /// 过去 14 天里的使用记录（跳过一些天，看起来像真人）
