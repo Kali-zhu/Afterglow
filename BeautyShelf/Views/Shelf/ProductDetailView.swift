@@ -71,7 +71,8 @@ struct ProductDetailView: View {
                         estimateSlider
                     }
                     usageDots
-                    slotToggles
+                    // 空瓶只看记录：不再选时段
+                    if !product.isFinished { slotToggles }
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 24)
@@ -380,7 +381,7 @@ struct ProductDetailView: View {
             Button { logUse(fromGesture: false) } label: {
                 HStack(spacing: 8) {
                     if recorded { Image(systemName: "checkmark") }
-                    Text(recorded ? "已记下" : "用了一次")
+                    Text(useTitle)
                 }
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(inkReverse)
@@ -390,17 +391,25 @@ struct ProductDetailView: View {
             .buttonStyle(ShelfPressStyle())
             .disabled(product.isFinished)
             HStack(spacing: 12) {
-                darkPill("用完了") {
-                    let p = product
-                    close()
-                    coordinator.finish(p)
+                if !product.isFinished {
+                    darkPill("用完了") {
+                        let p = product
+                        close()
+                        coordinator.finish(p)
+                    }
                 }
                 darkPill(product.needsRestock ? "已在补货" : "加入补货") {
                     withAnimation(Theme.snappy) { product.needsRestock.toggle() }
                 }
             }
-            .disabled(product.isFinished)
         }
+    }
+
+    /// 主按钮文字：刚记下 / 空瓶显示用完的日期 / 平时"用了一次"
+    private var useTitle: String {
+        if recorded { return "已记下" }
+        if let d = product.finishedDate { return "\(d.formatted(.dateTime.year().month().day()))用完" }
+        return "用了一次"
     }
 
     private func darkPill(_ title: String, action: @escaping () -> Void) -> some View {
