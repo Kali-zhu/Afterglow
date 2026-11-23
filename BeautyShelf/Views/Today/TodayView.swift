@@ -40,29 +40,28 @@ struct RoutineTodayView: View {
     private var allDone: Bool { !list.isEmpty && pending.isEmpty }
 
     var body: some View {
-        NavigationStack {
-            Group {
-                if useList { compactList } else { ritual }
-            }
-            .background(Theme.porcelain.ignoresSafeArea())
-            .navigationTitle("今日")
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) { SettingsButton() }
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    Button {
-                        withAnimation(Theme.spring) { layoutRaw = useList ? "tray" : "list" }
-                    } label: {
-                        Image(systemName: useList ? "rectangle.stack" : "list.bullet")
-                    }
-                    .accessibilityLabel(useList ? "切换为托盘卡片" : "切换为紧凑清单")
-                    Button("调整") { picking = slot }
-                        .accessibilityLabel("调整\(slot.title)流程")
+        Group {
+            if useList { compactList } else { ritual }
+        }
+        .background(Theme.porcelain.ignoresSafeArea())
+        .navigationTitle("日常流程")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.visible, for: .navigationBar)
+        .toolbar {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Button {
+                    withAnimation(Theme.spring) { layoutRaw = useList ? "tray" : "list" }
+                } label: {
+                    Image(systemName: useList ? "rectangle.stack" : "list.bullet")
                 }
+                .accessibilityLabel(useList ? "切换为托盘卡片" : "切换为紧凑清单")
+                Button("调整") { picking = slot }
+                    .accessibilityLabel("调整\(slot.title)流程")
             }
-            .sheet(item: $picking, onDismiss: { orderVersion += 1 }) { s in
-                RoutinePickerView(slot: s)
-                    .environment(coordinator)
-            }
+        }
+        .sheet(item: $picking, onDismiss: { orderVersion += 1 }) { s in
+            RoutinePickerView(slot: s)
+                .environment(coordinator)
         }
         .sensoryFeedback(.impact(weight: .medium), trigger: logTick)
         .sensoryFeedback(.success, trigger: allDone) { old, new in !old && new }
@@ -140,7 +139,11 @@ struct RoutineTodayView: View {
     }
 
     private var completionLine: String {
-        slot == .evening ? "晚间护肤完成，晚安" : "早间护肤完成，出门吧"
+        switch slot {
+        case .morning: "早间护肤完成，出门吧"
+        case .evening: "晚间护肤完成，晚安"
+        case .makeup: "今天的妆容完成了"
+        }
     }
 
     private var tray: some View {
@@ -224,7 +227,7 @@ struct RoutineTodayView: View {
 
     private var completion: some View {
         VStack(spacing: 14) {
-            Image(systemName: slot == .evening ? "moon.stars.fill" : "sun.max.fill")
+            Image(systemName: slot.symbol)
                 .font(.system(size: 40))
                 .foregroundStyle(slot == .evening ? Color(hex: "D5C6E8") : Theme.honey)
                 .symbolEffect(.bounce, value: reduceMotion ? false : allDone)
@@ -321,6 +324,7 @@ struct RoutineTodayView: View {
                         .swipeActions(edge: .trailing) {
                             Button("移出", systemImage: "minus.circle") {
                                 withAnimation { p.setRoutine(slot, false) }
+                                coordinator.dataChanged()
                             }
                             .tint(.gray)
                         }

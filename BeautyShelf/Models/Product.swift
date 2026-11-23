@@ -147,10 +147,22 @@ enum MeasureMode: String, Codable {
 }
 
 enum RoutineSlot: String, CaseIterable, Identifiable {
-    case morning, evening
+    case morning, evening, makeup
     var id: String { rawValue }
-    var title: String { self == .morning ? "早间" : "晚间" }
-    var symbol: String { self == .morning ? "sun.max" : "moon.stars" }
+    var title: String {
+        switch self {
+        case .morning: "早间"
+        case .evening: "晚间"
+        case .makeup: "化妆"
+        }
+    }
+    var symbol: String {
+        switch self {
+        case .morning: "sun.max"
+        case .evening: "moon.stars"
+        case .makeup: "paintbrush"
+        }
+    }
 }
 
 enum ExpiryBasis: Equatable {
@@ -177,6 +189,12 @@ enum ExpiryState {
 
 // MARK: - 产品
 
+struct UsageGroupMark: Codable, Equatable {
+    let id: UUID
+    let date: Date
+    let count: Int
+}
+
 @Model
 final class Product {
     var uid: UUID = UUID()
@@ -193,6 +211,8 @@ final class Product {
     var amountPerUse: Double = 1
     var useCount: Int = 0
     var useLog: [Date] = []
+    /// 仅标记用户一次提交的多件记录，旧记录保持独立。
+    var groupedUses: [UsageGroupMark]?
     var openedDate: Date? = nil
     /// 开封后保质期（月），PAO
     var paoMonths: Int? = nil
@@ -208,12 +228,14 @@ final class Product {
     var finishRaw: String = "clear"
     var inMorning: Bool = false
     var inEvening: Bool = false
+    var inMakeup: Bool? = nil
     var morningDoneOn: Date? = nil
     var eveningDoneOn: Date? = nil
+    var makeupDoneOn: Date? = nil
     var finishedDate: Date? = nil
     var needsRestock: Bool = false
     var isSample: Bool = false
-    /// 放到首页的时间；nil = 不在首页
+    /// 标为常用的时间，常用品优先显示在快速记录中
     var pinnedAt: Date? = nil
     var lowStockAlertAt: Date? = nil
     var createdAt: Date = Date.now
@@ -366,28 +388,20 @@ final class Product {
     // MARK: 操作
 
     /// 记一次使用。第一次使用时自动记为今天开封。
-    func logUse(at date: Date = .now) {
+    func logUse(at date: Date = .now, group: UsageGroupMark? = nil) {
         if openedDate == nil { openedDate = date }
         useCount += 1
         var log = useLog
         log.append(date)
-        if log.count > 500 { log.removeFirst(log.count - 500) }
+        if log.count > 500 {
+            let removed = Set(log.prefix(log.count - 500))
+            log.removeFirst(log.count - 500)
+            groupedUses?.removeAll { removed.contains($0.date) }
+        }
+        if let group { groupedUses = (groupedUses ?? []) + [group] }
         useLog = log
         if measureMode != .estimate {
             remainingAmount = max(0, remainingAmount - amountPerUse)
-        }
-    }
-
-    func undoLastUse() {
-        guard useCount > 0 else { return }
-        useCount -= 1
-        if !useLog.isEmpty {
-            var log = useLog
-            log.removeLast()
-            useLog = log
-        }
-        if measureMode != .estimate {
-            remainingAmount = min(totalAmount, remainingAmount + amountPerUse)
         }
     }
 
@@ -397,27 +411,66 @@ final class Product {
         if self.level >= 0.15 { lowStockAlertAt = nil }
     }
 
-    func inRoutine(_ slot: RoutineSlot) -> Bool { slot == .morning ? inMorning : inEvening }
+    func inRoutine(_ slot: RoutineSlot) -> Bool {
+        switch slot {
+        case .morning: inMorning
+        case .evening: inEvening
+        case .makeup: inMakeup ?? (category == .makeup)
+        }
+    }
 
     func setRoutine(_ slot: RoutineSlot, _ on: Bool) {
-        if slot == .morning { inMorning = on } else { inEvening = on }
+        switch slot {
+        case .morning: inMorning = on
+        case .evening: inEvening = on
+        case .makeup: inMakeup = on
+        }
+    }
+
+    func routineDate(_ slot: RoutineSlot) -> Date? {
+        switch slot {
+        case .morning: morningDoneOn
+        case .evening: eveningDoneOn
+        case .makeup: makeupDoneOn
+        }
+    }
+
+    func setRoutineDate(_ slot: RoutineSlot, _ date: Date?) {
+        switch slot {
+        case .morning: morningDoneOn = date
+        case .evening: eveningDoneOn = date
+        case .makeup: makeupDoneOn = date
+        }
     }
 
     func isDone(_ slot: RoutineSlot) -> Bool {
-        let d = slot == .morning ? morningDoneOn : eveningDoneOn
-        guard let d else { return false }
-        return Calendar.current.isDateInToday(d)
+        guard let date = routineDate(slot) else { return false }
+        return Calendar.current.isDateInToday(date)
     }
 
     func logRoutine(_ slot: RoutineSlot) {
-        logUse()
-        if slot == .morning { morningDoneOn = .now } else { eveningDoneOn = .now }
+        let date = Date.now
+        logUse(at: date)
+        setRoutineDate(slot, date)
     }
 
     func undoRoutine(_ slot: RoutineSlot) {
-        guard isDone(slot) else { return }
-        undoLastUse()
-        if slot == .morning { morningDoneOn = nil } else { eveningDoneOn = nil }
+        guard let date = routineDate(slot), Calendar.current.isDateInToday(date) else { return }
+        setRoutineDate(slot, nil)
+        var log = useLog
+        // Older versions stored the completion timestamp just after the usage timestamp.
+        let index = log.lastIndex(of: date) ?? log.lastIndex {
+            let delay = date.timeIntervalSince($0)
+            return delay >= 0 && delay < 1
+        }
+        guard let index, useCount > 0 else { return }
+        let useDate = log.remove(at: index)
+        useLog = log
+        useCount -= 1
+        if useCount == 0 && openedDate == useDate { openedDate = nil }
+        if measureMode != .estimate {
+            remainingAmount = min(totalAmount, remainingAmount + amountPerUse)
+        }
     }
 
     func markFinished() {
@@ -441,6 +494,7 @@ final class Product {
         p.finishRaw = finishRaw
         p.inMorning = inMorning
         p.inEvening = inEvening
+        p.inMakeup = inMakeup
         p.isSample = isSample
         return p
     }

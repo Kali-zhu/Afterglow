@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>妆台 · 使用手记</title>
+<p><a href="../docs/index.html?demo=journal">打开使用手记预览</a></p>
+<script>
+const mode=new URLSearchParams(location.search).has("empty")?"journal-empty":"journal";
+location.replace("../docs/index.html?demo="+mode);
+</script>
+</html>

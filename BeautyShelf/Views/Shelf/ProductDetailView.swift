@@ -261,28 +261,35 @@ struct ProductDetailView: View {
         .accessibilityElement(children: .combine)
     }
 
-    // MARK: 早间 / 晚间
+    // MARK: 日常流程
 
     private var slotToggles: some View {
-        HStack(spacing: 12) {
-            ForEach(RoutineSlot.allCases) { s in
-                let on = product.inRoutine(s)
-                Button {
-                    withAnimation(Theme.snappy) { product.setRoutine(s, !on) }
-                    coordinator.dataChanged()
-                } label: {
-                    Label(s.title, systemImage: s.symbol)
-                        .font(.body.weight(.semibold))
-                        .padding(.horizontal, 22)
-                        .frame(minHeight: 46)
-                        .foregroundStyle(on ? inkReverse : Color.primary.opacity(0.85))
-                        .background(Capsule().fill(on ? ink : soft))
-                }
-                .buttonStyle(.plain)
-                .accessibilityValue(on ? "已加入" : "未加入")
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) {
+                ForEach(RoutineSlot.allCases) { slot in routineToggle(slot) }
+            }
+            VStack(spacing: 8) {
+                ForEach(RoutineSlot.allCases) { slot in routineToggle(slot) }
             }
         }
         .padding(.top, 4)
+    }
+
+    private func routineToggle(_ slot: RoutineSlot) -> some View {
+        let on = product.inRoutine(slot)
+        return Button {
+            withAnimation(Theme.snappy) { product.setRoutine(slot, !on) }
+            coordinator.dataChanged()
+        } label: {
+            Label(slot.title, systemImage: slot.symbol)
+                .font(.body.weight(.semibold))
+                .padding(.horizontal, 12)
+                .frame(minHeight: 46)
+                .foregroundStyle(on ? inkReverse : Color.primary.opacity(0.85))
+                .background(Capsule().fill(on ? ink : soft))
+        }
+        .buttonStyle(.plain)
+        .accessibilityValue(on ? "已加入" : "未加入")
     }
 
     // MARK: 配色：白天瓷白、夜间近黑，跟随系统
@@ -383,7 +390,7 @@ struct ProductDetailView: View {
                 Spacer()
 
                 Menu {
-                    Button(product.isPinned ? "从首页拿下" : "放到首页", systemImage: product.isPinned ? "star.slash" : "star") {
+                    Button(product.isPinned ? "取消常用" : "标为常用", systemImage: product.isPinned ? "star.slash" : "star") {
                         product.togglePin()
                         coordinator.dataChanged()
                     }

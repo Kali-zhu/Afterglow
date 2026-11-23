@@ -11,7 +11,7 @@
 <title>妆台 · BeautyShelf</title>
 <style>
 :root{
-  --porcelain:#EEF1F4; --card:#FFFFFF; --shelf:#D9DEE4; --ink:#1C1C1E; --ink2:rgba(60,60,67,.6); --ink3:rgba(60,60,67,.3);
+  --porcelain:#EEF1F4; --card:#FFFFFF; --shelf:#D9DEE4; --ink:#1C1C1E; --ink2:#575761; --ink3:#666671;
   --surface:rgba(255,255,255,.78); --bar:rgba(249,249,251,.82); --glass:rgba(255,255,255,.6); --glass-stroke:rgba(255,255,255,.95); --edge:rgba(60,60,67,.16);
   --sage:#5E9277; --honey:#C7862B; --rouge:#B8404F; --fill:rgba(118,118,128,.12); --sep:rgba(60,60,67,.18); --blue:#007AFF;
   --spring:cubic-bezier(.34,1.36,.64,1); --ease:cubic-bezier(.22,1,.36,1);
@@ -19,7 +19,7 @@
   -webkit-font-smoothing:antialiased; color-scheme:light dark;
 }
 @media (prefers-color-scheme:dark){
-  :root{--porcelain:#000;--card:#1C1C1E;--shelf:#2C2C2E;--ink:#F2F2F7;--ink2:rgba(235,235,245,.6);--ink3:rgba(235,235,245,.3);
+  :root{--porcelain:#000;--card:#1C1C1E;--shelf:#2C2C2E;--ink:#F2F2F7;--ink2:#B4B4BF;--ink3:#9595A1;
     --surface:rgba(18,18,20,.8);--bar:rgba(22,22,24,.82);--glass:rgba(255,255,255,.07);--glass-stroke:rgba(255,255,255,.25);--edge:rgba(255,255,255,.18);
     --sage:#7FB89A;--honey:#E3A54E;--rouge:#E06876;--fill:rgba(118,118,128,.24);--sep:rgba(84,84,88,.6);--blue:#0A84FF}
 }
@@ -35,7 +35,6 @@ button:focus-visible,input:focus-visible,select:focus-visible,label:focus-within
 .r{font-family:ui-rounded,"SF Pro Rounded",-apple-system,sans-serif;font-variant-numeric:tabular-nums}
 
 /* nav */
-.nav{display:flex;justify-content:space-between;align-items:center;height:44px;margin:0 -10px}
 .icon-btn{width:44px;height:44px;border-radius:22px;display:grid;place-items:center;color:var(--blue)}
 .icon-btn svg{width:22px;height:22px}
 h1{font-size:34px;font-weight:700;margin:2px 0 4px;letter-spacing:.005em}
@@ -85,32 +84,20 @@ svg.c{display:block;overflow:visible}
 .bay::before{content:"";position:absolute;left:0;right:0;top:28px;height:150px;pointer-events:none;
   background:radial-gradient(52% 42% at 50% 55%,rgba(255,255,255,.6),transparent 100%)}
 @media (prefers-color-scheme:dark){.bay::before{background:radial-gradient(52% 42% at 50% 55%,rgba(255,255,255,.08),transparent 100%)}}
-.rail{position:relative;display:flex;align-items:flex-end;gap:14px;overflow-x:auto;scroll-snap-type:x proximity;padding:14px 20px 0;scroll-padding:0 20px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.rail::-webkit-scrollbar{display:none}
-.rail::after{content:"";flex:0 0 14px}
-.cab .item{flex:none;width:84px;scroll-snap-align:start;gap:6px;padding:0}
-.cab .item.narrow{width:62px}
-.cab .item .cw{height:118px;display:flex;align-items:flex-end;justify-content:center}
+.cab .item{gap:6px;padding:0}
 .cab .item svg.c[data-wave]{-webkit-box-reflect:below 2px linear-gradient(transparent 74%,rgba(255,255,255,.18))}
 .cab .item .name{margin-top:14px;font-size:12.5px}
 .cab .item .meta{font-size:11px}
-.railwrap{position:relative}
-.glass{position:absolute;left:0;right:0;top:130px;height:10px;pointer-events:none;
-  background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(255,255,255,.35) 2px,rgba(200,208,216,.35) 60%,rgba(0,0,0,.04));
-  border-top:1px solid rgba(255,255,255,.9);box-shadow:0 8px 12px -6px rgba(30,40,60,.18)}
-@media (prefers-color-scheme:dark){.glass{background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,.06) 2px,rgba(255,255,255,.03) 60%,transparent);border-top-color:rgba(255,255,255,.35);box-shadow:0 8px 14px -6px rgba(0,0,0,.6)}}
 .labels{display:flex;gap:6px;overflow:hidden;padding:30px 20px 0}
 .ghost{position:absolute;bottom:0;pointer-events:none;opacity:.55;filter:saturate(.6) brightness(1.05)}
 .ghost.g1{transform:translateX(12px) scale(.93);transform-origin:bottom center}
 .ghost.g2{transform:translateX(22px) scale(.86);transform-origin:bottom center;opacity:.35}
 .cw .stackn{position:absolute;left:-6px;top:-4px;min-width:22px;height:20px;padding:0 6px;border-radius:10px;font-size:11px;font-weight:700;background:var(--card);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.18),0 0 0 .5px var(--edge);display:grid;place-items:center;z-index:2}
-.more-end{flex:none;align-self:center;font-size:13px;color:var(--ink2);padding:0 6px 40px;white-space:nowrap}
 
 
 /* stacks: count chip instead of ghosts */
 .item .name .qty{display:inline-block;margin-left:4px;padding:0 6px;border-radius:8px;background:var(--fill);font-size:11px;font-weight:600;color:var(--ink2);vertical-align:1px}
 /* today v2 */
-.eyebrow{font-size:13px;font-weight:600;color:var(--ink2);letter-spacing:.02em;margin:0 0 2px}
 .seg{position:relative;display:flex;background:var(--fill);border-radius:12px;padding:3px;margin:14px 0 16px}
 .seg button{flex:1;position:relative;z-index:1;height:36px;font-size:15px;font-weight:600;color:var(--ink2);display:flex;align-items:center;justify-content:center;gap:6px;transition:color .25s}
 .seg button svg{width:15px;height:15px}
@@ -118,28 +105,6 @@ svg.c{display:block;overflow:visible}
 .steps .li .t>span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (prefers-color-scheme:dark){.seg .pill{background:rgba(255,255,255,.17)!important}}
 .seg .pill{position:absolute;top:3px;bottom:3px;left:3px;width:calc((100% - 6px)/3);border-radius:9px;background:var(--card);box-shadow:0 1px 4px rgba(0,0,0,.12);transition:transform .45s var(--spring)}
-.ritual{position:relative;border-radius:26px;padding:18px 18px 0;overflow:hidden;color:var(--ink)}
-.ritual.am{background:linear-gradient(160deg,#FFF3E2 0%,#FBE7DA 55%,#F4E9E4 100%)}
-.ritual.pm{background:linear-gradient(160deg,#E9E8F6 0%,#DCDDEE 55%,#E6E3EE 100%)}
-.ritual.mk{background:linear-gradient(160deg,#FBE9EC 0%,#F5DDE2 55%,#F1E6E8 100%)}
-@media (prefers-color-scheme:dark){
- .ritual.am{background:linear-gradient(160deg,#3A2A1C 0%,#2A201B 60%,#1E1A18 100%)}
- .ritual.pm{background:linear-gradient(160deg,#23243D 0%,#1B1C2C 60%,#16161F 100%)}
- .ritual.mk{background:linear-gradient(160deg,#3B2228 0%,#2A1C20 60%,#1D1719 100%)}}
-.ritual .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-.ritual .top b{display:block;font-size:22px;font-weight:700;letter-spacing:-.01em}
-.ritual .top span{font-size:14px;color:var(--ink2)}
-.ritual .prog{font-family:ui-rounded,"SF Pro Rounded",-apple-system,sans-serif;font-size:15px;font-weight:700;background:rgba(255,255,255,.55);border-radius:14px;padding:5px 11px;white-space:nowrap}
-@media (prefers-color-scheme:dark){.ritual .prog{background:rgba(255,255,255,.1)}}
-.ritual .row{display:flex;align-items:flex-end;justify-content:center;gap:10px;margin:14px -18px 0;padding:6px 18px 0;overflow-x:auto;scrollbar-width:none}
-.ritual .row::-webkit-scrollbar{display:none}
-.ritual .row .pi{position:relative;flex:none;display:flex;align-items:flex-end;transition:opacity .4s,transform .4s var(--spring)}
-.ritual .row .pi.done{opacity:.4;transform:scale(.94)}
-.ritual .row .pi .ok{position:absolute;right:-4px;top:-2px;width:18px;height:18px;border-radius:50%;background:var(--sage);color:#fff;display:grid;place-items:center}
-.ritual .row .pi .ok svg{width:11px;height:11px}
-.ritual .plank{height:9px;margin:0 -18px;background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(255,255,255,.4) 2px,rgba(255,255,255,.2));border-top:1px solid rgba(255,255,255,.9)}
-@media (prefers-color-scheme:dark){.ritual .plank{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.05) 2px,transparent);border-top-color:rgba(255,255,255,.3)}}
-.ritual .next{font-size:14px;color:var(--ink2);padding:12px 0 16px}.ritual .next b{color:var(--ink);font-weight:600}
 .steps{margin-top:14px}
 .steps .li .no{width:22px;font-family:ui-rounded,"SF Pro Rounded",-apple-system,sans-serif;font-size:14px;font-weight:700;color:var(--ink3);text-align:center;flex:none}
 .steps .li .pic{width:34px;display:flex;justify-content:center;flex:none}
@@ -159,24 +124,7 @@ svg.c{display:block;overflow:visible}
 .rcard b{font-size:14px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rcard span{font-size:12px;color:var(--ink2)}
 .rcard .buy{min-height:32px;margin-top:4px;padding:0 14px;border-radius:16px;background:var(--fill);font-size:14px}
 .ewall .item{cursor:default}
-.ewall .rail{padding-top:4px}.ewall .bay{margin-bottom:10px}
 .ewall .item .meta{white-space:normal;line-height:1.35}
-/* home v3 */
-.ritual{cursor:pointer;transition:transform .3s var(--spring)}
-.ritual:active{transform:scale(.98)}
-.ritual .cta{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0 18px}
-.ritual .cta .next{padding:0}
-.ritual .go{flex:none;height:40px;padding:0 18px;border-radius:20px;background:var(--ink);color:var(--porcelain);font-size:15px;font-weight:600;display:flex;align-items:center;gap:4px}
-.others{display:flex;gap:10px;margin-top:12px}
-.others button{flex:1;display:flex;align-items:center;gap:10px;background:var(--card);border-radius:18px;padding:12px 14px;text-align:left}
-.others svg{width:18px;height:18px;flex:none;color:var(--ink2)}
-.others b{display:block;font-size:15px;font-weight:600}.others span{font-size:12px;color:var(--ink2)}
-.nudge{display:flex;align-items:center;gap:14px;background:var(--card);border-radius:22px;padding:14px 16px;margin-top:22px}
-.nudge .t{flex:1;min-width:0}
-.nudge .t p{margin:0;font-size:15px;line-height:1.45}.nudge .t p b{font-weight:600}
-.nudge .acts{display:flex;gap:8px;margin-top:10px}
-.nudge .acts button{height:32px;padding:0 14px;border-radius:16px;background:var(--fill);font-size:14px;font-weight:600}
-.nudge .acts button.pri{background:var(--ink);color:var(--porcelain)}
 /* ritual page */
 .rpage{position:fixed;inset:0;z-index:9;background:var(--porcelain);overflow-y:auto;transform:translateX(100%);transition:transform .45s var(--spring);padding:0 20px calc(40px + env(safe-area-inset-bottom))}
 .rpage.open{transform:none}
@@ -188,9 +136,14 @@ svg.c{display:block;overflow:visible}
 /* tab bar */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;justify-content:center;background:var(--bar);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);border-top:.5px solid var(--sep);padding-bottom:env(safe-area-inset-bottom)}
 .tabbar nav{display:flex;width:100%;max-width:440px}
-.tabbar button{flex:1;height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;font-weight:500;color:var(--ink3);transition:color .2s}
+.tabbar button{flex:1;height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px;font-weight:500;color:var(--ink3);transition:color .2s}
 .tabbar button svg{width:26px;height:26px;transition:transform .3s var(--spring)}
 .tabbar button[aria-selected=true]{color:var(--ink)}
+.ui-icon{display:inline-block;width:1.15em;height:1.15em;flex:none;vertical-align:-.15em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabbar [aria-selected=true] .ui-icon{--symbol-fill:currentColor;--symbol-cut:var(--porcelain)}
+.solid-part{fill:var(--symbol-fill,none)}
+.cut-line{stroke:var(--symbol-cut,currentColor)}
+button .ui-icon+span{margin-inline-start:6px}
 .tabbar button:active svg{transform:scale(.88)}
 
 /* today */
@@ -257,7 +210,7 @@ svg.c{display:block;overflow:visible}
 .dots i{width:9px;height:9px;border-radius:50%;background:var(--fill)}
 .dots i.on{background:var(--ink)}
 .dots-l{font-size:11px;color:var(--ink2);margin-top:6px}
-.toggles{display:flex;gap:8px;margin-top:20px}
+.toggles{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:20px}
 .tg{height:36px;border-radius:18px;padding:0 14px;font-size:14px;background:var(--fill);display:flex;align-items:center;gap:6px;transition:all .3s var(--spring)}
 .tg[aria-pressed=true]{background:var(--ink);color:var(--porcelain);font-weight:600}
 .tg svg{width:15px;height:15px}
@@ -278,7 +231,7 @@ svg.c{display:block;overflow:visible}
 .grab{width:36px;height:5px;border-radius:3px;background:var(--ink3);margin:6px auto 0}
 .gt{font-size:13px;color:var(--ink2);margin:20px 16px 7px;display:flex;justify-content:space-between}
 .grp{background:var(--card);border-radius:12px;overflow:hidden}
-.f{display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:0 16px;border-bottom:.5px solid var(--sep);font-size:17px;gap:10px}
+.f{display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:8px 16px;border-bottom:.5px solid var(--sep);font-size:17px;gap:10px}
 .f:last-child{border-bottom:0}
 .f input,.f select{border:0;background:none;font:inherit;color:var(--ink);text-align:right;flex:1;min-width:0;outline:none}
 .f input::placeholder{color:var(--ink3)}
@@ -345,15 +298,14 @@ svg.c{display:block;overflow:visible}
 .foot a{color:inherit}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
-/* flow v3: one-tap routine, todo inbox, fab, onboarding */
-.ritual .done-btn{flex:none;height:44px;padding:0 20px;border-radius:22px;background:var(--ink);color:var(--porcelain);font-size:16px;font-weight:600;display:flex;align-items:center;gap:6px;transition:transform .25s var(--spring)}
-.ritual .done-btn:active{transform:scale(.95)}
-.ritual .done-btn svg{width:16px;height:16px}
-.ritual .done-btn.ok{background:var(--sage);color:#fff}
-.ritual .tweak{font-size:13px;color:var(--ink2);text-decoration:underline;text-underline-offset:3px}
+/* Shelf attention and routine picker */
+
+
+
+
 .todo{margin-top:26px}
-.todo>h2{font-size:20px;font-weight:700;margin:0 0 10px;display:flex;align-items:baseline;gap:8px}
-.todo>h2 small{font-size:13px;font-weight:500;color:var(--ink2)}
+
+
 .tcard{display:flex;align-items:center;gap:14px;background:var(--card);border-radius:20px;padding:12px 14px;margin-bottom:10px;animation:tabIn .35s var(--ease)}
 .tcard .pic{width:38px;display:flex;justify-content:center;flex:none}
 .tcard .t{flex:1;min-width:0}
@@ -363,81 +315,210 @@ svg.c{display:block;overflow:visible}
 .tcard .acts button{height:30px;padding:0 13px;border-radius:15px;background:var(--fill);font-size:13px;font-weight:600}
 .tcard .acts button.pri{background:var(--ink);color:var(--porcelain)}
 .todo .moreT{width:100%;height:40px;font-size:14px;color:var(--blue)}
-.allgood{background:var(--card);border-radius:20px;padding:18px;text-align:center;color:var(--ink2);font-size:15px;line-height:1.5}
-.allgood b{display:block;color:var(--ink);font-size:17px;margin-bottom:2px}
-.fab{position:fixed;right:max(20px,calc(50% - 200px));bottom:calc(env(safe-area-inset-bottom) + 70px);z-index:6;height:50px;padding:0 20px 0 16px;border-radius:25px;background:var(--ink);color:var(--porcelain);font-size:16px;font-weight:600;display:flex;align-items:center;gap:6px;box-shadow:0 6px 20px rgba(0,0,0,.22);transition:transform .3s var(--spring),opacity .3s}
-.fab svg{width:20px;height:20px}
-.fab:active{transform:scale(.94)}
-.fab.hide{opacity:0;transform:translateY(20px);pointer-events:none}
+
+
 .rsel{display:flex;flex-direction:column;gap:8px;margin:14px 0 6px}
 .rsel button{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:14px;padding:12px 14px;font-size:16px;font-weight:600;text-align:left}
 .rsel button svg{width:18px;height:18px;color:var(--ink2)}
 .rsel button .c{margin-left:auto;width:22px;height:22px;border-radius:7px;border:1.5px solid var(--ink3);display:grid;place-items:center;color:transparent}
 .rsel button[aria-pressed=true] .c{background:var(--ink);border-color:var(--ink);color:var(--porcelain)}
 .rsel button .c svg{width:13px;height:13px;color:inherit}
-.onb{position:fixed;inset:0;z-index:15;background:var(--porcelain);overflow-y:auto;padding:calc(env(safe-area-inset-top) + 20px) 22px calc(env(safe-area-inset-bottom) + 120px);transition:opacity .4s var(--ease)}
-.onb.gone{opacity:0;pointer-events:none}
-.onb .stp{font-size:13px;font-weight:700;color:var(--ink2);letter-spacing:.04em}
-.onb .dots3{display:flex;gap:6px;margin:10px 0 18px}.onb .dots3 i{height:4px;flex:1;border-radius:2px;background:var(--fill)}.onb .dots3 i.on{background:var(--ink)}
-.onb h2{font-size:28px;font-weight:700;margin:0 0 8px;letter-spacing:-.01em}
-.onb p.d{color:var(--ink2);font-size:15px;line-height:1.55;margin:0 0 18px}
-.onb .got{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;min-height:90px;background:var(--card);border-radius:22px;padding:18px}
-.onb .got .g{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--ink2);max-width:64px;text-align:center}
-.onb .got .ph{width:100%;text-align:center;color:var(--ink3);font-size:14px;align-self:center}
-.onb .bar{position:fixed;left:0;right:0;bottom:0;padding:14px 22px calc(env(safe-area-inset-bottom) + 18px);background:linear-gradient(transparent,var(--porcelain) 30%);display:flex;flex-direction:column;gap:10px;align-items:stretch;max-width:440px;margin:0 auto}
-.onb .rgrp{background:var(--card);border-radius:20px;padding:6px 0;margin-bottom:14px}
-.onb .rgrp h3{font-size:15px;margin:8px 16px 4px;display:flex;align-items:center;gap:6px}.onb .rgrp h3 svg{width:16px;height:16px;color:var(--ink2)}
-.onb .rrow{display:flex;align-items:center;gap:10px;padding:6px 16px;font-size:15px}
-.onb .rrow .no{width:18px;color:var(--ink3);font-weight:700;font-size:13px;text-align:center}
-.onb .rrow .x{margin-left:auto;color:var(--ink3);font-size:20px;width:30px;height:30px}
-.onb .rgrp .none{padding:6px 16px 10px;font-size:14px;color:var(--ink3)}
-.onb .fin{text-align:center;padding-top:22vh}.onb .fin b{color:var(--ink)}
-.onb .fin .big{font-size:64px}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .li .qty{display:inline-block;margin-left:6px;padding:0 7px;border-radius:9px;background:var(--fill);font-size:12px;font-weight:600;color:var(--ink2);vertical-align:2px}
+
+/* Page layout */
+:root{--page-gutter:clamp(16px,4vw,36px);--page-width:68rem}
+.app{max-width:var(--page-width);padding-inline:var(--page-gutter);padding-bottom:calc(env(safe-area-inset-bottom) + 80px)}
+.page-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 16px}
+.page-head h1{margin:0}
+.page-actions{display:flex;align-items:center;gap:8px}
+.page-actions .secondary{min-height:44px;padding-inline:14px;font-size:14px;white-space:nowrap}
+.journal-card{border-radius:18px;background:var(--card);overflow:hidden;padding:22px 20px 16px}
+.journal-stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(72px,34%);align-items:center;gap:12px}
+.journal-meta,.journal-brand{font-size:14px;line-height:1.5;color:var(--ink2);margin:0}
+.journal-date{display:block;font-size:17px;font-weight:600;margin:5px 0 19px}
+.journal-name{font-size:clamp(23px,5vw,31px);line-height:1.2;letter-spacing:-.025em;margin:0 0 6px;overflow-wrap:anywhere}
+.journal-figure{height:156px;display:flex;align-items:flex-end;justify-content:center;border-bottom:6px solid var(--shelf);box-shadow:0 3px 3px -3px var(--edge)}
+.journal-figure img,.journal-thumb img{height:100%;width:100%;object-fit:contain}
+.journal-figure img{object-position:center bottom}
+.journal-figure svg{max-width:100%;max-height:100%}
+.journal-card .primary{width:100%;margin-top:20px}
+.journal-alt{display:block;margin:4px auto 0}
+.journal-log{padding:0;margin:0;list-style:none}
+.journal-log li,.journal-choice{display:grid;align-items:center;gap:12px;min-height:51px;border-bottom:1px solid var(--sep);font-size:15px}
+.journal-log li{grid-template-columns:52px 1fr 36px;position:relative;padding-left:14px}
+.journal-log li::before{content:"";position:absolute;left:0;top:50%;width:4px;height:4px;border-radius:50%;background:var(--ink3)}
+.journal-log .r,.journal-day{color:var(--ink2);font-size:14px}
+.journal-day{margin:16px 0 3px;font-weight:600}
+.journal-thumb{display:flex;align-items:center;justify-content:center;overflow:hidden;height:36px;width:32px}.journal-thumb img{display:block;max-height:36px;max-width:32px}
+.journal-choice{width:100%;grid-template-columns:32px 1fr auto;text-align:left;padding:6px 4px}
+.journal-choice small{display:block;color:var(--ink2)}
+.journal-choice span,.journal-log strong{overflow-wrap:anywhere;min-width:0}
+.journal-choices{margin:10px 0 18px}
+.journal-receipt{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px}
+.journal-figure>span{min-width:0;width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center}
+.journal-set{height:112px;gap:2px}
+.journal-member{display:inline-block;max-width:100%;overflow-wrap:anywhere}
+.journal-card .primary,.usage-picker .primary{gap:6px}
+.journal-card .primary .ui-icon+span{margin-inline-start:0}
+.journal-log small{display:block;color:var(--ink2);margin:2px 0 6px;font-size:13px;overflow-wrap:anywhere}
+.usage-picker{display:flex;flex-direction:column;max-height:76dvh;gap:8px}
+.usage-picker header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.usage-picker h2{font-size:22px;margin:0}
+.usage-picker .search,.usage-picker .primary{flex:none}
+.usage-picker .journal-choices{min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:2px 0 4px}
+.usage-scope{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none;min-height:36px}
+.usage-scope[hidden],.usage-browse[hidden]{display:none}
+.usage-scope strong{font-size:14px}
+.usage-browse{display:flex;align-items:center;position:relative;gap:4px;min-height:44px;color:var(--blue);font-size:14px}
+.usage-browse select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.usage-browse:focus-within{outline:2px solid var(--blue);outline-offset:1px;border-radius:6px}
+.usage-more{width:100%;min-height:44px;color:var(--blue);font-size:14px}
+.choice-mark{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--ink3)}
+.choice-mark svg{width:15px;height:15px;visibility:hidden}
+[aria-pressed=true] .choice-mark{color:var(--card);background:var(--ink);border-color:var(--ink)}
+[aria-pressed=true] .choice-mark svg{visibility:visible}
+#t-today [hidden]{display:none}
+@media(min-width:760px){.journal-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;gap:40px}.journal-history>h2{margin-top:0}}
+.shelf-attention{margin-top:12px}
+.shelf-attention summary{min-height:44px;padding-block:11px;cursor:pointer;font-size:14px;font-weight:600}
+.shelf-attention .todo{padding-top:6px}
+.cab .shelf-grid .item{width:auto;min-width:0;gap:6px}
+.shelf-grid .item .cw{width:100%;height:108px;display:flex;justify-content:center;align-items:end;isolation:isolate}
+.shelf-grid .cw::before{content:"";position:absolute;inset:auto 0 -6px;height:9px;background:var(--shelf);border-top:1px solid var(--glass-stroke);z-index:-1}
+.shelf-grid .item .name{margin-top:7px}
+.shelf-grid .item .meta{min-height:16px}
+.shelf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,88px),1fr));row-gap:14px}
+.shelf-grid .item svg{max-width:100%}
+.shelf-grid .item .badge{right:6px}
+.pin-mark{position:absolute;top:0;left:8px;color:var(--ink2);font-size:13px}
+.shelfhd{gap:8px;padding:0}
+.shelfhd small{flex:none}
+.cab{margin-inline:0}
+.search{height:44px}
+.chips{margin-inline:0;padding:0}
+.chip,.chip-pill{min-height:44px}
+.todo{margin:0}
+.tcard .acts button{height:44px}
+
+
+
+.restock{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,128px),1fr));margin-inline:0;padding:0;overflow:visible}
+.restock .rcard{width:auto;min-width:0;padding-inline:8px}
+.restock .rcard b{overflow-wrap:anywhere}
+.rpage{padding-inline:max(var(--page-gutter),calc((100vw - 42rem)/2))}
+.rpage .rnav{margin-inline:0;padding-inline:0}
+.routine-order{display:flex;align-items:center;gap:4px;border-bottom:1px solid var(--sep)}
+.routine-order:last-child{border-bottom:0}
+.routine-order .li{min-width:0;border:0}
+.routine-order .link{flex:none;min-width:44px}
+.routine-order .link:disabled{opacity:.35;cursor:default}
+.ov:not(.open),.rpage:not(.open),.welcome.gone,.toast:not(.show){visibility:hidden}
+body:has(.ov.open,.rpage.open,.welcome:not(.gone)){overflow:hidden}
+.ov .panel,.dsheet,.rpage{overscroll-behavior:contain}
+.welcome{overflow:auto}
+.toast{max-width:calc(100% - 24px);white-space:normal}
+.toast button{min-height:24px;flex:none}
+.dname{overflow-wrap:anywhere;text-align:center}
+.share-image{display:block;width:min(100%,240px);height:auto;margin:12px auto;border-radius:8px}
+.share-download{display:flex;width:100%;text-decoration:none}
+@media (min-width:760px){
+  .page-head{margin-top:28px}
+  .shelf-grid{grid-template-columns:repeat(auto-fill,minmax(112px,1fr))}
+}
+@media (max-width:370px){
+
+
+  .shapes{grid-template-columns:repeat(3,1fr)}
+}
 </style>
 </head>
 <body>
+<svg aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden"><defs>
+<symbol id="ui-book" viewBox="0 0 24 24"><rect class="solid-part" x="5" y="2.8" width="14.5" height="18.4" rx="2.5"/><path class="cut-line" d="M8.5 3.7v16.8m3.2-11.7h4.5"/></symbol>
+<symbol id="ui-grid" viewBox="0 0 24 24"><g class="solid-part"><rect x="3" y="3" width="7" height="7" rx="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.8"/></g></symbol>
+<symbol id="ui-archive" viewBox="0 0 24 24"><rect class="solid-part" x="4.5" y="8" width="15" height="12.4" rx="2"/><rect class="solid-part" x="3" y="3.8" width="18" height="4.5" rx="1.1"/><path class="cut-line" d="M9.5 12.4h5"/></symbol>
+<symbol id="ui-settings" viewBox="0 0 24 24"><path d="m10 3 .5-1h3l.6 2.2 1.7.7 2-.9 2.1 2.1-.9 2 .7 1.7 2.3.7v3l-2.3.7-.7 1.7.9 2-2.1 2.1-2-.9-1.7.7-.6 2.2h-3l-.7-2.2-1.7-.7-2 .9L4 17.8l.9-2-.7-1.7-2.2-.7v-3l2.2-.7.7-1.7-.9-2 2.1-2.1 2 .9 1.7-.7Z"/><circle cx="12" cy="12" r="3.15"/></symbol>
+<symbol id="ui-plus" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></symbol>
+<symbol id="ui-search" viewBox="0 0 24 24"><circle cx="10.2" cy="10.2" r="6.4"/><path d="m15.1 15.1 5.3 5.3"/></symbol>
+<symbol id="ui-repeat" viewBox="0 0 24 24"><path d="M19.9 9.3A8 8 0 1 0 20 15M20 4.3v5.4h-5.4"/></symbol>
+<symbol id="ui-undo" viewBox="0 0 24 24"><path d="m8.5 4.8-5 5 5 5M4.2 9.8h9.4c4.1 0 6.5 2 6.5 5.8v2.5"/></symbol>
+<symbol id="ui-list" viewBox="0 0 24 24"><path d="m2.8 6.7 1.5 1.5L7 4.8M10.5 6.7h10M10.5 12.2h10M10.5 17.7h10"/><circle cx="5" cy="12.2" r="1.2"/><circle cx="5" cy="17.7" r="1.2"/></symbol>
+<symbol id="ui-check" viewBox="0 0 24 24"><path d="m4.7 12 4.8 4.8 9.8-10"/></symbol>
+<symbol id="ui-photo" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.4"/><circle cx="8" cy="9" r="1.1"/><path d="m5 17 4-4 2.5 2.5 4-5 4 5"/></symbol>
+<symbol id="ui-drop" viewBox="0 0 24 24"><path d="M12 2.8c-2.4 4.2-7.2 9-7.2 12.2a7.2 7.2 0 0 0 14.4 0C19.2 11.8 14.4 7 12 2.8Z"/></symbol>
+<symbol id="ui-pencil" viewBox="0 0 24 24"><path d="m4 16.4 12.3-12.3q.9-.9 1.8 0l1.8 1.8q.9.9 0 1.8L7.6 20H3.5zM14.5 6l3.4 3.4"/></symbol>
+<symbol id="ui-trash" viewBox="0 0 24 24"><path d="M3.4 6.7h17.2M9 6.3V3.5h6v2.8M5.6 7.3l.9 12.2q.1 1.4 1.6 1.4h7.8q1.5 0 1.6-1.4l.9-12.2M10 10.1v7.2m4-7.2v7.2"/></symbol>
+<symbol id="ui-star" viewBox="0 0 24 24"><path d="m12 2.6 3 6.2 6.8 1-4.9 4.8 1.1 6.8-6-3.3-6 3.3 1.1-6.8-4.9-4.8 6.8-1Z"/></symbol>
+</defs></svg>
 <main class="app">
   <!-- 今日 -->
   <div class="tab on" id="t-today" role="tabpanel" aria-label="今日">
-    <div class="nav"></div>
-    <p class="eyebrow" id="todaySub"></p>
-    <h1 id="hello">今日</h1>
-    <div id="ritual" style="margin-top:16px"></div>
-    <div class="others" id="others"></div>
-    <div class="todo" id="todo" style="margin-bottom:70px"></div>
+    <header class="page-head">
+      <h1>使用手记</h1>
+      <div class="page-actions">
+        <button class="icon-btn" id="todaySettings" aria-label="设置"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#ui-settings"/></svg></button>
+        <button class="icon-btn" id="todayAdd" aria-label="添加产品"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#ui-plus"/></svg></button>
+      </div>
+    </header>
+    <div class="journal-layout"><div>
+      <div class="journal-card">
+        <div id="journalStage"></div>
+        <button class="primary" id="journalRecord"></button>
+        <div class="journal-receipt" id="journalReceipt" hidden><span role="status" id="journalFeedback"></span><button class="link" id="journalUndo"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#ui-undo"/></svg><span>撤销</span></button></div>
+      </div>
+      <button class="link journal-alt" id="journalOther"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#ui-list"/></svg><span>换一件或记多件</span></button>
+    </div>
+    <section class="journal-history" id="journalHistory"><h2>近期记录</h2><div id="journalEntries"></div></section></div>
   </div>
   <!-- 妆台 -->
   <div class="tab" id="t-shelf" role="tabpanel" aria-label="藏品">
-    <div class="nav">
-      <button class="icon-btn" id="setBtn" aria-label="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/></svg></button>
-      <button class="icon-btn" id="addBtn" aria-label="添加产品"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 4v16M4 12h16"/></svg></button>
-    </div>
-    <h1>藏品</h1>
+    <header class="page-head">
+      <h1>藏品</h1><div class="page-actions">
+      <button class="icon-btn" id="setBtn" aria-label="设置"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#ui-settings"/></svg></button>
+      <button class="icon-btn" id="addBtn" aria-label="添加产品"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#ui-plus"/></svg></button>
+    </div></header>
     <div class="worth" id="shelfSub"></div>
-    <label class="search"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="q" type="search" placeholder="搜索名称或品牌" aria-label="搜索名称或品牌" enterkeyhint="search"></label>
+    <label class="search"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#ui-search"/></svg><input id="q" type="search" placeholder="搜索名称或品牌" aria-label="搜索名称或品牌" enterkeyhint="search"></label>
     <div class="chips" id="chips" role="toolbar" aria-label="分类"><span class="chip-pill" id="pill"></span></div>
+    <details class="shelf-attention" id="shelfAttention" hidden><summary>要处理的</summary><div class="todo" id="todo"></div></details>
     <div id="shelves"></div>
     <p class="foot">网页预览版，数据只保存在这台设备的浏览器里 · <a href="https://github.com/LLM-zhu/BeautyShelf">GitHub</a></p>
   </div>
   <!-- 空瓶 -->
   <div class="tab" id="t-empty" role="tabpanel" aria-label="空瓶">
-    <div class="nav"></div>
-    <h1>空瓶</h1>
+    <header class="page-head"><h1>空瓶</h1><button class="secondary" id="shareEmpties"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#ui-photo"/></svg><span>生成空瓶记</span></button></header>
     <p class="sub" style="margin-bottom:10px">用完的每一瓶都算数。</p>
     <div id="empties"></div>
   </div>
 </main>
 
 <div class="tabbar"><nav role="tablist">
-  <button role="tab" aria-selected="true" data-tab="today"><svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="13" cy="13" r="9"/><path d="M9 13.2l2.8 2.8L17.5 10"/></svg>今日</button>
-  <button role="tab" aria-selected="false" data-tab="shelf"><svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="5" y="4" width="6" height="12" rx="2"/><rect x="15" y="8" width="7" height="8" rx="2"/><path d="M2.5 19.5h21" stroke-linecap="round" stroke-width="2.2"/></svg>藏品</button>
-  <button role="tab" aria-selected="false" data-tab="empty"><svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="9" y="3" width="8" height="4" rx="1.2"/><path d="M8 9.5Q8 8 9.5 8h7Q18 8 18 9.5V21q0 2-2 2h-6q-2 0-2-2z"/><path d="M8 17h10" stroke-dasharray="2 2"/></svg>空瓶</button>
+  <button role="tab" aria-selected="true" data-tab="today"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#ui-book"/></svg>今日</button>
+  <button role="tab" aria-selected="false" data-tab="shelf"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#ui-grid"/></svg>藏品</button>
+  <button role="tab" aria-selected="false" data-tab="empty"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#ui-archive"/></svg>空瓶</button>
 </nav></div>
 
 <!-- ritual page -->
 <div class="rpage" id="rpage" aria-hidden="true" role="dialog" aria-label="流程">
-  <div class="rnav"><button id="rBack"><svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2L2 10l8 8"/></svg>今日</button><button id="rEdit">调整</button></div>
+  <div class="rnav"><button id="rBack"><svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2L2 10l8 8"/></svg>返回</button><button id="rEdit">调整</button></div>
   <h1 id="rTitle"></h1>
   <div class="seg" id="rseg" role="tablist" aria-label="流程"></div>
   <div id="rbody"></div>
@@ -513,6 +594,7 @@ svg.c{display:block;overflow:visible}
       <div class="grp">
         <div class="f"><span>早间使用</span><button type="button" class="sw-toggle" role="switch" aria-checked="false" id="fAm" aria-label="早间使用"></button></div>
         <div class="f"><span>晚间使用</span><button type="button" class="sw-toggle" role="switch" aria-checked="false" id="fPm" aria-label="晚间使用"></button></div>
+        <div class="f"><span>化妆使用</span><button type="button" class="sw-toggle" role="switch" aria-checked="false" id="fMk" aria-label="化妆使用"></button></div>
       </div>
       <div class="grp" id="fDelGrp" style="margin-top:20px"><button type="button" class="f danger" id="fDel" style="width:100%;justify-content:center">删除这件产品</button></div>
     </div>
@@ -529,14 +611,12 @@ svg.c{display:block;overflow:visible}
 <div class="welcome gone" id="welcome" aria-hidden="true">
   <div class="trio" id="wTrio"></div>
   <h2>把梳妆台搬进手机</h2>
-  <p>拍下正在用的，早晚流程自动排好。<br>每天点一下「照常」，快过期、快用完我来提醒。</p>
+  <p>用过哪一瓶，顺手记一次。<br>每一瓶的余量和保质期，随时都能查。</p>
   <div class="acts">
-    <button class="primary" id="wAdd">开始，约 1 分钟</button>
+    <button class="primary" id="wAdd">添加第一件</button>
     <button class="secondary" id="wDemo">先看看示例</button>
   </div>
 </div>
-<button class="fab" id="fab" aria-label="入库"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>入库</button>
-<div class="onb gone" id="onb" aria-hidden="true"></div>
 <div class="toast" id="toast" role="status"><span id="toastT"></span><button id="toastU" hidden>撤销</button></div>
 <input type="file" id="dummy" hidden>
 
@@ -560,8 +640,14 @@ const DAY=864e5;
 const t0=()=>{const d=new Date();d.setHours(0,0,0,0);return d};
 const iso=d=>{const x=new Date(d);x.setMinutes(x.getMinutes()-x.getTimezoneOffset());return x.toISOString().slice(0,10)};
 const todayISO=()=>iso(t0());
-const plusDays=n=>iso(new Date(t0().getTime()+n*DAY));
-const plusMonths=(dISO,m)=>{const d=new Date(dISO+"T00:00:00");d.setMonth(d.getMonth()+m);return iso(d)};
+const plusDays=n=>{const d=t0();d.setDate(d.getDate()+n);return iso(d)};
+function plusMonths(dISO,m){
+  const d=dParse(dISO),day=d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth()+m);
+  d.setDate(Math.min(day,new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));
+  return iso(d);
+}
 const dParse=s=>new Date(s+"T00:00:00");
 const daysTo=s=>Math.round((dParse(s)-t0())/DAY);
 const fmtDate=s=>dParse(s).toLocaleDateString("zh-CN",{year:"numeric",month:"long",day:"numeric"});
@@ -569,10 +655,17 @@ const fmtShort=s=>{const d=dParse(s);return `${d.getFullYear()!==new Date().getF
 const fmtN=n=>Number.isInteger(+(+n).toFixed(2))?String(Math.round(n)):(+n).toFixed(1);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
+// 设计预览使用独立示例库，方便在三个真实标签之间核对。
+const journalDemo=new URLSearchParams(location.search).get("demo");
+const previewJournal=journalDemo==="journal"||journalDemo==="journal-empty";
+const storageKey=previewJournal?"beautyshelf.preview."+journalDemo:"bs2";
 let db=load();
-(function dedupe(){const seen=new Set(),n0=db.items.length;db.items=db.items.filter(p=>{const k=[p.brand,p.name,p.opened,p.finished,p.total,p.created,p.price].join("|");if(seen.has(k))return false;seen.add(k);return true});if(db.items.length!==n0)try{localStorage.setItem("bs2",JSON.stringify(db))}catch{}})();
-function load(){try{return JSON.parse(localStorage.getItem("bs2"))||{items:[],seen:false,nextId:1}}catch{return{items:[],seen:false,nextId:1}}}
-function save(){try{localStorage.setItem("bs2",JSON.stringify(db))}catch(e){toast("存储空间满了，照片可能没保存")}}
+(function dedupe(){const seen=new Set(),n0=db.items.length;db.items=db.items.filter(p=>{const k=[p.brand,p.name,p.opened,p.finished,p.total,p.created,p.price].join("|");if(seen.has(k))return false;seen.add(k);return true});if(db.items.length!==n0)try{localStorage.setItem(storageKey,JSON.stringify(db))}catch{}})();
+function load(){try{return JSON.parse(localStorage.getItem(storageKey))||{items:[],seen:false,nextId:1}}catch{return{items:[],seen:false,nextId:1}}}
+function save(){
+  try{localStorage.setItem(storageKey,JSON.stringify(db));return true}
+  catch{toast("浏览器空间不足，保存失败");return false}
+}
 const items=()=>db.items;
 const active=()=>db.items.filter(i=>!i.finished);
 const byId=id=>db.items.find(i=>i.id===id);
@@ -594,21 +687,30 @@ function seed(){
   db.items=db.items.filter(p=>!p.demo);
   const T=todayISO(),ago=n=>plusDays(-n);
   const mk=(o)=>{const id=db.nextId++;const s=SHAPES[o.shape];return Object.assign({id,brand:"",cat:"护肤",unit:s.unit,mode:s.mode,per:s.per[Math.min(1,s.per.length-1)],uses:0,log:[],opened:null,pao:null,price:null,backup:0,photo:null,am:false,pm:false,finished:null,restock:false,created:ago(90),demo:true},o)};
-  const logs=(n,r)=>Array.from({length:n},(_,i)=>({d:ago(Math.floor(i*1.3)),r}));
+  function logs(n,r,hour,minute){
+    const latest=t0();
+    latest.setHours(hour,minute);
+    if(latest>Date.now())latest.setDate(latest.getDate()-1);
+    return Array.from({length:n},(_,i)=>{
+      const time=new Date(latest);
+      time.setDate(time.getDate()-Math.floor(i*1.3));
+      return {d:iso(time),r,at:time.getTime()};
+    });
+  }
   const list=[
-    mk({name:"小棕瓶精华",brand:"Estée Lauder",shape:"bottle",total:50,left:7,per:1,uses:43,log:logs(12,"pm"),opened:ago(160),pao:6,exp:plusDays(500),tint:LIQUIDS[0],price:860,pm:true}),
-    mk({name:"神仙水",brand:"SK-II",shape:"bottle",total:230,left:150,per:3,uses:27,log:logs(10,"am"),opened:ago(60),pao:12,exp:plusDays(720),tint:LIQUIDS[2],price:1540,am:true,pm:true}),
-    mk({name:"权力粉底液",brand:"Armani",cat:"彩妆",shape:"bottle",total:30,left:19,per:.4,uses:22,log:logs(6,"am"),opened:ago(400),pao:12,exp:plusDays(300),tint:LIQUIDS[6],price:590}),
-    mk({name:"精华面霜",brand:"La Mer",shape:"jar",total:60,left:44,per:.6,uses:26,log:logs(9,"pm"),opened:ago(45),pao:12,exp:plusDays(800),tint:LIQUIDS[1],price:2800,pm:true}),
-    mk({name:"氨基酸洁面",brand:"Freeplus",shape:"tube",total:100,left:38,per:1.5,uses:41,log:logs(14,"am"),opened:ago(70),pao:12,exp:plusDays(420),tint:LIQUIDS[4],price:150,am:true,pm:true}),
-    mk({name:"小金瓶防晒",brand:"Anessa",shape:"bottle",total:60,left:52,per:1,uses:8,log:logs(8,"am"),opened:ago(10),pao:12,exp:plusDays(26),tint:LIQUIDS[1],price:298,am:true,backup:1}),
+    mk({name:"小棕瓶精华",brand:"Estée Lauder",shape:"bottle",total:50,left:7,per:1,uses:43,log:logs(12,"pm",22,10),opened:ago(160),pao:6,exp:plusDays(500),tint:LIQUIDS[0],price:860,pm:true}),
+    mk({name:"神仙水",brand:"SK-II",shape:"bottle",total:230,left:150,per:3,uses:27,log:logs(10,"am",8,6),opened:ago(60),pao:12,exp:plusDays(720),tint:LIQUIDS[2],price:1540,am:true,pm:true}),
+    mk({name:"权力粉底液",brand:"Armani",cat:"彩妆",shape:"bottle",total:30,left:19,per:.4,uses:22,log:logs(6,"am",8,24),opened:ago(400),pao:12,exp:plusDays(300),tint:LIQUIDS[6],price:590}),
+    mk({name:"精华面霜",brand:"La Mer",shape:"jar",total:60,left:44,per:.6,uses:26,log:logs(9,"pm",22,15),opened:ago(45),pao:12,exp:plusDays(800),tint:LIQUIDS[1],price:2800,pm:true}),
+    mk({name:"氨基酸洁面",brand:"Freeplus",shape:"tube",total:100,left:38,per:1.5,uses:41,log:logs(14,"am",8,3),opened:ago(70),pao:12,exp:plusDays(420),tint:LIQUIDS[4],price:150,am:true,pm:true}),
+    mk({name:"小金瓶防晒",brand:"Anessa",shape:"bottle",total:60,left:52,per:1,uses:8,log:logs(8,"am",8,14),opened:ago(10),pao:12,exp:plusDays(26),tint:LIQUIDS[1],price:298,am:true,backup:1}),
     mk({name:"补水面膜",brand:"Dr.Jart+",shape:"sheet",total:10,left:7,per:1,uses:3,log:[{d:ago(2),r:"pm"},{d:ago(6),r:"pm"}],exp:plusDays(340),tint:LIQUIDS[2],price:199,backup:2}),
-    mk({name:"持妆粉底液",brand:"Estée Lauder",cat:"彩妆",shape:"bottle",total:30,left:24,per:.4,uses:9,log:logs(4,"am"),opened:ago(50),pao:12,exp:plusDays(500),tint:LIQUIDS[6],price:470,cut:["foundation",146,520,.31,.94]}),
-    mk({name:"999 哑光",brand:"Dior",cat:"彩妆",shape:"stick",total:100,left:62,per:2,uses:30,log:logs(5,null),opened:ago(200),pao:24,exp:plusDays(600),tint:LIQUIDS[7],price:350}),
+    mk({name:"持妆粉底液",brand:"Estée Lauder",cat:"彩妆",shape:"bottle",total:30,left:24,per:.4,uses:9,log:logs(4,"am",8,20),opened:ago(50),pao:12,exp:plusDays(500),tint:LIQUIDS[6],price:470,cut:["foundation",146,520,.31,.94]}),
+    mk({name:"999 哑光",brand:"Dior",cat:"彩妆",shape:"stick",total:100,left:62,per:2,uses:30,log:logs(5,null,12,30),opened:ago(200),pao:24,exp:plusDays(600),tint:LIQUIDS[7],price:350}),
     mk({name:"四色眼影 #1",brand:"Tom Ford",cat:"彩妆",shape:"compact",total:100,left:70,per:1,uses:18,log:[{d:ago(12),r:"mk"},{d:ago(16),r:"mk"}],opened:ago(260),pao:24,exp:plusDays(500),tint:LIQUIDS[6],price:720}),
-    mk({name:"英国梨与小苍兰",brand:"Jo Malone",cat:"香氛",shape:"bottle",total:100,left:71,per:.3,uses:95,log:logs(7,null),opened:ago(300),pao:36,exp:plusDays(900),tint:LIQUIDS[3],price:1150}),
-    mk({name:"维C精华",brand:"Skinceuticals",shape:"bottle",total:30,left:12,per:.5,uses:36,log:logs(3,"am"),opened:ago(190),pao:6,exp:plusDays(200),tint:LIQUIDS[0],price:1390}),
-    mk({name:"护发精油",brand:"Moroccanoil",cat:"头发",shape:"bottle",total:100,left:63,per:1,uses:37,log:logs(4,null),opened:ago(120),pao:12,exp:plusDays(300),tint:LIQUIDS[0],price:330}),
+    mk({name:"英国梨与小苍兰",brand:"Jo Malone",cat:"香氛",shape:"bottle",total:100,left:71,per:.3,uses:95,log:logs(7,null,8,32),opened:ago(300),pao:36,exp:plusDays(900),tint:LIQUIDS[3],price:1150}),
+    mk({name:"维C精华",brand:"Skinceuticals",shape:"bottle",total:30,left:12,per:.5,uses:36,log:logs(3,"am",8,10),opened:ago(190),pao:6,exp:plusDays(200),tint:LIQUIDS[0],price:1390}),
+    mk({name:"护发精油",brand:"Moroccanoil",cat:"头发",shape:"bottle",total:100,left:63,per:1,uses:37,log:logs(4,null,21,55),opened:ago(120),pao:12,exp:plusDays(300),tint:LIQUIDS[0],price:330}),
     mk({name:"舒缓洁面乳",brand:"Cetaphil",shape:"tube",total:125,left:125,per:1.5,uses:0,log:[],opened:null,pao:12,exp:plusDays(700),tint:LIQUIDS[1],price:98,created:ago(2)}),
     mk({name:"修护身体乳",brand:"Aesop",cat:"身体",shape:"tube",total:120,left:0,per:4,uses:31,log:[],opened:ago(150),pao:12,exp:plusDays(200),tint:LIQUIDS[4],price:350,finished:ago(20),restock:true}),
     mk({name:"神仙水",brand:"SK-II",shape:"bottle",total:230,left:0,per:3,uses:74,log:[],opened:ago(260),pao:12,exp:plusDays(300),tint:LIQUIDS[2],price:1540,finished:ago(70)}),
@@ -617,6 +719,7 @@ function seed(){
     mk({name:"氨基酸洁面",brand:"Freeplus",shape:"tube",total:100,left:0,per:1.5,uses:66,log:[],opened:ago(170),pao:12,exp:plusDays(300),tint:LIQUIDS[4],price:150,finished:ago(72)}),
     mk({name:"卸妆膏",brand:"Banila Co",shape:"jar",total:100,left:0,per:2,uses:52,log:[],opened:ago(130),pao:12,exp:plusDays(200),tint:LIQUIDS[5],price:160,finished:ago(41)}),
   ];
+  list.filter(p=>!p.finished&&(p.am||p.pm)).forEach((p,i)=>{p.pin=Date.now()-i});
   db.items.push(...list);db.seen=true;save();
 }
 
@@ -771,7 +874,7 @@ function tick(t){
 /* ================= tabs ================= */
 let tab="today";
 $$(".tabbar button").forEach(b=>b.onclick=()=>{tab=b.dataset.tab;$$(".tabbar button").forEach(x=>x.setAttribute("aria-selected",x===b));$$(".tab").forEach(x=>x.classList.toggle("on",x.id==="t-"+tab));render();scrollTo({top:0});haptic()});
-function render(){$("#fab").classList.toggle("hide",tab!=="today");if(tab==="shelf")renderShelf();else if(tab==="today")renderToday();else renderEmpties()}
+function render(){if(tab==="shelf")renderShelf();else if(tab==="today")renderToday();else renderEmpties()}
 
 /* ================= shelf ================= */
 let filter=null,query="";
@@ -797,10 +900,9 @@ function tileHTML(p,group=[p]){
   const s=state(p),[meta,cls]=metaFor(p),[w,h]=SIZE[p.shape]||[64,104];
   const extra=group.length-1+(p.backup||0);
   const badge=s!=="fresh"?`<span class="badge" style="background:${stateColor(s)}">!</span>`:"";
-  const narrow=(p.shape==="stick"||p.shape==="sheet")?" narrow":"";
-  return `<button class="item${narrow}" data-id="${p.id}" aria-label="${esc(p.name)}，${esc(meta)}${extra?`，共 ${extra+1} 件`:""}，剩余 ${p.mode==="count"?fmtN(p.left)+" 片":Math.round(level(p)*100)+"%"}">
-    <span class="cw">${containerSVG(p,w,h)}${badge}</span>
-    <span class="name">${esc(p.name)}${extra?`<i class="qty r">×${extra+1}</i>`:""}</span><span class="meta ${cls}">${esc(meta)}</span></button>`;
+  return `<button class="item" data-id="${p.id}" aria-label="${esc(p.name)}，${esc(meta)}${extra?`，共 ${extra+1} 件`:""}，剩余 ${p.mode==="count"?fmtN(p.left)+" 片":Math.round(level(p)*100)+"%"}">
+    <span class="cw">${containerSVG(p,w,h)}${badge}${p.pin?`<span class="pin-mark" aria-label="常用"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></span>`:""}</span>
+    <span class="name" title="${esc(p.name)}">${esc(p.name)}${extra?`<i class="qty r">×${extra+1}</i>`:""}</span><span class="meta ${cls}">${esc(meta)}</span></button>`;
 }
 function groupSame(arr){const m=new Map();arr.forEach(p=>{const k=(p.brand+"|"+p.name).toLowerCase();m.has(k)?m.get(k).push(p):m.set(k,[p])});return[...m.values()]}
 function renderShelves(){
@@ -814,7 +916,7 @@ function renderShelves(){
   let html="";
   const bay=(t,arr,note)=>{const groups=groupSame(arr),cnt=arr.length;
     html+=`<section class="bay"><div class="shelfhd"><h2>${t}<span class="n r">${cnt}</span></h2>${note?`<small>${note}</small>`:""}</div>
-      <div class="railwrap"><div class="glass"></div><div class="rail">${groups.map(g=>tileHTML(g[0],g)).join("")}${groups.length>4?`<span class="more-end">共 ${cnt} 件</span>`:""}</div></div></section>`};
+      <div class="shelf-grid">${groups.map(g=>tileHTML(g[0],g)).join("")}</div></section>`};
   if(first.length)bay("该先用掉",first,"快过期或快用完");
   const val=a=>{const v=a.reduce((x,p)=>x+(+p.price||0),0);return v?`¥${v.toLocaleString("en-US")}`:""};
   const small=[],smallCats=[];
@@ -826,7 +928,7 @@ function renderShelves(){
   $("#shelves").innerHTML=html;
   bindTiles($("#shelves"));
 }
-function renderShelf(){renderChips();renderShelves()}
+function renderShelf(){renderChips();renderShelves();renderAttention()}
 /* tap = open, long-press = quick actions */
 function bindTiles(root){
   root.querySelectorAll(".item").forEach(el=>{
@@ -835,25 +937,32 @@ function bindTiles(root){
     const cancel=()=>{clearTimeout(timer);el.classList.remove("press")};
     el.addEventListener("pointermove",e=>{if(Math.hypot(e.clientX-sx,e.clientY-sy)>8)cancel()});
     el.addEventListener("pointerup",cancel);el.addEventListener("pointerleave",cancel);el.addEventListener("pointercancel",cancel);
-    el.addEventListener("contextmenu",e=>e.preventDefault());
+    el.addEventListener("contextmenu",e=>{e.preventDefault();cancel();if(!long){long=true;openActions(+el.dataset.id)}});
+    el.addEventListener("keydown",e=>{if(e.key==="ContextMenu"||(e.shiftKey&&e.key==="F10")){e.preventDefault();openActions(+el.dataset.id)}});
     el.addEventListener("click",e=>{if(long){e.preventDefault();return}openDetail(+el.dataset.id,el)});
   });
 }
 
 /* ================= use / undo ================= */
-function logUse(p,r=null){
+function logUse(p,r=null,{deferSave=false}={}){
   if(p.left<=0)return false;
-  const before={left:p.left,opened:p.opened};
-  p.uses++;p.left=Math.max(0,+(p.left-p.per).toFixed(2));
+  const before={left:p.left,opened:p.opened,uses:p.uses,log:p.log.slice()};
+  p.uses++;
+  if(p.mode!=="est")p.left=Math.max(0,+(p.left-p.per).toFixed(2));
   let msg="";
   if(!p.opened){p.opened=todayISO();msg="已记为今天开封"}
-  p.log.unshift({d:todayISO(),r});p.log=p.log.slice(0,120);
-  save();lv(p.id).e=reduce?0:1;haptic(10);
-  return{before,msg};
+  const entry={d:todayISO(),at:Date.now(),r,amount:before.left-p.left,opened:before.opened};
+  p.log=[entry,...p.log].slice(0,120);
+  if(!deferSave){save();lv(p.id).e=reduce?0:1;haptic(10)}
+  return{before,msg,entry};
 }
 function undoUse(p,r){
   const i=p.log.findIndex(l=>l.d===todayISO()&&l.r===r);if(i<0)return;
-  p.log.splice(i,1);p.uses=Math.max(0,p.uses-1);p.left=Math.min(p.total,+(p.left+p.per).toFixed(2));save();
+  const [entry]=p.log.splice(i,1);
+  p.uses=Math.max(0,p.uses-1);
+  p.left=Math.min(p.total,+(p.left+(entry.amount??(p.mode==="est"?0:p.per))).toFixed(2));
+  if("opened" in entry&&!entry.opened&&p.uses===0)p.opened=null;
+  save();
 }
 
 /* ================= detail ================= */
@@ -900,7 +1009,8 @@ function fillDetail(anim){
   $("#expLine").textContent=`${fmtDate(e.date)} 到期`+(e.why==="pao"?`（开封后 ${p.pao} 个月）`:p.opened?"（包装到期日）":"（还没开封，按包装到期日）");
   // 14-day dots
   const days=new Set(p.log.map(l=>l.d));let dots="";for(let i=13;i>=0;i--)dots+=`<i class="${days.has(plusDays(-i))?"on":""}"></i>`;$("#dots").innerHTML=dots;
-  $("#toggles").innerHTML=`<button class="tg" aria-pressed="${p.am}" data-rt="am">${SUN}早间</button><button class="tg" aria-pressed="${p.pm}" data-rt="pm">${MOON}晚间</button><button class="tg" aria-pressed="${inR(p,"mk")}" data-rt="mk">${BRUSH}化妆</button>`;
+  $("#toggles").innerHTML=RT.map(([k,n,icon])=>`<button class="tg" aria-pressed="${inR(p,k)}" data-rt="${k}">${icon()}${n}</button>`).join("")+`<button class="tg" id="pinDetail" aria-pressed="${!!p.pin}">${PIN_I}常用</button>`;
+  $("#pinDetail").onclick=()=>{togglePin(p);$("#pinDetail").setAttribute("aria-pressed",!!p.pin)};
   $$("#toggles .tg").forEach(b=>b.onclick=()=>{const k=b.dataset.rt;p[k]=!inR(p,k);save();b.setAttribute("aria-pressed",p[k]);haptic();const nm={am:"早间",pm:"晚间",mk:"化妆"}[k];toast(p[k]?`已加入${nm}流程`:`已移出${nm}流程`)});
   const u=$("#useBtn");u.disabled=p.left<=0;u.textContent=p.left<=0?"已经用完":p.mode==="count"?"用了一片":"用了一次";
   $("#restockBtn").textContent=p.restock?"已在补货清单":"加入补货";
@@ -910,7 +1020,7 @@ $("#useBtn").onclick=()=>{
   const drop=$("#drop");drop.classList.remove("fall");void drop.offsetWidth;if(p.mode!=="count")drop.classList.add("fall");
   if(p.mode==="count"){const f=$("#stage .fly");f.innerHTML=containerSVG(p,150,244);f.animate([{transform:"translateY(-6px)"},{transform:"none"}],{duration:350,easing:"cubic-bezier(.34,1.56,.64,1)"})}
   fillDetail(true);
-  if(p.left<=0)setTimeout(()=>finishFlow(p),700);else toast(r.msg||(p.mode==="count"?"记好了，用掉一片":"记好了"),()=>{p.log.shift();p.uses--;p.left=r.before.left;p.opened=r.before.opened;save();fillDetail(true);if(p.mode==="count")$("#stage .fly").innerHTML=containerSVG(p,150,244)});
+  if(p.left<=0)setTimeout(()=>finishFlow(p),700);else toast(r.msg||(p.mode==="count"?"记好了，用掉一片":"记好了"),()=>{Object.assign(p,r.before);save();if(cur===p){fillDetail(true);if(p.mode==="count")$("#stage .fly").innerHTML=containerSVG(p,150,244)}else render()});
 };
 $("#finBtn").onclick=()=>cur&&finishFlow(cur);
 $("#restockBtn").onclick=()=>{if(!cur)return;cur.restock=!cur.restock;save();fillDetail();haptic();toast(cur.restock?"已加入补货清单":"已移出补货清单")};
@@ -938,14 +1048,16 @@ function finishFlow(p){
       <h3>又空了一瓶</h3><p>${esc(p.name)} 陪了你${days?` ${days} 天`:"一阵子"}，一共用了 ${p.uses} ${p.mode==="count"?"片":"次"}${p.price&&p.uses?`，平均每次 ¥${(p.price/p.uses).toFixed(1)}`:""}。</p>
       <button class="primary" id="finR">放进空瓶，并加入补货</button>
       <button class="secondary" id="finN">放进空瓶</button>
+      ${p.backup>0?`<button class="secondary" id="finBackup">开一瓶备用的（还有 ${p.backup} 件）</button>`:""}
       <button class="link" id="finC" style="margin-top:8px">还没用完，算了</button></div>`,{onCancel:()=>{p.left=prevLeft;save();cur&&fillDetail()}});
-    const doIt=restock=>{p.finished=todayISO();p.restock=restock;let fresh=false;
-      if(p.backup>0){/* 有备用：自动开一瓶新的放回妆台 */const n=clone(p);n.backup=p.backup-1;p.backup=0;db.items.push(n);fresh=true}
+    const doIt=(restock,fresh=false)=>{p.finished=todayISO();p.restock=restock;
+      if(fresh){const n=clone(p);n.opened=todayISO();n.backup=p.backup-1;n.pin=p.pin;p.backup=0;db.items.push(n)}
       save();closeSheet();closeDetail(()=>toast(fresh?"已放进空瓶墙，备用的那瓶已经放上妆台":"已放进空瓶墙"));};
     $("#finR").onclick=()=>doIt(true);$("#finN").onclick=()=>doIt(false);$("#finC").onclick=()=>{p.left=prevLeft;save();closeSheet();cur&&fillDetail()};
+    if(p.backup>0)$("#finBackup").onclick=()=>doIt(false,true);
   },reduce?0:600);
 }
-function clone(p){const id=db.nextId++;return Object.assign(JSON.parse(JSON.stringify(p)),{id,left:p.total,uses:0,log:[],opened:null,finished:null,restock:false,created:todayISO(),exp:p.exp<todayISO()?plusMonths(todayISO(),24):p.exp})}
+function clone(p){const id=db.nextId++;return Object.assign(JSON.parse(JSON.stringify(p)),{id,left:p.total,uses:0,log:[],opened:null,finished:null,restock:false,pin:null,backup:0,created:todayISO(),exp:plusMonths(todayISO(),24)})}
 
 /* ================= quick actions ================= */
 function openActions(id){
@@ -953,12 +1065,14 @@ function openActions(id){
   openSheet(`<div class="actions"><div class="head">${containerSVG(p,32,52)}<div><b>${esc(p.name)}</b><span>${esc(p.brand||p.cat)}</span></div></div>
     <div class="grp">
       <button data-a="use" ${p.left<=0?"disabled":""}>${DROP}${p.mode==="count"?"用了一片":"用了一次"}</button>
+      <button data-a="pin">${PIN_I}${p.pin?"取消常用":"标为常用"}</button>
       <button data-a="edit">${PEN}编辑</button>
       <button data-a="fin">${BOTTLE}用完了</button>
       <button data-a="del" class="danger">${TRASH}删除</button>
     </div><button class="cancel-btn" data-scancel>取消</button></div>`);
   $$("#sheet [data-a]").forEach(b=>b.onclick=()=>{const a=b.dataset.a;
-    if(a==="use"){closeSheet();const r=logUse(p);render();if(p.left<=0){openDetail(p.id,$(`.item[data-id="${p.id}"]`));setTimeout(()=>finishFlow(p),500)}else toast(r.msg||"记好了",()=>{p.log.shift();p.uses--;p.left=r.before.left;p.opened=r.before.opened;save();render()})}
+    if(a==="use"){closeSheet();const r=logUse(p);render();if(p.left<=0){openDetail(p.id,$(`.item[data-id="${p.id}"]`));setTimeout(()=>finishFlow(p),500)}else if(r)toast(r.msg||"记好了",()=>{Object.assign(p,r.before);save();render()})}
+    if(a==="pin"){closeSheet();togglePin(p);render()}
     if(a==="edit"){closeSheet();setTimeout(()=>openForm(p),200)}
     if(a==="fin"){closeSheet();setTimeout(()=>{openDetail(p.id,$(`.item[data-id="${p.id}"]`));setTimeout(()=>finishFlow(p),500)},200)}
     if(a==="del"){closeSheet();delItem(p)}
@@ -975,15 +1089,17 @@ $("#sheetOv .bd").onclick=cancelSheet;
 
 /* ================= today ================= */
 const RT=[["am","早间",()=>SUN,"早间护理"],["pm","晚间",()=>MOON,"晚间护理"],["mk","化妆",()=>BRUSH,"今日妆容"]];
-let rsel=null;
 function stepRank(p){const n=p.name;const K=[["卸妆",0],["洁面",1],["洗面",1],["水",2],["精华",3],["面膜",4],["眼",5],["乳",6],["霜",6],["油",7],["防晒",8],["隔离",9],["妆前",9],["粉底",10],["遮瑕",11],["粉",12],["眉",13],["眼影",14],["睫毛",15],["腮红",16],["口红",17],["唇",17],["香",18]];
   for(const[k,r]of K)if(n.includes(k))return r;return{tube:1,bottle:3,sheet:4,jar:6,compact:12,stick:17}[p.shape]??8}
 const fmtLeft=p=>p.mode==="count"?`剩 ${fmtN(p.left)} 片`:p.mode==="est"?`约 ${Math.round(p.left)}%`:`剩 ${fmtN(p.left)} ${p.unit}`;
 const OK_I=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg>`;
 const pkey=p=>(p.brand+"|"+p.name).toLowerCase();
-const rItems=k=>{const m=new Map();active().filter(p=>inR(p,k)&&p.left>0).forEach(p=>{const key=pkey(p),c=m.get(key);
-  if(!c){m.set(key,p);p._n=1;return}c._n++;const better=(!!p.opened-!!c.opened)||(usedToday(p,k)-usedToday(c,k))||(level(c)-level(p));if(better>0){p._n=c._n;m.set(key,p)}});
-  return[...m.values()].sort((a,b)=>stepRank(a)-stepRank(b))};
+function rItems(k){
+  const groups=groupSame(active().filter(p=>inR(p,k)&&(p.left>0||usedToday(p,k))));
+  const order=new Map((db.routineOrder?.[k]||[]).map((key,index)=>[key,index]));
+  return groups.map(group=>group.sort((a,b)=>usedToday(b,k)-usedToday(a,k)||!!b.opened-!!a.opened||level(a)-level(b))[0])
+    .sort((a,b)=>(order.get(pkey(a))??Infinity)-(order.get(pkey(b))??Infinity)||stepRank(a)-stepRank(b));
+}
 const lastUsed=p=>p.log.length?p.log.reduce((m,l)=>l.d>m?l.d:m,p.log[0].d):null;
 const autoR=p=>{const n=p.name;if(p.cat==="彩妆")return{mk:true};if(p.cat!=="护肤")return{};
   if(/防晒|隔离|维C|VC/i.test(n))return{am:true};if(/面膜|卸妆|晚|A醇|视黄/.test(n))return{pm:true};
@@ -991,13 +1107,178 @@ const autoR=p=>{const n=p.name;if(p.cat==="彩妆")return{mk:true};if(p.cat!=="�
 const snoozed=k=>(db.snz||{})[k]>=todayISO();
 const snooze=(k,days)=>{db.snz=db.snz||{};db.snz[k]=plusDays(days-1);save()};
 let todoAll=false;
-function doneAll(k){
-  const l=rItems(k).filter(p=>!usedToday(p,k)&&p.left>0);if(!l.length)return;
-  const back=l.map(p=>({p,left:p.left,opened:p.opened,uses:p.uses,log:p.log.slice()}));
-  l.forEach(p=>logUse(p,k));haptic(14);renderToday();
-  const out=l.filter(p=>p.left<=0);
-  toast(out.length?`记好了 · ${out[0].name} 用完了`:`${RT.find(r=>r[0]===k)[1]}记好了，${l.length} 件`,()=>{back.forEach(b=>Object.assign(b.p,{left:b.left,opened:b.opened,uses:b.uses,log:b.log}));save();renderToday()});
+let journalReceipt=null;
+function togglePin(p){
+  p.pin=p.pin?null:Date.now();
+  save();
+  toast(p.pin?"已标为常用":"已取消常用");
 }
+
+function journalFigure(p,width,height){
+  const cut=cutOf(p);
+  if(cut)return `<img src="${esc(cut.src)}" alt="">`;
+  return containerSVG(p,width,height);
+}
+
+function journalDay(day){
+  if(day===todayISO())return "今天";
+  if(day===plusDays(-1))return "昨天";
+  return fmtShort(day);
+}
+function journalClock(entry){
+  return Number.isFinite(entry.at)?new Date(entry.at).toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit",hour12:false}):"";
+}
+function usageHistory(){
+  const entries=items().flatMap(p=>p.log.map(entry=>({p,entry})))
+    .sort((a,b)=>b.entry.d.localeCompare(a.entry.d)||(b.entry.at||0)-(a.entry.at||0));
+  const sessions=[],groups=new Map();
+  for(const {p,entry} of entries){
+    const session=entry.group&&groups.get(entry.group);
+    if(session){session.products.push(p);continue}
+    const next={products:[p],entry};
+    sessions.push(next);
+    if(entry.group)groups.set(entry.group,next);
+  }
+  return sessions;
+}
+function canRecord(p){return !!p&&!p.finished&&p.left>0}
+function journalIcon(name){return `<svg class="ui-icon" aria-hidden="true"><use href="#ui-${name}"/></svg>`}
+function renderToday(){
+  const history=usageHistory(),available=active().filter(canRecord);
+  const recent=history.find(s=>s.products.some(canRecord));
+  const usable=recent?.products.filter(canRecord)||[];
+  const wholeGroup=recent?.entry.group&&usable.length===recent.entry.groupSize;
+  const featured=wholeGroup?usable:usable.length?[usable[0]]:available.length===1?available:[];
+  const many=featured.length>1,p=featured[0];
+  const button=$("#journalRecord");
+  let title,symbol;
+  if(p){
+    const date=recent?[journalDay(recent.entry.d),journalClock(recent.entry)].filter(Boolean).join("　"):"";
+    $("#journalStage").innerHTML=`<div class="journal-stage"><div><p class="journal-meta">${recent?"最近用过":"在用的产品"}</p>
+      ${date?`<span class="journal-date r">${esc(date)}</span>`:""}<h2 class="journal-name">${many?`一起用了 ${featured.length} 件`:esc(p.name)}</h2>
+      <p class="journal-brand">${many?featured.map(item=>`<span class="journal-member">${esc(item.name)}</span>`).join("、") : esc([p.brand,fmtLeft(p)].filter(Boolean).join(" · "))}</p></div>
+      <div class="journal-figure${many?" journal-set":""}" aria-hidden="true">${featured.slice(0,3).map(item=>`<span>${journalFigure(item,100,150)}</span>`).join("")}</div></div>`;
+    title=many?`再记这 ${featured.length} 件`:recent?"再记一次":"用了一次";
+    symbol=recent?"repeat":"drop";
+    button.onclick=()=>recordJournal(featured);
+  }else{
+    $("#journalStage").innerHTML=`<h2 class="journal-name">${available.length?"这次用了哪些产品？":"还没有可记录的产品"}</h2>`;
+    title=available.length?"记下用过的产品":"添加产品";symbol=available.length?"list":"plus";
+    button.onclick=available.length?openJournalPicker:()=>openForm();
+  }
+  const batch=journalReceipt;
+  const valid=batch&&batch.every(({p,entry,after})=>byId(p.id)===p&&!p.finished&&p.log[0]===entry&&p.left===after.left&&p.opened===after.opened&&p.uses===after.uses);
+  if(!valid)journalReceipt=null;
+  button.disabled=!!valid&&p&&batch.some(item=>item.p===p)&&Date.now()-batch[0].entry.at<1200;
+  button.innerHTML=journalIcon(button.disabled?"check":symbol)+`<span>${button.disabled?"已记下":title}</span>`;
+  $("#journalReceipt").hidden=!valid;
+  $("#journalFeedback").textContent=valid?(batch.length>1?`已记录 ${batch.length} 件，各一次`:`${batch[0].p.name}已记一次`):"";
+  $("#journalOther").hidden=!p||available.length<2;
+  $("#journalHistory").hidden=!history.length;
+  let lastDay="",html="";
+  for(const {products,entry} of history.slice(0,8)){
+    if(entry.d!==lastDay){
+      if(lastDay)html+="</ul>";
+      html+=`<h3 class="journal-day">${esc(journalDay(entry.d))}</h3><ul class="journal-log">`;
+      lastDay=entry.d;
+    }
+    const time=journalClock(entry)||({am:"早间",pm:"晚间",mk:"化妆"}[entry.r]||"当日");
+    const names=esc(products.map(p=>p.name).join("、"));
+    html+=`<li><span class="r">${time}</span><div>${products.length>1?`<strong>一起用了 ${products.length} 件</strong><small>${names}</small>`:`<strong>${names}</strong>`}</div><span class="journal-thumb" aria-hidden="true">${journalFigure(products[0],28,36)}</span></li>`;
+  }
+  $("#journalEntries").innerHTML=html+(lastDay?"</ul>":"");
+}
+function openJournalPicker(){
+  const trigger=document.activeElement,selected=new Set();
+  const available=active().filter(canRecord);
+  const newest=[...available].sort((a,b)=>(b.created||"").localeCompare(a.created||"")||b.id-a.id);
+  const pinned=newest.filter(p=>p.pin).sort((a,b)=>b.pin-a.pin);
+  const recent=newest.filter(p=>p.log.length).sort((a,b)=>{
+    const x=a.log[0],y=b.log[0];
+    return y.d.localeCompare(x.d)||(y.at||0)-(x.at||0);
+  });
+  const limit=6;
+  const known=[...new Set([...pinned.slice(0,3),...recent,...pinned])];
+  const suggestions=(known.length?known:newest).slice(0,limit);
+  const suggestionTitle=known.length?"常用和最近使用":"最近入库";
+  const normalize=s=>s.normalize("NFKD").replace(/\p{M}/gu,"").toLowerCase();
+  const searchIndex=new Map(available.map(p=>[p.id,normalize([p.name,p.brand,p.cat].join(" "))]));
+  const categories=[...new Set(available.map(p=>p.cat).filter(Boolean))];
+  let pageSize=24;
+  openSheet(`<div class="usage-picker"><header><h2>这次用了哪些产品？</h2><button class="link" data-scancel>取消</button></header>
+    <label class="search">${journalIcon("search")}<input id="journalQuery" type="search" placeholder="搜索所有产品、品牌或品类" aria-label="搜索所有产品、品牌或品类"></label>
+    <div class="usage-scope" id="usageScope"><strong id="usageHeading"></strong>
+      <label class="usage-browse" id="usageBrowse">${journalIcon("grid")}按品类找<select aria-label="按品类浏览产品" id="usageCategory">
+        <option value="suggested">${suggestionTitle}</option><option value="all">全部产品（${available.length}）</option>
+        ${categories.map(cat=>`<option value="${esc(cat)}">${esc(cat)}（${available.filter(p=>p.cat===cat).length}）</option>`).join("")}</select></label></div>
+    <div class="journal-choices" id="journalChoices"></div><button class="primary" id="journalSave" disabled>请选择产品</button></div>`,{onCancel:()=>trigger?.focus()});
+  function showMatches(){
+    const words=normalize($("#journalQuery").value.trim()).split(/\s+/).filter(Boolean);
+    const scope=$("#usageCategory").value;
+    const large=available.length>limit;
+    let matches=newest,heading="全部产品";
+    if(words.length){
+      matches=newest.filter(p=>words.every(word=>searchIndex.get(p.id).includes(word)));
+      heading=`搜索结果 · ${matches.length} 件`;
+    }else if(large&&scope==="suggested"){
+      matches=suggestions;heading=suggestionTitle;
+    }else if(large&&scope!=="all"){
+      matches=newest.filter(p=>p.cat===scope);heading=scope;
+    }
+    $("#usageScope").hidden=!large&&!words.length;
+    $("#usageBrowse").hidden=!large||!!words.length;
+    $("#usageHeading").textContent=heading;
+    const list=$("#journalChoices");
+    list.innerHTML=matches.slice(0,pageSize).map(p=>`<button class="journal-choice" data-usage-id="${p.id}" aria-pressed="${selected.has(p.id)}"><span class="journal-thumb" aria-hidden="true">${journalFigure(p,28,36)}</span><span><strong>${esc(p.name)}</strong><small>${esc([p.brand,fmtLeft(p)].filter(Boolean).join(" · "))}</small></span><span class="choice-mark">${journalIcon("check")}</span></button>`).join("")||"<p>没有找到匹配的产品</p>";
+    if(matches.length>pageSize)list.insertAdjacentHTML("beforeend",`<button class="usage-more">再显示 ${Math.min(24,matches.length-pageSize)} 件</button>`);
+  }
+  function resetList(){pageSize=24;showMatches();$("#journalChoices").scrollTop=0}
+  showMatches();
+  $("#journalQuery").oninput=resetList;
+  $("#usageCategory").onchange=resetList;
+  $("#journalChoices").onclick=e=>{
+    if(e.target.closest(".usage-more")){
+      const oldLimit=pageSize;
+      pageSize+=24;showMatches();
+      $("#journalChoices").children[oldLimit]?.focus({preventScroll:true});
+      return;
+    }
+    const choice=e.target.closest("[data-usage-id]");
+    if(!choice)return;
+    const id=+choice.dataset.usageId;
+    if(selected.has(id))selected.delete(id);else selected.add(id);
+    choice.setAttribute("aria-pressed",selected.has(id));
+    $("#journalSave").disabled=!selected.size;
+    $("#journalSave").textContent=selected.size?`记录 ${selected.size} 件，各一次`:"请选择产品";
+  };
+  $("#journalSave").onclick=()=>{if(recordJournal([...selected].map(byId))){closeSheet();$("#journalUndo").focus({preventScroll:true})}};
+  $("#sheet [data-scancel]").focus({preventScroll:true});
+}
+function recordJournal(products){
+  if(!products.length||!products.every(canRecord))return false;
+  const at=Date.now();
+  const group=products.length>1?Array.from(crypto.getRandomValues(new Uint32Array(4)),n=>n.toString(16).padStart(8,"0")).join(""):null;
+  const batch=products.map(p=>{
+    const {entry,before}=logUse(p,null,{deferSave:true});
+    entry.at=at;
+    if(group){entry.group=group;entry.groupSize=products.length}
+    return {p,entry,before,after:{left:p.left,uses:p.uses,opened:p.opened,log:p.log}};
+  });
+  if(!save()){batch.forEach(({p,before})=>Object.assign(p,before));return false}
+  journalReceipt=batch;renderToday();haptic(10);
+  $("#journalUndo").focus({preventScroll:true});
+  setTimeout(()=>{if(tab==="today"&&journalReceipt===batch)renderToday()},1250);
+  return true;
+}
+$("#journalOther").onclick=openJournalPicker;
+$("#journalUndo").onclick=()=>{
+  renderToday();
+  if(!journalReceipt)return;
+  journalReceipt.forEach(({p,before})=>Object.assign(p,before));
+  if(!save()){journalReceipt.forEach(({p,after})=>Object.assign(p,after));return}
+  journalReceipt=null;renderToday();toast("已撤销这次记录");
+  $("#journalRecord").focus({preventScroll:true});
+};
 function openRoutinePick(p,{open=false,after}={}){
   const a=autoR(p),sel={am:p.am||(!p.opened&&!!a.am),pm:p.pm||(!p.opened&&!!a.pm),mk:p.mk??(p.cat==="彩妆"||!!a.mk)};
   if(open&&!p.am&&!p.pm&&!p.mk){sel.am=!!a.am;sel.pm=!!a.pm;sel.mk=!!a.mk||p.cat==="彩妆"}
@@ -1011,14 +1292,18 @@ function openRoutinePick(p,{open=false,after}={}){
     const ns=RT.filter(r=>sel[r[0]]).map(r=>r[1]).join("、");toast(open?`已开封${ns?`，放进${ns}`:""}`:ns?`已放进${ns}`:"好的，不放进流程");after?after():render()};
 }
 function todos(){
-  const T=[],act=active().filter(p=>p.left>0);
+  const T=[],act=active();
   const name=p=>`<b>${esc(p.name)}</b>`;
   act.forEach(p=>{const d=daysTo(effExp(p).date),st=state(p);
-    if(st==="expired"&&!snoozed("x"+p.id))T.push({pr:0,p,k:["已过期","rouge"],t:`${name(p)} 过期 ${-d} 天了，别再上脸啦`,a:[["扔掉了",()=>{p.finished=todayISO();save();toast(`${p.name} 已放进空瓶`,()=>{p.finished=null;save();renderToday()})},1],["还在用",()=>snooze("x"+p.id,30)]]});
-    else if(isLow(p)&&!p.restock&&!snoozed("l"+p.id))T.push(p.backup>0?{pr:3,p,k:["快见底","honey"],t:`${name(p)} ${fmtLeft(p)}了，还有 ${p.backup} 件备用，用完自动接上`,a:[["知道了",()=>snooze("l"+p.id,14)]]}
+    if(p.left<=0){
+      T.push({pr:0,p,k:["已用完","honey"],t:`${name(p)} 可以放进空瓶了`,a:[["移入空瓶",()=>{openDetail(p.id);finishFlow(p)},1,1]]});
+      return;
+    }
+    if(st==="expired"&&!snoozed("x"+p.id))T.push({pr:0,p,k:["已过期","rouge"],t:`${name(p)} 过期 ${-d} 天了，别再上脸啦`,a:[["扔掉了",()=>{p.finished=todayISO();save();toast(`${p.name} 已放进空瓶`,()=>{p.finished=null;save();render()})},1],["还在用",()=>snooze("x"+p.id,30)]]});
+    else if(isLow(p)&&!p.restock&&!snoozed("l"+p.id))T.push(p.backup>0?{pr:3,p,k:["快见底","honey"],t:`${name(p)} ${fmtLeft(p)}了，还有 ${p.backup} 件备用`,a:[["知道了",()=>snooze("l"+p.id,14)]]}
       :{pr:1,p,k:["快见底","honey"],t:`${name(p)} ${fmtLeft(p)}了，要不要先补货？`,a:[["加入补货",()=>{p.restock=true;save();toast(`${p.name} 已加入待补货`)},1],["还够用",()=>snooze("l"+p.id,14)]]});
     if(st==="soon"&&!snoozed("s"+p.id))T.push({pr:2,p,k:["快过期","honey"],t:`${name(p)} 还有 ${d} 天过期，趁还新鲜多用用吧～`,a:[["今天用了",()=>{logUse(p);toast(`记好了，${p.name} 用了一次`)},1],["知道了",()=>snooze("s"+p.id,7)]]});
-    if(!p.opened&&p.shape!=="sheet"&&!snoozed("o"+p.id))T.push({pr:4,p,k:["新入库","sage"],t:`新的 ${name(p)} 还没开封`,a:[["开封",()=>openRoutinePick(p,{open:true,after:renderToday}),1,1],["先放着",()=>snooze("o"+p.id,30)]]});
+    if(!p.opened&&p.shape!=="sheet"&&!snoozed("o"+p.id))T.push({pr:4,p,k:["新入库","sage"],t:`新的 ${name(p)} 还没开封`,a:[["开封",()=>openRoutinePick(p,{open:true,after:renderShelf}),1,1],["先放着",()=>snooze("o"+p.id,30)]]});
   });
   const nd=pickNudge();
   if(nd&&nd.gap!==null&&!T.some(x=>x.p===nd.p))T.push({pr:5,p:nd.p,k:["好久不见","blue"],t:`很久没用 ${name(nd.p)} 啦，已经 ${nd.gap} 天了，今天要不要试试～`,a:[["今天用了",()=>{logUse(nd.p);toast(`记好了，${nd.p.name} 用了一次`)},1],["改天吧",()=>snooze("n"+nd.p.id,3)]]});
@@ -1031,35 +1316,21 @@ function pickNudge(){
     .filter(x=>x.gap!==null&&x.gap>=7).sort((a,b)=>b.gap-a.gap);
   return c[0]||null;
 }
-function renderToday(){
-  const d=new Date(),hour=d.getHours();
-  $("#todaySub").textContent=d.toLocaleDateString("zh-CN",{month:"long",day:"numeric",weekday:"long"});
-  $("#hello").textContent=hour<5?"夜深了":hour<11?"早上好":hour<14?"中午好":hour<18?"下午好":"晚上好";
-  const now=hour>=16||hour<4?"pm":"am";
-  const ix=RT.findIndex(r=>r[0]===now),[k,nm,,title]=RT[ix];
-  const l=rItems(k),done=l.filter(p=>usedToday(p,k)).length,next=l.find(p=>!usedToday(p,k));
-  const SZ={bottle:[40,64],tube:[40,64],jar:[52,48],stick:[28,58],compact:[46,52],sheet:[40,56]};
-  const all=l.length&&done===l.length;
-  $("#ritual").innerHTML=`<div class="ritual ${k}" data-open-r="${k}" role="button" aria-label="打开${title}"><div class="top"><div><b>${title}</b><span>${l.length?`${l.length} 件${done&&!all?` · 已用 ${done}`:""}`:"还没挑产品"}</span></div>${l.length?`<span class="prog">${all?"完成 ✓":`${done} / ${l.length}`}</span>`:""}</div>
-    ${l.length?`<div class="row">${l.map(p=>{const[w,h]=SZ[p.shape]||SZ.bottle,u=usedToday(p,k);return `<span class="pi ${u?"done":""}">${containerSVG(p,w,h)}${u?`<i class="ok">${OK_I}</i>`:""}</span>`}).join("")}</div><div class="plank"></div>`:""}
-    <div class="cta"><div class="next">${!l.length?"挑几件平时会用的":all?`${nm}都记好了${k==="pm"?"，晚安":""}`:done?`还差 ${l.length-done} 件 · <b>${esc(next.name)}</b>`:`照常用完了？一下全记好<br><span class="tweak">只用几样就点卡片</span>`}</div>
-    ${!l.length?`<span class="go">去挑选</span>`:all?`<span class="done-btn ok">${OK_I}已记好</span>`:`<button class="done-btn" data-all="${k}">${OK_I}${done?"剩下的也用了":nm+"照常"}</button>`}</div></div>`;
-  $("#others").innerHTML=RT.filter(r=>r[0]!==k).map(([kk,n,ic])=>{const ll=rItems(kk),dd=ll.filter(p=>usedToday(p,kk)).length;
-    return `<button data-open-r="${kk}">${ic()}<span><b>${n}</b><span>${ll.length?(dd===ll.length?"已记好":`${ll.length} 件${dd?` · 已用 ${dd}`:""}`):"未设置"}</span></span></button>`}).join("");
+function renderAttention(){
   const T=todos(),shown=todoAll?T:T.slice(0,3);
-  $("#todo").innerHTML=`<h2>要处理的${T.length?`<small>${T.length} 件</small>`:""}</h2>`+(T.length?shown.map((x,i)=>`<div class="tcard"><span class="pic">${containerSVG(x.p,30,48)}</span><div class="t"><div class="k" style="color:var(--${x.k[1]})">${x.k[0]}</div><p>${x.t}</p><div class="acts">${x.a.map((a,j)=>`<button class="${a[2]?"pri":""}" data-ti="${i}" data-tj="${j}">${a[0]}</button>`).join("")}</div></div></div>`).join("")
+  $("#shelfAttention").hidden=!T.length;
+  $("#shelfAttention summary").textContent=`要处理的 · ${T.length} 件`;
+  $("#todo").innerHTML=T.length?shown.map((x,i)=>`<div class="tcard"><span class="pic">${containerSVG(x.p,30,48)}</span><div class="t"><div class="k" style="color:var(--${x.k[1]})">${x.k[0]}</div><p>${x.t}</p><div class="acts">${x.a.map((a,j)=>`<button class="${a[2]?"pri":""}" data-ti="${i}" data-tj="${j}">${a[0]}</button>`).join("")}</div></div></div>`).join("")
     +(T.length>3?`<button class="moreT" id="moreT">${todoAll?"收起":`还有 ${T.length-3} 件`}</button>`:"")
-    :`<div class="allgood"><b>都很好 ✨</b>没有快过期、快用完的，今天只管好好护肤。</div>`);
-  $$("#t-today [data-open-r]").forEach(b=>b.onclick=()=>openRitual(b.dataset.openR));
-  const da=$("#ritual [data-all]");if(da)da.onclick=e=>{e.stopPropagation();doneAll(da.dataset.all)};
+    :"";
   $$("#todo [data-ti]").forEach(b=>b.onclick=()=>{const a=shown[+b.dataset.ti].a[+b.dataset.tj];haptic(6);
     const card=b.closest(".tcard");if(a[3]){a[1]();return}
-    card.animate([{opacity:1,transform:"none"},{opacity:0,transform:"translateX(30px)"}],{duration:reduce?1:260,fill:"forwards"}).onfinish=()=>{a[1]();renderToday()}});
-  const mt=$("#moreT");if(mt)mt.onclick=()=>{todoAll=!todoAll;renderToday()};
+    card.animate([{opacity:1,transform:"none"},{opacity:0,transform:"translateX(30px)"}],{duration:reduce?1:260,fill:"forwards"}).onfinish=()=>{a[1]();render()}});
+  const mt=$("#moreT");if(mt)mt.onclick=()=>{todoAll=!todoAll;renderAttention()};
 }
 let rcur="am",redit=false;
 function openRitual(k){rcur=k;redit=!rItems(k).length;renderRitual();const r=$("#rpage");r.classList.add("open");r.setAttribute("aria-hidden","false");r.scrollTop=0;haptic(4)}
-function closeRitual(){const r=$("#rpage");r.classList.remove("open");r.setAttribute("aria-hidden","true");renderToday()}
+function closeRitual(){const r=$("#rpage");r.classList.remove("open");r.setAttribute("aria-hidden","true");render()}
 $("#rBack").onclick=closeRitual;
 $("#rEdit").onclick=()=>{redit=!redit;renderRitual();haptic(4)};
 function renderRitual(){
@@ -1069,14 +1340,30 @@ function renderRitual(){
   $$("#rseg button").forEach(b=>b.onclick=()=>{if(rcur===b.dataset.k)return;rcur=b.dataset.k;redit=!rItems(rcur).length;haptic(4);renderRitual()});
   let html="";
   if(redit){
-    const all=groupSame(active()).map(g=>g[0]).sort((a,b)=>(inR(b,k)-inR(a,k))||stepRank(a)-stepRank(b));
-    html+=`<p class="sub" style="margin:0 0 10px">勾选${nm}要用的产品，顺序会自动排好。</p><div class="list pick">${all.map(p=>{const on=inR(p,k);return `<button class="li ${on?"done":""}" data-tg="${p.id}" aria-pressed="${on}"><span class="pic" style="width:34px;display:flex;justify-content:center">${containerSVG(p,26,42)}</span><span class="t"><b>${esc(p.name)}</b><span>${esc(p.brand||p.cat)}</span></span><span class="check">${OK_I}</span></button>`}).join("")}</div>`;
+    const chosen=rItems(k);
+    const keys=new Set(chosen.map(pkey));
+    const all=[...chosen,...groupSame(active().filter(p=>p.left>0&&!keys.has(pkey(p)))).map(g=>g[0]).sort((a,b)=>stepRank(a)-stepRank(b))];
+    html+=`<p class="sub">勾选${nm}要用的产品，再用箭头调整顺序。</p><div class="list pick">${all.map((p,i)=>{
+      const on=i<chosen.length;
+      return `<div class="routine-order"><button class="li ${on?"done":""}" data-tg="${p.id}" aria-pressed="${on}"><span class="pic">${containerSVG(p,26,42)}</span><span class="t"><b>${esc(p.name)}</b><span>${esc(p.brand||p.cat)}</span></span><span class="check">${OK_I}</span></button>
+        ${on?`<button class="link" data-move="-1" data-index="${i}" aria-label="上移 ${esc(p.name)}" ${i===0?"disabled":""}>↑</button><button class="link" data-move="1" data-index="${i}" aria-label="下移 ${esc(p.name)}" ${i===chosen.length-1?"disabled":""}>↓</button>`:""}</div>`;
+    }).join("")||"<p class='hint'>先在藏品页添加产品。</p>"}</div>`;
   }else{
     const l=rItems(k);
-    html+=`<div class="list steps">${l.map((p,i)=>{const u=usedToday(p,k);return `<button class="li ${u?"done":""}" data-id="${p.id}" aria-pressed="${u}"><span class="no">${i+1}</span><span class="pic">${containerSVG(p,26,42)}</span><span class="t"><b>${esc(p.name)}${p._n>1?`<span class="qty">×${p._n}</span>`:""}</b><span>${esc(p.brand?p.brand+" · ":"")}${fmtLeft(p)}${state(p)!=="fresh"?` · <span style="color:${stateColor(state(p))}">${metaFor(p)[0]}</span>`:""}</span></span><span class="check">${OK_I}</span></button>`}).join("")}</div>
+    html+=`<div class="list steps">${l.map((p,i)=>{const u=usedToday(p,k);return `<button class="li ${u?"done":""}" data-id="${p.id}" aria-pressed="${u}"><span class="no">${i+1}</span><span class="pic">${containerSVG(p,26,42)}</span><span class="t"><b>${esc(p.name)}</b><span>${esc(p.brand?p.brand+" · ":"")}${fmtLeft(p)}${state(p)!=="fresh"?` · <span style="color:${stateColor(state(p))}">${metaFor(p)[0]}</span>`:""}</span></span><span class="check">${OK_I}</span></button>`}).join("")}</div>
       <p class="hint">只用了其中几样？在这里单独点，再点撤销。右上角「调整」增减产品。</p>`;
   }
   $("#rbody").innerHTML=html;
+  $$("#rbody [data-move]").forEach(b=>b.onclick=()=>{
+    const order=rItems(k).map(pkey),from=+b.dataset.index,to=from+ +b.dataset.move;
+    if(to<0||to>=order.length)return;
+    [order[from],order[to]]=[order[to],order[from]];
+    db.routineOrder??={};
+    db.routineOrder[k]=order;
+    save();renderRitual();
+    const next=$(`[data-index="${to}"][data-move="${b.dataset.move}"]:not(:disabled)`)||$("[data-tg]");
+    next?.focus({preventScroll:true});
+  });
   $$("#rbody [data-tg]").forEach(b=>b.onclick=()=>{const p=byId(+b.dataset.tg),v=!inR(p,k);active().filter(x=>pkey(x)===pkey(p)).forEach(x=>x[k]=v);save();haptic(4);renderRitual()});
   $$("#rbody .li[data-id]").forEach(b=>b.onclick=()=>{const p=byId(+b.dataset.id);
     if(usedToday(p,k)){undoUse(p,k);haptic(4)}else{if(p.left<=0){toast("这件已经用完了");return}const r=logUse(p,k);b.classList.add("done");if(r.msg)toast(r.msg)}
@@ -1085,22 +1372,22 @@ function renderRitual(){
 
 /* ================= empties ================= */
 function renderEmpties(){
-  const fin=db.items.filter(p=>p.finished).sort((a,b)=>b.finished.localeCompare(a.finished));
+  const fin=finishedItems();
+  $("#shareEmpties").disabled=!fin.length;
   const yr=String(new Date().getFullYear()),thisYear=fin.filter(p=>p.finished.startsWith(yr)).length;
-  const restock=groupSame(db.items.filter(p=>p.restock)).map(g=>Object.assign(g[0],{_rn:g.length}));
+  const restock=groupSame(db.items.filter(p=>p.restock));
   const spent=fin.reduce((s,p)=>s+(+p.price||0),0),uses=fin.reduce((s,p)=>s+(p.price?p.uses:0),0);
   const days=p=>p.opened?Math.max(1,Math.round((dParse(p.finished)-dParse(p.opened))/DAY)):null;
   const dl=fin.map(days).filter(Boolean),avgD=dl.length?Math.round(dl.reduce((a,b)=>a+b,0)/dl.length):null;
   let html=`<div class="ehero"><div class="big">${thisYear}<small>${yr} 年用空</small></div>
     <div class="three"><div><b class="r">${spent?"¥"+spent.toLocaleString("en-US"):"—"}</b>用完的价值</div><div><b class="r">${uses?"¥"+(spent/uses).toFixed(1):"—"}</b>平均每次</div><div><b class="r">${avgD?(avgD>=60?Math.round(avgD/30)+" 个月":avgD+" 天"):"—"}</b>平均用多久</div></div></div>`;
-  if(restock.length)html+=`<section><h2>待补货<small>${restock.length} 件</small></h2><div class="restock">${restock.map(p=>`<div class="rcard">${containerSVG(Object.assign({},p,{id:-3,left:p.finished?0:p.left}),44,70)}<b>${esc(p.name)}${p._rn>1?` ×${p._rn}`:""}</b><span>${esc(p.brand||p.cat)}${p.price?` · ¥${p.price}`:""}</span><button class="buy" data-buy="${p.id}">买到了</button></div>`).join("")}</div></section>`;
+  if(restock.length)html+=`<section><h2>待补货<small>${restock.length} 件</small></h2><div class="restock">${restock.map(([p,...copies])=>`<div class="rcard">${containerSVG({...p,id:-3,left:p.finished?0:p.left},44,70)}<b>${esc(p.name)}${copies.length?` ×${copies.length+1}`:""}</b><span>${esc(p.brand||p.cat)}${p.price?` · ¥${p.price}`:""}</span><button class="buy" data-buy="${p.id}">买到了</button></div>`).join("")}</div></section>`;
   html+=`<section><h2>空瓶墙<small>${fin.length?`累计 ${fin.length} 件`:""}</small></h2>`;
   if(!fin.length)html+=`<div class="empty" style="padding-top:20px">用完的产品会出现在这里，<br>附上用了多少次、多久、每次多少钱。</div>`;
   else{
     html+=`<div class="cab ewall" style="margin-top:4px">`;
-    for(let i=0;i<fin.length;i+=4){const arr=fin.slice(i,i+4);
-      html+=`<section class="bay"><div class="railwrap"><div class="glass"></div><div class="rail" style="justify-content:flex-start;overflow:hidden">${arr.map(p=>{const dd=days(p),[w,h]=SIZE[p.shape]||[64,104],dt=dParse(p.finished);
-        return `<div class="item"><span class="cw">${containerSVG(Object.assign({},p,{id:-3,left:0}),w,h)}</span><span class="name">${esc(p.name)}</span><span class="meta r">${p.uses} ${p.mode==="count"?"片":"次"}${dd?` · ${dd>=60?Math.round(dd/30)+" 个月":dd+" 天"}`:""}<br>${dt.getMonth()+1} 月用完</span></div>`}).join("")}</div></div></section>`}
+    html+=`<div class="shelf-grid">${fin.map(p=>{const dd=days(p),[w,h]=SIZE[p.shape]||[64,104],dt=dParse(p.finished);
+        return `<div class="item"><span class="cw">${containerSVG({...p,id:-3,left:0},w,h)}</span><span class="name" title="${esc(p.name)}">${esc(p.name)}</span><span class="meta r">${p.uses} ${p.mode==="count"?"片":"次"}${dd?` · ${dd>=60?Math.round(dd/30)+" 个月":dd+" 天"}`:""}<br>${dt.getMonth()+1} 月用完</span></div>`}).join("")}</div>`;
     html+=`</div>`}
   html+=`</section>`;
   $("#empties").innerHTML=html;
@@ -1109,14 +1396,79 @@ function renderEmpties(){
     else{p.backup=(p.backup||0)+1;save();renderEmpties();toast(`${p.name} 备用库存 +1`)}haptic()});
 }
 
+function finishedItems(){
+  return items().filter(p=>p.finished).sort((a,b)=>b.finished.localeCompare(a.finished));
+}
+function sharePhoto(src){
+  return new Promise(resolve=>{
+    if(!src){resolve(null);return}
+    const picture=new Image();
+    picture.onload=()=>resolve(picture);
+    picture.onerror=()=>resolve(null);
+    picture.src=src;
+  });
+}
+async function makeEmptiesCard(list,period){
+  const canvas=document.createElement("canvas");
+  canvas.width=1080;
+  canvas.height=Math.max(1440,290+Math.ceil(list.length/4)*220);
+  const ctx=canvas.getContext("2d");
+  ctx.fillStyle="#F6F5F3";ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="#141414";ctx.font="bold 64px 'Songti SC', SimSun, serif";ctx.fillText("空瓶记",64,110);
+  ctx.fillStyle="#454641";ctx.font="30px sans-serif";
+  const [year,month]=period.split("-");
+  ctx.fillText(`${year} 年${month?` ${+month} 月`:""} · ${list.length} 件`,64,170);
+  const images=await Promise.all(list.map(p=>sharePhoto(cutOf(p)?.src||p.photo)));
+  list.forEach((p,index)=>{
+    const x=183+(index%4)*238,y=215+Math.floor(index/4)*220,picture=images[index];
+    if(index%4===0){ctx.fillStyle="#D9DEE4";ctx.fillRect(64,y+122,952,7)}
+    if(picture){
+      const scale=Math.min(116/picture.naturalWidth,116/picture.naturalHeight);
+      const w=picture.naturalWidth*scale,h=picture.naturalHeight*scale;
+      ctx.drawImage(picture,x-w/2,y+122-h,w,h);
+    }else{
+      ctx.save();ctx.translate(x-32,y+18);
+      ctx.fillStyle=p.tint||"#D9DEE4";
+      if(GEO[p.shape]?.body)ctx.fill(new Path2D(GEO[p.shape].body));
+      else ctx.fillRect(2,8,60,96);
+      if(p.shape==="bottle"){ctx.fillStyle="#474949";ctx.fillRect(19,0,26,21)}
+      ctx.restore();
+    }
+    ctx.fillStyle="#141414";ctx.font="bold 25px sans-serif";ctx.textAlign="center";
+    ctx.fillText(p.name,x,y+161,218);
+    ctx.fillStyle="#454641";ctx.font="22px sans-serif";
+    ctx.fillText(`${p.uses} ${p.mode==="count"?"片":"次"}${p.price&&p.uses?` · ¥${(p.price/p.uses).toFixed(1)}/次`:""}`,x,y+196,218);
+  });
+  ctx.textAlign="left";ctx.fillStyle="#454641";ctx.font="27px sans-serif";ctx.fillText("妆台 · BeautyShelf",64,canvas.height-36);
+  return canvas.toDataURL("image/png");
+}
+$("#shareEmpties").onclick=()=>{
+  const finished=finishedItems();
+  if(!finished.length)return;
+  const unique=keys=>[...new Set(keys)].sort().reverse();
+  const periods=[...unique(finished.map(p=>p.finished.slice(0,7))),...unique(finished.map(p=>p.finished.slice(0,4)))];
+  openSheet(`<div class="actions"><h3>生成空瓶记</h3><label class="f"><span>选择月份或年份</span><select id="sharePeriod">${periods.map(p=>`<option value="${p}">${p}</option>`).join("")}</select></label><button class="primary" id="previewEmpties">生成图片</button><div id="sharePreview"></div><button class="cancel-btn" data-scancel>完成</button></div>`);
+  const button=$("#previewEmpties"),preview=$("#sharePreview"),select=$("#sharePeriod");
+  select.onchange=()=>{preview.replaceChildren()};
+  button.onclick=async()=>{
+    const period=select.value;
+    button.disabled=select.disabled=true;
+    try{
+      const url=await makeEmptiesCard(finished.filter(p=>p.finished.startsWith(period)),period);
+      preview.innerHTML=`<img class="share-image" src="${url}" alt="${period} 空瓶记预览"><a class="primary share-download" download="空瓶记-${period}.png" href="${url}">下载 PNG</a>`;
+    }catch{toast("图片生成失败，请重试")}
+    finally{button.disabled=select.disabled=false}
+  };
+};
+
 /* ================= form ================= */
-let F=null,editing=null,onbAdd=false;
+let F=null,editing=null;
 function defaultPao(shape,cat){if(shape==="sheet")return null;if(cat==="香氛")return 36;if(shape==="stick"||shape==="compact")return 24;if(shape==="bottle"&&cat==="护肤")return 6;return 12}
-function openForm(p=null,opt={}){
-  editing=p;onbAdd=!!opt.onb;
+function openForm(p=null){
+  editing=p;
   F=p?{name:p.name,brand:p.brand,cat:p.cat,shape:p.shape,total:p.total,per:p.per,openMode:p.opened?(p.opened===todayISO()?"today":"pick"):"no",opened:p.opened||todayISO(),pao:p.pao,paoTouched:true,expMode:"pick",exp:p.exp,price:p.price,backup:p.backup||0,tint:p.tint,photo:p.photo,cutImg:p.cutImg||null,am:p.am,pm:p.pm,left:p.left}
      :{name:"",brand:"",cat:"护肤",shape:"bottle",total:50,per:1,openMode:"no",opened:todayISO(),pao:6,paoTouched:false,expMode:24,exp:plusMonths(todayISO(),24),price:null,backup:0,tint:LIQUIDS[0],photo:null,cutImg:null,am:false,pm:false};
-  if(!p&&opt.using)F.openMode="today";
+  if(p)F.mk=p.mk;
   $("#fTitle").textContent=p?"编辑":"添加产品";$("#saveBtn").textContent=p?"完成":"保存";
   $("#fName").value=F.name;$("#fBrand").value=F.brand;$("#fPrice").value=F.price??"";
   $("#fDelGrp").style.display=p?"":"none";
@@ -1165,6 +1517,7 @@ function renderForm(){
   $("#fBackupV").textContent=F.backup;
   $("#fSw").innerHTML=LIQUIDS.map(c=>`<button type="button" class="sw" role="radio" aria-checked="${c===F.tint}" aria-pressed="${c===F.tint}" data-c="${c}" aria-label="颜色"><i style="background:${c}"></i></button>`).join("");
   $("#fAm").setAttribute("aria-checked",F.am);$("#fPm").setAttribute("aria-checked",F.pm);
+  $("#fMk").setAttribute("aria-checked",F.mk??F.cat==="彩妆");
 }
 function miniShape(k){return containerSVG({id:-5,shape:k,total:k==="sheet"?3:1,left:k==="sheet"?3:.6,tint:"currentColor"},24,39).replace('data-wave="-5"','data-static="1"').replace('<path class="w1" fill="currentColor" opacity=".5"/><path class="w2" fill="currentColor"/>',`<rect x="-2" y="${GEO[k].top+(GEO[k].bot-GEO[k].top)*.4}" width="70" height="110" fill="currentColor" opacity=".55"/>`)}
 function validate(){$("#saveBtn").disabled=!$("#fName").value.trim()}
@@ -1184,8 +1537,9 @@ $("#form").addEventListener("click",e=>{
     if(k==="left")F.left=Math.max(0,Math.min(F.total,+(F.left+ +v).toFixed(2)));renderForm()}
   else if(ds.c){F.tint=ds.c;haptic();renderForm()}
   else if(b.id==="fAm"){F.am=!F.am;renderForm()}else if(b.id==="fPm"){F.pm=!F.pm;renderForm()}
+  else if(b.id==="fMk"){F.mk=!(F.mk??F.cat==="彩妆");renderForm()}
 });
-$("#fCat").onchange=e=>{F.cat=e.target.value;if(!F.paoTouched){F.pao=defaultPao(F.shape,F.cat);renderForm()}};
+$("#fCat").onchange=e=>{F.cat=e.target.value;if(!F.paoTouched)F.pao=defaultPao(F.shape,F.cat);renderForm()};
 $("#fOpenDate").onchange=e=>{if(e.target.value){F.opened=e.target.value;renderForm()}};
 $("#fExpDate").onchange=e=>{if(e.target.value){F.exp=e.target.value;renderForm()}};
 $("#moreBtn").onclick=()=>{const on=!$("#moreBox").classList.contains("on");$("#moreBox").classList.toggle("on",on);$("#moreBtn").setAttribute("aria-expanded",on)};
@@ -1199,15 +1553,20 @@ $("#form").onsubmit=e=>{
   e.preventDefault();const name=$("#fName").value.trim();if(!name)return;
   const S=SHAPES[F.shape],price=parseFloat($("#fPrice").value);
   const data={name,brand:$("#fBrand").value.trim(),cat:F.cat,shape:F.shape,mode:S.mode,unit:S.unit,total:S.mode==="est"?100:F.total,per:S.mode==="est"?S.per[0]:F.per,
-    opened:F.openMode==="no"?null:F.opened,pao:S.mode==="count"?null:F.pao,exp:F.exp,price:isNaN(price)?null:price,backup:F.backup,tint:F.tint,photo:F.photo,cutImg:F.cutImg,am:F.am,pm:F.pm};
+    opened:F.openMode==="no"?null:F.opened,pao:S.mode==="count"?null:F.pao,exp:F.exp,price:isNaN(price)?null:price,backup:F.backup,tint:F.tint,photo:F.photo,cutImg:F.cutImg,am:F.am,pm:F.pm,mk:F.mk??F.cat==="彩妆"};
   if(editing){
     const left=S.mode==="est"?F.left:Math.min(F.left,data.total);
     Object.assign(editing,data,{left});save();closeForm();if(cur===editing){$("#stage .fly").innerHTML=containerSVG(cur,150,244);fillDetail()}else render();toast("已保存修改");
   }else{
     const p=Object.assign({id:db.nextId++,uses:0,log:[],finished:null,restock:false,created:todayISO(),left:S.mode==="est"?(F.left??100):data.total},data);
-    if(onbAdd){Object.assign(p,{am:p.am||!!autoR(p).am,pm:p.pm||!!autoR(p).pm,mk:!!autoR(p).mk||p.cat==="彩妆"});db.items.push(p);save();closeForm();renderOnb();toast(`${name} 拍好了`);return}
     db.items.push(p);db.seen=true;save();closeForm();filter=null;query="";$("#q").value="";
-    setTimeout(()=>{if(p.opened)openRoutinePick(p);else toast("已入库，开封那天在「今日」点一下就行")},1500);
+    if(tab==="today"){
+      renderToday();
+      toast(`${name} 已入库`);
+      return;
+    }
+    if(p.opened)setTimeout(()=>{if(tab==="shelf"&&!$("#formOv").classList.contains("open")&&!$("#sheetOv").classList.contains("open"))openRoutinePick(p)},1500);
+    else toast("已入库，可在「今日」记录使用");
     if(tab!=="shelf")$(`.tabbar [data-tab=shelf]`).click();else renderShelf();
     // drop-in animation on the new tile
     requestAnimationFrame(()=>{const el=$(`.item[data-id="${p.id}"]`);if(el){el.scrollIntoView({block:"center",behavior:reduce?"auto":"smooth"});el.animate([{transform:"translateY(-60px) scale(.8)",opacity:0},{transform:"translateY(4px) scale(1.02)",opacity:1,offset:.7},{transform:"none"}],{duration:reduce?1:650,easing:"cubic-bezier(.34,1.3,.64,1)",delay:250,fill:"backwards"})}});
@@ -1216,13 +1575,25 @@ $("#form").onsubmit=e=>{
 };
 
 /* ================= settings ================= */
-$("#setBtn").onclick=()=>{
-  const hasDemo=db.items.length>0;
+$("#setBtn").onclick=$("#todaySettings").onclick=()=>{
+  const hasItems=items().length>0,hasDemo=items().some(p=>p.demo);
   openSheet(`<div class="actions"><div class="head"><div><b>妆台</b><span>网页预览版 · 数据存在本机浏览器</span></div></div>
-    <div class="grp"><button data-s="demo">${BOTTLE}载入示例数据</button><button data-s="clear" class="danger" ${hasDemo?"":"disabled"}>${TRASH}清空全部数据</button></div>
+    <div class="grp"><button id="settingsRoutine">日常流程</button><button data-s="demo">${BOTTLE}载入示例数据</button><button data-s="clearDemo" ${hasDemo?"":"disabled"}>${TRASH}移除示例数据</button><button data-s="clear" class="danger" ${hasItems?"":"disabled"}>${TRASH}清空全部数据</button></div>
     <p class="hint">iOS 版会在到期前 30 天、7 天和快用完时提醒你。</p>
     <button class="cancel-btn" data-scancel>完成</button></div>`);
-  $$("#sheet [data-s]").forEach(b=>b.onclick=()=>{if(b.dataset.s==="demo"){seed();toast("已载入示例")}else{const bak=JSON.stringify(db);db={items:[],seen:true,nextId:1};save();toast("已清空",()=>{db=JSON.parse(bak);save();render()})}closeSheet();render()});
+  $("#settingsRoutine").onclick=()=>{closeSheet();openRitual(new Date().getHours()<15?"am":"pm")};
+  $$("#sheet [data-s]").forEach(b=>b.onclick=()=>{
+    journalReceipt=null;
+    if(b.dataset.s==="demo"){seed();toast("已载入示例")}
+    else{
+      const previous=db;
+      if(b.dataset.s==="clearDemo")db={...db,items:items().filter(p=>!p.demo)};
+      else db={items:[],seen:true,nextId:1,pinsMigrated:true};
+      save();
+      toast(b.dataset.s==="clearDemo"?"已移除示例":"已清空",()=>{db=previous;save();render()});
+    }
+    closeSheet();render();
+  });
 };
 
 /* ================= welcome ================= */
@@ -1233,60 +1604,37 @@ function welcome(){
   $("#wTrio").innerHTML=demo.map((p,i)=>containerSVG(p,[54,84,48][i],[88,136,78][i])).join("");
   $$("#wTrio svg[data-wave]").forEach((s,i)=>{s._L={lv:0,v:0,e:0};setTimeout(()=>{s._override=[.55,.78,.4][i]},reduce?0:350+i*220)});
   const go=()=>{db.seen=true;save();w.classList.add("gone");w.setAttribute("aria-hidden","true")};
-  $("#wAdd").onclick=()=>{go();onbStep=1;renderOnb()};
+  $("#wAdd").onclick=()=>{go();openForm()};
   $("#wDemo").onclick=()=>{seed();go();render()};
 }
 
 
-/* ================= onboarding ================= */
-let onbStep=0;
-function renderOnb(){
-  const o=$("#onb");
-  if(!onbStep){o.classList.add("gone");o.setAttribute("aria-hidden","true");return}
-  o.classList.remove("gone");o.setAttribute("aria-hidden","false");
-  const act=active(),dots=`<div class="dots3">${[1,2,3].map(i=>`<i class="${i<=onbStep?"on":""}"></i>`).join("")}</div>`;
-  let h="";
-  if(onbStep===1){
-    h=`<div class="stp">第 1 步 / 共 3 步</div>${dots}<h2>拍下台面上正在用的</h2><p class="d">洁面、水、精华、面霜、防晒……先拍你每天在用的几件就够，囤货以后再慢慢加。</p>
-    <div class="got">${act.length?act.map(p=>`<span class="g">${containerSVG(p,40,64)}${esc(p.name)}</span>`).join(""):`<span class="ph">还没有，拍第一件吧</span>`}</div>
-    <div class="bar"><button class="primary" id="oAdd">${act.length?"再拍一件":"拍第一件"}</button>${act.length?`<button class="secondary" id="oNext">拍好了，下一步</button>`:`<button class="link" id="oDemo">先看看示例</button>`}</div>`;
-  }else if(onbStep===2){
-    const un=act.filter(p=>!RT.some(r=>inR(p,r[0])));
-    h=`<div class="stp">第 2 步 / 共 3 步</div>${dots}<h2>流程帮你排好了</h2><p class="d">按品类排好了先后顺序。不对的点 × 去掉，漏掉的点一下加进去。</p>
-    ${RT.map(([k,n,ic,title])=>{const l=rItems(k);return `<div class="rgrp"><h3>${ic()}${title}</h3>${l.length?l.map((p,i)=>`<div class="rrow"><span class="no">${i+1}</span>${containerSVG(p,18,29)}${esc(p.name)}<button class="x" data-ox="${k}:${p.id}" aria-label="移出">×</button></div>`).join(""):`<div class="none">没有</div>`}
-      ${act.filter(p=>!inR(p,k)&&(k==="mk")===(p.cat==="彩妆")).length?`<div style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 16px 10px">${act.filter(p=>!inR(p,k)&&(k==="mk")===(p.cat==="彩妆")).map(p=>`<button class="chip" style="height:30px;font-size:13px;background:var(--fill);border-radius:15px;padding:0 10px" data-oa="${k}:${p.id}">＋ ${esc(p.name)}</button>`).join("")}</div>`:""}</div>`}).join("")}
-    <div class="bar"><button class="primary" id="oNext">就这样</button><button class="link" id="oBack">返回再拍几件</button></div>`;
-  }else{
-    h=`<div class="fin"><div class="big">✨</div><h2>好了</h2><p class="d" style="max-width:300px;margin:0 auto 18px">以后每天只要在「今日」点一下<b>「早间照常」</b>或<b>「晚间照常」</b>。<br>买了新的，点右下角「入库」。<br>快过期、快用完、很久没用的，我会放在「要处理的」里提醒你。</p></div>
-    <div class="bar"><button class="primary" id="oDone">进入妆台</button></div>`;
-  }
-  o.innerHTML=h;o.scrollTop=0;
-  const on=(id,fn)=>{const b=$("#"+id);if(b)b.onclick=fn};
-  on("oAdd",()=>openForm(null,{onb:true,using:true}));
-  on("oDemo",()=>{seed();onbStep=0;renderOnb();render()});
-  on("oNext",()=>{onbStep++;haptic(6);renderOnb()});
-  on("oBack",()=>{onbStep=1;renderOnb()});
-  on("oDone",()=>{onbStep=0;db.seen=true;save();renderOnb();render()});
-  $$("#onb [data-ox]").forEach(b=>b.onclick=()=>{const[k,id]=b.dataset.ox.split(":");byId(+id)[k]=false;save();haptic(4);renderOnb()});
-  $$("#onb [data-oa]").forEach(b=>b.onclick=()=>{const[k,id]=b.dataset.oa.split(":");byId(+id)[k]=true;save();haptic(4);renderOnb()});
-}
-$("#fab").onclick=()=>openForm();
+$("#todayAdd").onclick=()=>openForm();
 
 /* ================= misc ================= */
 const SUN=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1"/></svg>`;
 const BRUSH=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 2.5l3 3-5.2 5.2-3-3z"/><path d="M5.3 7.7C3 8 2.6 10.2 2.4 13.6c3.4-.2 5.6-.6 5.9-2.9"/></svg>`;
 const MOON=`<svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.5 10.2A6 6 0 0 1 5.8 2.5a6 6 0 1 0 7.7 7.7z"/></svg>`;
-const DROP=`<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 2.5S4.5 9 4.5 12.5a5.5 5.5 0 0 0 11 0C15.5 9 10 2.5 10 2.5z"/></svg>`;
-const PEN=`<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M13.5 3.5l3 3L7 16H4v-3z"/></svg>`;
-const BOTTLE=`<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="7" y="2" width="6" height="3" rx="1"/><path d="M6 7q0-1.5 1.5-1.5h5Q14 5.5 14 7v9.5q0 1.5-1.5 1.5h-5Q6 18 6 16.5z"/></svg>`;
-const TRASH=`<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3.5 5.5h13M8 5.5V3.5h4v2M5.5 5.5l.8 11q.1 1.5 1.6 1.5h4.2q1.5 0 1.6-1.5l.8-11"/></svg>`;
+const DROP='<svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#ui-drop"/></svg>';
+const PEN='<svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#ui-pencil"/></svg>';
+const BOTTLE='<svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#ui-archive"/></svg>';
+const TRASH='<svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#ui-trash"/></svg>';
+const PIN_I='<svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg>';
 function haptic(ms=6){try{navigator.vibrate?.(ms)}catch{}}
 let tt;function toast(m,undo){const t=$("#toast");$("#toastT").textContent=m;const u=$("#toastU");u.hidden=!undo;u.onclick=()=>{undo();t.classList.remove("show");haptic()};t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),undo?4000:2200)}
 $("#q").oninput=e=>{query=e.target.value.trim().toLowerCase();renderShelves()};
 $("#addBtn").onclick=()=>openForm();
-addEventListener("keydown",e=>{if(e.key!=="Escape")return;if($("#sheetOv").classList.contains("open"))cancelSheet();else if($("#formOv").classList.contains("open"))closeForm();else if(cur)closeDetail()});
+addEventListener("keydown",e=>{if(e.key!=="Escape")return;if($("#sheetOv").classList.contains("open"))cancelSheet();else if($("#formOv").classList.contains("open"))closeForm();else if(cur)closeDetail();else if($("#rpage").classList.contains("open"))closeRitual()});
 addEventListener("resize",()=>tab==="shelf"&&renderChips());
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)render()});
+if(previewJournal&&!db.seen){
+  seed();
+  if(journalDemo==="journal-empty"){
+    db.items=db.items.filter(p=>!p.finished);
+    for(const p of db.items){p.uses=0;p.log=[]}
+  }
+  save();
+}
 render();welcome();requestAnimationFrame(tick);
 </script>
 </body>

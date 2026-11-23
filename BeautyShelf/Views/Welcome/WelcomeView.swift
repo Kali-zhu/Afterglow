@@ -21,7 +21,7 @@ struct WelcomeView: View {
                 Text("把梳妆台搬进手机")
                     .font(.largeTitle.weight(.bold))
                     .multilineTextAlignment(.center)
-                Text("每一瓶还剩多少、什么时候过期，一眼就知道。\n每天点一下，就记好了。")
+                Text("用过哪一瓶，顺手记一次。\n每一瓶的余量和保质期，随时都能查。")
                     .font(.body)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)

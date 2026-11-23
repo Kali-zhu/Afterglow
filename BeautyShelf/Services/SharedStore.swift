@@ -77,7 +77,7 @@ enum SharedStore {
     }
 
     static func isDone(_ p: Product, _ slot: RoutineSlot, on day: Date = .now) -> Bool {
-        let d = slot == .morning ? p.morningDoneOn : p.eveningDoneOn
+        let d = p.routineDate(slot)
         guard let d else { return false }
         return Calendar.current.isDate(d, inSameDayAs: day)
     }

@@ -558,6 +558,10 @@ struct ProductConfirmCard: View {
                 .frame(minHeight: 44)
             Toggle(isOn: $d.evening) { Label("加入晚间流程", systemImage: RoutineSlot.evening.symbol) }
                 .frame(minHeight: 44)
+            Toggle(isOn: Binding(get: { d.makeup ?? (d.category == .makeup) }, set: { d.makeup = $0 })) {
+                Label("加入化妆流程", systemImage: RoutineSlot.makeup.symbol)
+            }
+            .frame(minHeight: 44)
         }
     }
 

@@ -20,6 +20,13 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section {
+                    NavigationLink {
+                        RoutineTodayView()
+                    } label: {
+                        Label("日常流程", systemImage: "list.bullet")
+                    }
+                }
+                Section {
                     Toggle("到期提醒", isOn: $notifyExpiry)
                     Toggle("快用完提醒", isOn: $notifyLowStock)
                     Toggle("晚间流程提醒", isOn: $notifyEvening)

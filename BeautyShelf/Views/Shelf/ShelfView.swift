@@ -1,13 +1,14 @@
 import SwiftUI
 import SwiftData
 
-/// 妆台：一层层玻璃架子，每层三件（大字号时两件）。
+/// 妆台：玻璃架按可用空间和字号决定每层件数。
 /// 快到期 / 已过期的永远在最上面一层"该先用掉"，其他按分类排列。
 /// 物件按真实比例高低错落、底边贴住架板；点一下把它"拿起来"看详情。
 struct ShelfView: View {
     @Environment(\.modelContext) private var context
     @Environment(AppCoordinator.self) private var coordinator
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.horizontalSizeClass) private var widthClass
     @Query(sort: \Product.createdAt, order: .forward, animation: .spring(response: 0.42, dampingFraction: 0.82))
     private var all: [Product]
     @Namespace private var ns
@@ -28,11 +29,11 @@ struct ShelfView: View {
     }
 
     private var needsAttention: [Product] {
-        shown.filter { $0.expiryState != .fresh }.sorted { $0.effectiveExpiry < $1.effectiveExpiry }
+        shown.filter { $0.expiryState != .fresh || $0.isLow }.sorted { $0.effectiveExpiry < $1.effectiveExpiry }
     }
 
     private var rest: [Product] {
-        shown.filter { $0.expiryState == .fresh }
+        shown.filter { $0.expiryState == .fresh && !$0.isLow }
             .sorted { ($0.category.order, $0.createdAt) < ($1.category.order, $1.createdAt) }
     }
 
@@ -42,7 +43,7 @@ struct ShelfView: View {
                 LazyVStack(alignment: .leading, spacing: 30) {
                     if !active.isEmpty { categoryPicker }
                     if !needsAttention.isEmpty {
-                        shelfSection("该先用掉", subtitle: "快到期或已过期，先用它们", items: needsAttention)
+                        shelfSection("该先处理", subtitle: "到期提醒和快用完的产品", items: needsAttention)
                     }
                     if !rest.isEmpty {
                         shelfSection(needsAttention.isEmpty ? "全部" : "其他", subtitle: nil, items: rest)
@@ -136,7 +137,10 @@ struct ShelfView: View {
     }
 
     /// 大字号时每层两件，名字有地方放
-    private var columns: Int { typeSize.isAccessibilitySize ? 2 : 3 }
+    private var columns: Int {
+        if typeSize.isAccessibilitySize { return 2 }
+        return widthClass == .regular ? 5 : 3
+    }
     private var stageHeight: CGFloat { typeSize.isAccessibilitySize ? 150 : ProductCard.defaultStageHeight }
 
     /// 一层：物件站在玻璃架板上，名字在架板下方
@@ -172,7 +176,7 @@ struct ShelfView: View {
 
     @ViewBuilder
     private func menu(for p: Product) -> some View {
-        Button(p.isPinned ? "从首页拿下" : "放到首页", systemImage: p.isPinned ? "star.slash" : "star") {
+        Button(p.isPinned ? "取消常用" : "标为常用", systemImage: p.isPinned ? "star.slash" : "star") {
             withAnimation(Theme.spring) { p.togglePin() }
             coordinator.dataChanged()
         }

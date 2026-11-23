@@ -18,13 +18,22 @@ struct MainTabView: View {
     var body: some View {
         TabView(selection: $coordinator.tab) {
             TodayView()
-                .tabItem { Label("今日", systemImage: "sun.max") }
+                .tabItem {
+                    Label("今日", systemImage: "book.closed")
+                        .environment(\.symbolVariants, coordinator.tab == .today ? .fill : .none)
+                }
                 .tag(AppCoordinator.Tab.today)
             ShelfView()
-                .tabItem { Label("藏品", systemImage: "square.stack.3d.up") }
+                .tabItem {
+                    Label("藏品", systemImage: "square.grid.2x2")
+                        .environment(\.symbolVariants, coordinator.tab == .shelf ? .fill : .none)
+                }
                 .tag(AppCoordinator.Tab.shelf)
             FinishedView()
-                .tabItem { Label("空瓶", systemImage: "archivebox") }
+                .tabItem {
+                    Label("空瓶", systemImage: "archivebox")
+                        .environment(\.symbolVariants, coordinator.tab == .finished ? .fill : .none)
+                }
                 .tag(AppCoordinator.Tab.finished)
         }
         .environment(coordinator)
@@ -97,6 +106,7 @@ struct MainTabView: View {
             h.combine(p.finishedDate)
             h.combine(p.inMorning)
             h.combine(p.inEvening)
+            h.combine(p.inMakeup)
             h.combine(p.expiryDate)
             h.combine(p.openedDate)
             h.combine(p.paoMonths)
@@ -115,6 +125,7 @@ struct MainTabView: View {
     private func openBackup(of p: Product) {
         let fresh = p.makeFreshCopy(openNow: true)
         fresh.backupStock = max(0, p.backupStock - 1)
+        fresh.pinnedAt = p.pinnedAt
         p.backupStock = 0
         withAnimation(Theme.spring) { context.insert(fresh) }
         coordinator.dataChanged()

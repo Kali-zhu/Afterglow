@@ -53,6 +53,7 @@ struct ProductDraft {
     var tintTouched = false
     var morning = false
     var evening = false
+    var makeup: Bool? = nil
     var photo: Data? = nil
     var cutout: Data? = nil
     var cap: CapStyle = .screw
@@ -102,6 +103,7 @@ struct ProductDraft {
         tintTouched = true
         morning = p.inMorning
         evening = p.inEvening
+        makeup = p.inMakeup
         photo = p.photo
         cutout = p.cutout
         cap = p.capStyle
@@ -267,6 +269,7 @@ struct ProductDraft {
         product.tintHex = tint
         product.inMorning = morning
         product.inEvening = evening
+        product.inMakeup = makeup
         product.photo = photo
         product.cutout = cutout
         product.capStyle = capTouched ? cap : CaptureService.defaultCap(kind: kind, category: category, name: trimmedName)
