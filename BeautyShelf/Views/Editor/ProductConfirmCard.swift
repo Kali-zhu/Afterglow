@@ -80,11 +80,12 @@ struct ProductConfirmCard: View {
 
     private var preview: some View {
         ZStack(alignment: .bottom) {
-            Ellipse()
-                .fill(Color.black.opacity(0.14))
-                .frame(width: 150, height: 16)
-                .blur(radius: 6)
-                .offset(y: -2)
+            // 和架上同一套东西：接触阴影 + 玻璃架板，看上去已经站在妆台上了
+            ShelfPlank()
+                .padding(.bottom, 2)
+                .accessibilityHidden(true)
+            ContactShadow(width: 110)
+                .offset(y: -(ShelfPlank.height) + 2)
                 .accessibilityHidden(true)
 
             Group {
@@ -108,10 +109,10 @@ struct ProductConfirmCard: View {
                         .frame(width: previewHeight * 0.48, height: previewHeight * 0.8)
                 }
             }
-            .padding(.bottom, 8)
+            .padding(.bottom, 8 + ShelfPlank.height)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: previewHeight + 16)
+        .frame(height: previewHeight + 16 + ShelfPlank.height)
         .padding(.top, 8)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(cutoutImage != nil ? "抠好的产品照片" : (photoImage != nil ? "产品照片" : "\(d.kind.title)的形状插画"))
@@ -755,8 +756,8 @@ struct EditorPressStyle: ButtonStyle {
 }
 
 extension View {
+    /// 编辑器里的分组：和首页、藏品同一套玻璃
     func editorCard() -> some View {
-        background(RoundedRectangle(cornerRadius: 20, style: .continuous)
-            .fill(Color(uiColor: .secondarySystemGroupedBackground)))
+        glassPanel(cornerRadius: 20, strong: true)
     }
 }

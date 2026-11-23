@@ -1,9 +1,14 @@
 import SwiftUI
 import SwiftData
 
-/// 空瓶：顶部"待补货"清单 + 今年空瓶数 + 用完的产品墙（用了几次、多久、每次多少钱）。
+/// 空瓶：把"用完了"变成值得看的东西。
+///
+/// 顶部一张玻璃统计卡（今年用空几件、用完的价值、平均每次、平均用多久），
+/// 然后是待补货，最后一整面"空瓶墙"：空瓶倒空后褪成磨砂的白，站在玻璃架板上，
+/// 每一瓶下面写着它陪了你多久、用了几次、每次多少钱。
 struct FinishedView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.horizontalSizeClass) private var widthClass
     @Query(sort: \Product.createdAt, order: .forward, animation: .spring(response: 0.42, dampingFraction: 0.82))
     private var all: [Product]
     @State private var restockTick = 0
@@ -23,30 +28,59 @@ struct FinishedView: View {
         }
     }
 
-    private let columns = [GridItem(.adaptive(minimum: 150), spacing: 14, alignment: .top)]
+    // MARK: 统计
+
+    private var finishedValue: Double { finished.reduce(0.0) { $0 + ($1.price ?? 0) } }
+
+    private var averagePerUse: Double? {
+        let priced = finished.filter { ($0.price ?? 0) > 0 && $0.useCount > 0 }
+        guard !priced.isEmpty else { return nil }
+        let cost = priced.reduce(0.0) { $0 + ($1.price ?? 0) }
+        let uses = priced.reduce(0) { $0 + $1.useCount }
+        guard uses > 0 else { return nil }
+        return cost / Double(uses)
+    }
+
+    private var averageDays: Int? {
+        guard !finished.isEmpty else { return nil }
+        return finished.reduce(0) { $0 + $1.usageDays } / finished.count
+    }
+
+    private var durationValue: String {
+        guard let days = averageDays else { return "—" }
+        if days >= 45 { return "\(max(1, Int((Double(days) / 30).rounded()))) 个月" }
+        return "\(days) 天"
+    }
+
+    // MARK: 空瓶墙的分行
+
+    private var columns: Int { widthClass == .regular ? 6 : 4 }
+
+    private var rows: [[Product]] {
+        stride(from: 0, to: finished.count, by: columns).map { start in
+            Array(finished[start..<min(start + columns, finished.count)])
+        }
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 28) {
-                    if !restock.isEmpty { restockList }
-                    yearBanner
+                VStack(alignment: .leading, spacing: 26) {
+                    statsCard
                     if !finished.isEmpty { shareButton }
-                    if finished.isEmpty {
-                        emptyState
-                    } else {
-                        LazyVGrid(columns: columns, spacing: 14) {
-                            ForEach(finished) { p in
-                                FinishedCard(product: p)
-                                    .contextMenu { menu(for: p) }
-                            }
-                        }
-                    }
+                    if !restock.isEmpty { restockList }
+                    if finished.isEmpty { emptyState } else { wall }
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 40)
             }
-            .background(Theme.porcelain.ignoresSafeArea())
+            .background {
+                ZStack {
+                    Theme.porcelain
+                    AmbientGlow(colors: Array(finished.prefix(3).map(\.tint)))
+                }
+                .ignoresSafeArea()
+            }
             .navigationTitle("空瓶")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) { SettingsButton() }
@@ -60,25 +94,44 @@ struct FinishedView: View {
 
     // MARK: 今年空瓶
 
-    private var yearBanner: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 6) {
-            Text("今年空瓶")
-                .font(.headline)
-            Text("\(thisYear.count)")
-                .font(.system(.largeTitle, design: .rounded).weight(.bold))
-                .monospacedDigit()
-                .contentTransition(.numericText())
-            Text("件")
-                .font(.headline)
-            Spacer()
-            if !thisYear.isEmpty {
-                Text("共用了 \(thisYear.reduce(0) { $0 + $1.useCount }) 次")
-                    .font(.subheadline)
+    private var statsCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text("\(thisYear.count)")
+                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .contentTransition(.numericText())
+                Text("\(Self.year) 年用空")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.secondary)
+                Spacer(minLength: 8)
+                Text("累计 \(finished.count) 件")
+                    .font(.caption)
                     .foregroundStyle(.secondary)
             }
+            Rectangle()
+                .fill(Color.primary.opacity(0.08))
+                .frame(height: 1)
+            HStack(alignment: .top, spacing: 8) {
+                StatReadout(value: finishedValue > 0 ? Fmt.bigMoney(finishedValue) : "—",
+                            caption: "用完的价值")
+                Spacer(minLength: 6)
+                StatReadout(value: averagePerUse.map { Fmt.money($0) } ?? "—",
+                            caption: "平均每次")
+                Spacer(minLength: 6)
+                StatReadout(value: durationValue,
+                            caption: "平均用多久")
+            }
         }
-        .padding(.top, 4)
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassPanel(cornerRadius: 24, tint: finished.first?.tint)
         .accessibilityElement(children: .combine)
+        .accessibilityLabel("今年用空 \(thisYear.count) 件，累计 \(finished.count) 件")
+    }
+
+    private static var year: Int {
+        Calendar.current.component(.year, from: .now)
     }
 
     // MARK: 空瓶记分享图
@@ -102,8 +155,15 @@ struct FinishedView: View {
 
     private var restockList: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("待补货").font(.title3.weight(.semibold))
-                .accessibilityAddTraits(.isHeader)
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text("待补货").font(.title3.weight(.semibold))
+                Text("\(restock.count)")
+                    .font(.subheadline)
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+                Spacer()
+            }
+            .accessibilityAddTraits(.isHeader)
             VStack(spacing: 0) {
                 ForEach(Array(restock.enumerated()), id: \.element.id) { index, p in
                     if index > 0 { Divider().padding(.leading, 60) }
@@ -111,7 +171,8 @@ struct FinishedView: View {
                 }
             }
             .padding(.horizontal, 14)
-            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Theme.card))
+            .padding(.vertical, 4)
+            .glassPanel(cornerRadius: 20)
         }
     }
 
@@ -148,7 +209,7 @@ struct FinishedView: View {
         .padding(.vertical, 6)
     }
 
-    /// 买到了：用完的 → 妆台上多一件全新的同款；还在用的 → 备用库存 +1
+    /// 买到了：用完的 → 藏品里多一件全新的同款；还在用的 → 备用库存 +1
     private func bought(_ p: Product) {
         withAnimation(Theme.spring) {
             p.needsRestock = false
@@ -175,13 +236,49 @@ struct FinishedView: View {
         }
     }
 
+    // MARK: 空瓶墙
+
+    private var wall: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text("空瓶墙").font(.title3.weight(.semibold))
+                Spacer(minLength: 8)
+                Text("累计 \(finished.count) 件")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            .accessibilityAddTraits(.isHeader)
+            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                emptyRow(row)
+            }
+        }
+    }
+
+    private func emptyRow(_ row: [Product]) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            ForEach(row) { p in
+                EmptyBottleCell(product: p)
+                    .contextMenu { menu(for: p) }
+            }
+            ForEach(0..<(columns - row.count), id: \.self) { _ in
+                Color.clear.frame(maxWidth: .infinity, maxHeight: 1)
+            }
+        }
+        .padding(.top, 6)
+        .background(alignment: .top) {
+            ShelfPlank()
+                .padding(.horizontal, -10)
+                .padding(.top, EmptyBottleCell.stageHeight)
+        }
+    }
+
     private var emptyState: some View {
         VStack(spacing: 12) {
             ContainerView(kind: .bottle, level: 0, tint: Color(hex: Theme.liquids[2]), animated: false)
                 .frame(width: 56, height: 92)
                 .accessibilityHidden(true)
             Text("还没有空瓶").font(.headline)
-            Text("用完一件，在妆台长按它选「用完了」，它会来到这里。")
+            Text("用完一件，在藏品里长按它选「用完了」，它会站在这里。")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -191,60 +288,53 @@ struct FinishedView: View {
     }
 }
 
-/// 空瓶墙上的一件
-struct FinishedCard: View {
+/// 空瓶墙上的一件：空的磨砂瓶站在架板上，下面两行字写着它陪了你多久
+private struct EmptyBottleCell: View {
     let product: Product
 
+    static let stageHeight: CGFloat = 88
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .bottom) {
+        VStack(spacing: 0) {
+            ZStack(alignment: .bottom) {
+                ContactShadow(width: 38)
+                    .offset(y: 1)
                 ContainerView(product: product, level: 0, animated: false)
-                    .frame(width: 44, height: 72)
-                Spacer()
-                if let d = product.finishedDate {
-                    Text(Fmt.shortDay(d))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                    .frame(width: 44, height: 78)
             }
-            VStack(alignment: .leading, spacing: 1) {
+            .frame(height: Self.stageHeight, alignment: .bottom)
+            Color.clear.frame(height: ShelfPlank.height - ShelfPlank.surface + 2)
+            VStack(spacing: 2) {
                 Text(product.name)
-                    .font(.subheadline.weight(.semibold))
-                    .lineLimit(2)
-                if !product.brand.isEmpty {
-                    Text(product.brand).font(.caption).foregroundStyle(.secondary).lineLimit(1)
-                }
+                    .font(.caption.weight(.medium))
+                    .lineLimit(1)
+                Text(detail)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
-            VStack(alignment: .leading, spacing: 3) {
-                fact("用了", "\(product.useCount)", "次")
-                fact("用了", "\(product.usageDays)", "天")
-                if let c = product.costPerUse {
-                    fact("每次", Fmt.money(c), "")
-                }
-            }
+            .padding(.top, 8)
         }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Theme.card))
-        .accessibilityElement(children: .ignore)
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityText)
+    }
+
+    private var detail: String {
+        var parts = ["\(product.useCount) 次", durationText]
+        if let cost = product.costPerUse { parts.append("\(Fmt.money(cost))/次") }
+        return parts.joined(separator: " · ")
+    }
+
+    private var durationText: String {
+        let days = product.usageDays
+        if days >= 60 { return "\(max(1, Int((Double(days) / 30).rounded()))) 个月" }
+        return "\(days) 天"
     }
 
     private var accessibilityText: String {
         var s = "\(product.name)，用了 \(product.useCount) 次，用了 \(product.usageDays) 天"
-        if let c = product.costPerUse { s += "，每次 \(Fmt.money(c))" }
+        if let cost = product.costPerUse { s += "，每次 \(Fmt.money(cost))" }
         return s
-    }
-
-    private func fact(_ lead: String, _ value: String, _ unit: String) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 3) {
-            Text(lead).font(.caption).foregroundStyle(.secondary)
-            Text(value)
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                .monospacedDigit()
-            if !unit.isEmpty {
-                Text(unit).font(.caption).foregroundStyle(.secondary)
-            }
-        }
     }
 }

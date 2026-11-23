@@ -96,6 +96,10 @@ enum Fmt {
     static func money(_ v: Double) -> String {
         v >= 10 ? "¥\(Int(v.rounded()))" : String(format: "¥%.1f", v)
     }
+    /// ¥5,565：藏品总值这种四位数以上的金额，带千分位更好读
+    static func bigMoney(_ v: Double) -> String {
+        "¥" + Int(v.rounded()).formatted()
+    }
 }
 
 /// 按下时轻微收缩，回应用户的触摸

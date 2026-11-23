@@ -448,6 +448,20 @@ body:has(.ov.open,.rpage.open,.welcome:not(.gone)){overflow:hidden}
 
   .shapes{grid-template-columns:repeat(3,1fr)}
 }
+/* v4 glass：和 iOS 端同一套材质 */
+.glass{position:relative;background:var(--glass);-webkit-backdrop-filter:blur(16px) saturate(1.5);backdrop-filter:blur(16px) saturate(1.5);
+  border-radius:24px;box-shadow:inset 0 1px 0 rgba(255,255,255,.9),inset 0 0 0 .5px var(--glass-stroke),0 12px 22px -16px rgba(28,38,52,.5)}
+@media (prefers-color-scheme:dark){.glass{box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 0 0 .5px var(--glass-stroke),0 12px 22px -16px #000}}
+.journal-card.glass{border-radius:22px;padding:22px 20px 16px}
+.worth.glass{padding:16px 18px}
+.streak.glass{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 18px;margin-top:10px;border-radius:18px;font-size:13px;color:var(--ink2)}
+.streak[hidden]{display:none}
+.streak .sk-n{font-family:ui-rounded,"SF Pro Rounded",-apple-system,sans-serif;font-size:20px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.streak .sk-l{margin-left:3px}
+.streak .sk-w{font-size:12px;margin-top:2px}
+.sk-dots{display:flex;gap:5px;flex:none}
+.sk-dots i{width:7px;height:7px;border-radius:50%;background:var(--fill)}
+.sk-dots i.on{background:var(--sage)}
 </style>
 </head>
 <body>
@@ -479,11 +493,12 @@ body:has(.ov.open,.rpage.open,.welcome:not(.gone)){overflow:hidden}
       </div>
     </header>
     <div class="journal-layout"><div>
-      <div class="journal-card">
+      <div class="journal-card glass">
         <div id="journalStage"></div>
         <button class="primary" id="journalRecord"></button>
         <div class="journal-receipt" id="journalReceipt" hidden><span role="status" id="journalFeedback"></span><button class="link" id="journalUndo"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#ui-undo"/></svg><span>撤销</span></button></div>
       </div>
+      <div class="streak glass" id="journalStreak" hidden></div>
       <button class="link journal-alt" id="journalOther"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#ui-list"/></svg><span>换一件或记多件</span></button>
     </div>
     <section class="journal-history" id="journalHistory"><h2>近期记录</h2><div id="journalEntries"></div></section></div>
@@ -495,7 +510,7 @@ body:has(.ov.open,.rpage.open,.welcome:not(.gone)){overflow:hidden}
       <button class="icon-btn" id="setBtn" aria-label="设置"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#ui-settings"/></svg></button>
       <button class="icon-btn" id="addBtn" aria-label="添加产品"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#ui-plus"/></svg></button>
     </div></header>
-    <div class="worth" id="shelfSub"></div>
+    <div class="worth glass" id="shelfSub"></div>
     <label class="search"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#ui-search"/></svg><input id="q" type="search" placeholder="搜索名称或品牌" aria-label="搜索名称或品牌" enterkeyhint="search"></label>
     <div class="chips" id="chips" role="toolbar" aria-label="分类"><span class="chip-pill" id="pill"></span></div>
     <details class="shelf-attention" id="shelfAttention" hidden><summary>要处理的</summary><div class="todo" id="todo"></div></details>
@@ -1187,6 +1202,31 @@ function renderToday(){
     html+=`<li><span class="r">${time}</span><div>${products.length>1?`<strong>一起用了 ${products.length} 件</strong><small>${names}</small>`:`<strong>${names}</strong>`}</div><span class="journal-thumb" aria-hidden="true">${journalFigure(products[0],28,36)}</span></li>`;
   }
   $("#journalEntries").innerHTML=html+(lastDay?"</ul>":"");
+  renderStreak();
+}
+/* 连续记录：今天还没记就从昨天往前数，不清零 */
+function prevDayISO(day){const x=dParse(day);x.setDate(x.getDate()-1);return iso(x)}
+function usedDaysSet(){
+  const days=new Set();
+  items().forEach(p=>(p.log||[]).forEach(entry=>{if(entry.d)days.add(entry.d)}));
+  return days;
+}
+function streakInfo(){
+  const days=usedDaysSet();
+  let n=0,d=todayISO();
+  if(!days.has(d))d=prevDayISO(d);
+  while(days.has(d)){n++;d=prevDayISO(d)}
+  const week=[];for(let i=6;i>=0;i--)week.push(plusDays(-i));
+  return{n,days,week,weekCount:week.filter(x=>days.has(x)).length};
+}
+function renderStreak(){
+  const el=$("#journalStreak");if(!el)return;
+  const info=streakInfo();
+  if(!info.days.size){el.hidden=true;el.innerHTML="";return}
+  el.hidden=false;
+  el.innerHTML=`<div><span class="sk-n">${info.n}</span><span class="sk-l">天连续记录</span>
+    <div class="sk-w">${info.weekCount?`这周记了 ${info.weekCount} 天`:"这周还没记，今天记一笔？"}</div></div>
+    <div class="sk-dots" aria-hidden="true">${info.week.map(d=>`<i class="${info.days.has(d)?"on":""}"></i>`).join("")}</div>`;
 }
 function openJournalPicker(){
   const trigger=document.activeElement,selected=new Set();
@@ -1379,7 +1419,7 @@ function renderEmpties(){
   const spent=fin.reduce((s,p)=>s+(+p.price||0),0),uses=fin.reduce((s,p)=>s+(p.price?p.uses:0),0);
   const days=p=>p.opened?Math.max(1,Math.round((dParse(p.finished)-dParse(p.opened))/DAY)):null;
   const dl=fin.map(days).filter(Boolean),avgD=dl.length?Math.round(dl.reduce((a,b)=>a+b,0)/dl.length):null;
-  let html=`<div class="ehero"><div class="big">${thisYear}<small>${yr} 年用空</small></div>
+  let html=`<div class="ehero glass"><div class="big">${thisYear}<small>${yr} 年用空</small></div>
     <div class="three"><div><b class="r">${spent?"¥"+spent.toLocaleString("en-US"):"—"}</b>用完的价值</div><div><b class="r">${uses?"¥"+(spent/uses).toFixed(1):"—"}</b>平均每次</div><div><b class="r">${avgD?(avgD>=60?Math.round(avgD/30)+" 个月":avgD+" 天"):"—"}</b>平均用多久</div></div></div>`;
   if(restock.length)html+=`<section><h2>待补货<small>${restock.length} 件</small></h2><div class="restock">${restock.map(([p,...copies])=>`<div class="rcard">${containerSVG({...p,id:-3,left:p.finished?0:p.left},44,70)}<b>${esc(p.name)}${copies.length?` ×${copies.length+1}`:""}</b><span>${esc(p.brand||p.cat)}${p.price?` · ¥${p.price}`:""}</span><button class="buy" data-buy="${p.id}">买到了</button></div>`).join("")}</div></section>`;
   html+=`<section><h2>空瓶墙<small>${fin.length?`累计 ${fin.length} 件`:""}</small></h2>`;
@@ -1387,7 +1427,7 @@ function renderEmpties(){
   else{
     html+=`<div class="cab ewall" style="margin-top:4px">`;
     html+=`<div class="shelf-grid">${fin.map(p=>{const dd=days(p),[w,h]=SIZE[p.shape]||[64,104],dt=dParse(p.finished);
-        return `<div class="item"><span class="cw">${containerSVG({...p,id:-3,left:0},w,h)}</span><span class="name" title="${esc(p.name)}">${esc(p.name)}</span><span class="meta r">${p.uses} ${p.mode==="count"?"片":"次"}${dd?` · ${dd>=60?Math.round(dd/30)+" 个月":dd+" 天"}`:""}<br>${dt.getMonth()+1} 月用完</span></div>`}).join("")}</div>`;
+        return `<div class="item"><span class="cw">${containerSVG({...p,id:-3,left:0},w,h)}</span><span class="name" title="${esc(p.name)}">${esc(p.name)}</span><span class="meta r">${p.uses} ${p.mode==="count"?"片":"次"}${dd?` · ${dd>=60?Math.round(dd/30)+" 个月":dd+" 天"}`:""}${p.price&&p.uses?` · ¥${(p.price/p.uses).toFixed(1)}/次`:""}<br>${dt.getMonth()+1} 月用完</span></div>`}).join("")}</div>`;
     html+=`</div>`}
   html+=`</section>`;
   $("#empties").innerHTML=html;

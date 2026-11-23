@@ -95,6 +95,7 @@ struct TodayView: View {
                                 .font(.subheadline).frame(minHeight: 44)
                         }
                     }
+                    if !usedDays.isEmpty { streakStrip }
                     historyList(Array(history.prefix(8)))
                     if products.contains(where: { !$0.isFinished && $0.remainingAmount <= 0 }) {
                         Button("去藏品处理用完的产品") { coordinator.tab = .shelf }.frame(minHeight: 44)
@@ -103,7 +104,13 @@ struct TodayView: View {
                 .padding(.horizontal, 20).padding(.bottom, 30)
                 .frame(maxWidth: 740).frame(maxWidth: .infinity)
             }
-            .background(Theme.porcelain.ignoresSafeArea())
+            .background {
+                ZStack {
+                    Theme.porcelain
+                    AmbientGlow(colors: Array(available.prefix(3).map(\.tint)))
+                }
+                .ignoresSafeArea()
+            }
             .navigationTitle("使用手记")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) { SettingsButton() }
@@ -122,6 +129,82 @@ struct TodayView: View {
                 if !Task.isCancelled { confirming = false }
             }
         }
+    }
+
+    // MARK: 坚持（乐意一直用，是因为看得见自己在坚持）
+
+    /// 有记录的日子
+    private var usedDays: Set<Date> {
+        let cal = Calendar.current
+        var days = Set<Date>()
+        for p in products {
+            for date in p.useLog { days.insert(cal.startOfDay(for: date)) }
+        }
+        return days
+    }
+
+    /// 连续记录天数：今天还没记就往前数到昨天
+    private var streak: Int {
+        let cal = Calendar.current
+        let days = usedDays
+        guard !days.isEmpty else { return 0 }
+        var day = cal.startOfDay(for: .now)
+        if !days.contains(day) {
+            guard let yesterday = cal.date(byAdding: .day, value: -1, to: day) else { return 0 }
+            day = yesterday
+        }
+        var count = 0
+        while days.contains(day) {
+            count += 1
+            guard let previous = cal.date(byAdding: .day, value: -1, to: day) else { break }
+            day = previous
+        }
+        return count
+    }
+
+    /// 最近 7 天（含今天），从早到晚
+    private var weekDays: [Date] {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: .now)
+        return (0..<7).reversed().compactMap { cal.date(byAdding: .day, value: -$0, to: today) }
+    }
+
+    private var weekCount: Int {
+        let days = usedDays
+        return weekDays.filter { days.contains($0) }.count
+    }
+
+    private var streakStrip: some View {
+        HStack(spacing: 14) {
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(alignment: .firstTextBaseline, spacing: 3) {
+                    Text("\(streak)")
+                        .font(.system(.title3, design: .rounded).weight(.bold))
+                        .monospacedDigit()
+                        .contentTransition(.numericText())
+                    Text("天连续记录")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Text(weekCount > 0 ? "这周记了 \(weekCount) 天" : "这周还没记，今天记一笔？")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 8)
+            HStack(spacing: 5) {
+                ForEach(weekDays, id: \.self) { day in
+                    Circle()
+                        .fill(usedDays.contains(day) ? Theme.sage : Color.primary.opacity(0.12))
+                        .frame(width: 7, height: 7)
+                }
+            }
+            .accessibilityHidden(true)
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 12)
+        .glassPanel(cornerRadius: 18)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("连续记录 \(streak) 天，这周记了 \(weekCount) 天")
     }
 
     private func action(for items: [Product]) -> (title: String, symbol: String) {
@@ -181,7 +264,7 @@ struct TodayView: View {
             }
         }
         .padding(18).frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 18))
+        .glassPanel(cornerRadius: 22, tint: items.first?.tint)
     }
 
     private func dayLabel(_ date: Date) -> String {

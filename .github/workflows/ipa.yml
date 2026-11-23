@@ -2,7 +2,7 @@ name: Build unsigned IPA
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, dev]
     paths: ["BeautyShelf/**", "Widgets/**", "project.yml", "Entitlements/**", ".github/workflows/ipa.yml"]
 jobs:
   ipa:
