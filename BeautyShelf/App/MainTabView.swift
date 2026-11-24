@@ -44,7 +44,10 @@ struct MainTabView: View {
         .modifier(ProductDetailPresenter(
             coordinator: coordinator,
             detail: Binding(get: { coordinator.detail },
-                            set: { coordinator.detail = $0 }),
+                            set: { newValue in
+                                if newValue == nil { coordinator.closeDetail() }
+                                else { coordinator.detail = newValue }
+                            }),
             ns: detailNS))
         .overlay {
             if let p = coordinator.finishing {

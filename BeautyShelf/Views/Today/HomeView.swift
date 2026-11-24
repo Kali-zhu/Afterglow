@@ -208,9 +208,15 @@ struct TodayView: View {
     }
 
     private func action(for items: [Product]) -> (title: String, symbol: String) {
-        if items.count > 1 { return ("再记这 \(items.count) 件", "arrow.clockwise") }
+        if items.count > 1 { return ("逐件记这 \(items.count) 件", "rectangle.on.rectangle") }
         if let p = items.first { return p.useLog.isEmpty ? ("去记这一次", "drop") : ("再记一次", "arrow.clockwise") }
         return available.isEmpty ? ("添加产品", "plus") : ("记下用过的产品", "checklist")
+    }
+
+    /// 一件：直接打开它；多件：还是同一个详情页，几件产品像卡片一样左右滑动，一件件记
+    private func openDetail(_ items: [Product]) {
+        guard let first = items.first else { return }
+        coordinator.openDetail(first, also: Array(items.dropFirst()))
     }
 
     private func journalCard(_ items: [Product]) -> some View {
@@ -220,9 +226,10 @@ struct TodayView: View {
         return VStack(alignment: .leading, spacing: 16) {
             if let p = items.first {
                 let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading)) : AnyLayout(HStackLayout(spacing: 12))
-                // 单件：点卡片 = 打开这件产品的详情（"使用页"），在那里记一次；多件：一键批量记
+                // 点卡片 = 打开这件的详情（"使用页"），在那里记一次；
+                // 多件时也进同一个页面，几件产品左右滑动一件件记
                 Button {
-                    if items.count > 1 { record(items) } else { coordinator.openDetail(p) }
+                    openDetail(items)
                 } label: {
                     layout {
                         VStack(alignment: .leading, spacing: 5) {
@@ -250,16 +257,16 @@ struct TodayView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityHint(items.count > 1 ? "轻点把这几件各记一次" : "打开详情，在详情里记一次")
+                .accessibilityHint(items.count > 1 ? "打开详情，左右滑动一件件记" : "打开详情，在详情里记一次")
             } else {
                 Text(available.isEmpty ? "还没有可记录的产品" : "这次用了哪些产品？").font(.title2.bold())
             }
             Button {
-                if !items.isEmpty {
-                    if items.count > 1 { record(items) }
-                    else if let p = items.first { coordinator.openDetail(p) }
-                } else if available.isEmpty { coordinator.editor = .new }
-                else { showPicker() }
+                if items.isEmpty {
+                    if available.isEmpty { coordinator.editor = .new } else { showPicker() }
+                } else {
+                    openDetail(items)
+                }
             } label: {
                 Label(justRecorded ? "已记下" : button.title, systemImage: justRecorded ? "checkmark" : button.symbol)
                     .font(.headline).frame(maxWidth: .infinity, minHeight: 46)
@@ -305,8 +312,8 @@ struct TodayView: View {
                         if let p = entry.items.first { ProductFigure(product: p, maxPixel: 120).frame(width: 30, height: 34) }
                     }.font(.subheadline).frame(minHeight: 48).accessibilityElement(children: .combine)
                     .contentShape(Rectangle())
-                    // 点一条记录 = 打开那件产品的详情，可以接着再记一次
-                    .onTapGesture { if let p = entry.items.first { coordinator.openDetail(p) } }
+                    // 点一条记录 = 打开那件产品的详情，可以接着再记一次（多件记录逐件滑）
+                    .onTapGesture { openDetail(entry.items) }
                     .accessibilityAddTraits(.isButton)
                     Divider()
                 }

@@ -30,6 +30,8 @@ final class AppCoordinator {
     var showSettings = false
     /// 全屏详情：所有"用一件产品"的入口都打开它，在详情里点"用了一次"才真正记录
     var detail: Product? = nil
+    /// 一起记多件时，详情页里排在后面、可以左右滑动的另外几件（第一件是 `detail`）
+    var detailPeers: [Product] = []
 
     /// 当前界面用的 ModelContext（MainTabView 出现 / 切换时设置），用于保存后刷新小组件
     @ObservationIgnored weak var context: ModelContext?
@@ -84,7 +86,20 @@ final class AppCoordinator {
     /// 打开一件产品的详情（"用一次"的唯一入口）
     func openDetail(_ p: Product) {
         guard !p.isDeleted else { return }
+        detailPeers = []
         detail = p
+    }
+
+    /// 一起记多件：还是同一个详情页，几件产品像卡片一样左右滑动
+    func openDetail(_ p: Product, also peers: [Product]) {
+        guard !p.isDeleted else { return }
+        detailPeers = peers.filter { !$0.isDeleted && $0.uid != p.uid }
+        detail = p
+    }
+
+    func closeDetail() {
+        detail = nil
+        detailPeers = []
     }
 
     /// 小组件里记到 0 的产品：回到 App 时补上"用完了"流程

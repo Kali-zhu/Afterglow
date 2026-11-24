@@ -33,8 +33,9 @@ struct ProductDetailPresenter: ViewModifier {
         }
     }
 
+    /// 一起记多件时，点开的那件排第一，其余几件跟在后面左右滑动
     private func scene(_ p: Product) -> some View {
-        ProductDetailView(product: p) { detail.wrappedValue = nil }
+        ProductDetailView(items: [p] + coordinator.detailPeers) { coordinator.closeDetail() }
             .environment(coordinator)
             .modelContext(context)
     }

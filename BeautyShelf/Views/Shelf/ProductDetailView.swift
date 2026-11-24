@@ -1,94 +1,72 @@
 import SwiftUI
 import SwiftData
 
-/// 点开 = 把它从架子上"拿起来"：放大、带一点 3D 倾斜、投影变大变柔，背景压暗成磨砂。
+/// 点开 = 把它从架子上"拿起来"：放大、带一点 3D 倾斜、投影变大变柔。
 /// 这是全 App 唯一的"使用页"：首页、藏品、空瓶、近期记录点任何一件产品都打开它。
-/// iOS 18 由 ProductDetailPresenter 的系统缩放转场带过来，iOS 17 用 matchedGeometryEffect。
+/// iOS 18 由 ProductDetailPresenter 的系统缩放转场带过来，iOS 17 直接全屏。
 /// 实物本身可以按形状操作来记一次使用（见 UseGestureHero），下方保留大按钮"用了一次"。
 /// 估算型产品（口红、粉盒）用滑块调整剩余量。
+///
+/// 一起记多件时也进这一页：几件产品像卡片一样左右滑动，一张一张地记。
+/// 底色和首页、藏品、空瓶一样是那层淡淡的瓷白（Theme.porcelain），产品色只是背景里的一团柔光。
 struct ProductDetailView: View {
-    @Bindable var product: Product
-    /// iOS 17 的 matchedGeometryEffect 用；iOS 18 走系统缩放转场，这里可以为 nil
-    var ns: Namespace.ID? = nil
-    /// iOS 18 全屏缩放转场呈现（不用 matchedGeometryEffect）
-    var zoomed: Bool = false
+    /// 可以左右滑动的几件产品，第一张是点开的那件
+    let items: [Product]
     var close: () -> Void
 
     @Environment(AppCoordinator.self) var coordinator
     @Environment(\.modelContext) var context
     @Environment(\.accessibilityReduceMotion) var reduceMotion
     @Environment(\.colorScheme) var scheme
-    /// 每记一次（手势或按钮）+1：液面晃动、触感
-    @State var uses = 0
-    /// 只有按钮触发时 +1：实物自动演示一遍动作
-    @State var buttonUses = 0
+
+    /// 当前在第几张卡
+    @State var index = 0
+    /// 每件产品各记了几次：液面晃一下
+    @State var sloshes: [UUID: Int] = [:]
+    /// 只有"用了一次"按钮触发时 +1：实物自动演示一遍动作
+    @State var demos: [UUID: Int] = [:]
+    /// 触感反馈的触发计数
+    @State var tick = 0
     @State var revealed = false
     @State var lifted = false
     @State var tilt: Double = 0
     @State var confirmDelete = false
     /// 这一次记给哪个时段：默认当前时段（15:00 前早间，之后晚间）
     @State var slot: RoutineSlot = SharedStore.currentSlot()
-    /// 刚记下：按钮短暂变成"已记下"，并给出撤销
-    @State var recorded = false
+    /// 刚记下的那一件：按钮短暂变成"已记下"，并给出撤销
+    @State var recordedID: UUID? = nil
     @State var resetTask: Task<Void, Never>? = nil
 
-    init(product: Product, ns: Namespace.ID? = nil, zoomed: Bool = false, close: @escaping () -> Void) {
-        self.product = product
-        self.ns = ns
-        self.zoomed = zoomed
+    init(items: [Product], close: @escaping () -> Void) {
+        self.items = items
         self.close = close
     }
 
-    private var heroSize: CGSize {
-        product.cutout != nil ? CGSize(width: 230, height: 270) : CGSize(width: 150, height: 244)
+    /// 当前这张卡上的产品
+    private var current: Product { items[min(max(index, 0), items.count - 1)] }
+    /// 一起记多件：可以左右滑动
+    private var grouped: Bool { items.count > 1 }
+
+    private func heroSize(_ p: Product) -> CGSize {
+        p.cutout != nil ? CGSize(width: 210, height: 246) : CGSize(width: 144, height: 222)
     }
 
     var body: some View {
         ZStack {
             backdrop
-                .opacity(zoomed || revealed ? 1 : 0.0001)
+                .opacity(revealed ? 1 : 0.0001)
                 .accessibilityHidden(true)
 
-            ScrollView {
-                VStack(spacing: 22) {
-                    hero
-                        .padding(.top, 60)
-
-                    VStack(spacing: 4) {
-                        Text(product.name)
-                            .font(.title.weight(.bold))
-                            .multilineTextAlignment(.center)
-                        if !product.brand.isEmpty {
-                            Text(product.brand).font(.title3).foregroundStyle(.secondary)
-                        }
+            // 卡片在上面，按钮在自己的一块里：两者各占各的高度，永远不会叠在一起
+            VStack(spacing: 0) {
+                TabView(selection: $index) {
+                    ForEach(Array(items.enumerated()), id: \.element.uid) { pair in
+                        card(pair.element).tag(pair.offset)
                     }
-                    .accessibilityElement(children: .combine)
-                    .accessibilityAddTraits(.isHeader)
-
-                    stats
-                    expiryLine
-                    if product.measureMode == .estimate {
-                        estimateSlider
-                    }
-                    usageDots
-                    slotToggles
                 }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 24)
-                .opacity(revealed ? 1 : 0)
-            }
-            .scrollIndicators(.hidden)
-            // 底部按钮自己一块安全区：不会被 Home Indicator 挡住，也不跟着内容滚走
-            .safeAreaInset(edge: .bottom, spacing: 0) {
+                .tabViewStyle(.page(indexDisplayMode: .never))
+
                 actions
-                    .padding(.horizontal, 24)
-                    .padding(.top, 16)
-                    .padding(.bottom, 8)
-                    .background {
-                        LinearGradient(colors: [stage.opacity(0), stage.opacity(0.9), stage],
-                                       startPoint: .top, endPoint: .bottom)
-                            .ignoresSafeArea(edges: .bottom)
-                    }
                     .opacity(revealed ? 1 : 0)
             }
 
@@ -103,17 +81,47 @@ struct ProductDetailView: View {
             MotionService.shared.end()
             resetTask?.cancel()
         }
-        .sensoryFeedback(.impact(weight: .light), trigger: uses)
+        .sensoryFeedback(.impact(weight: .light), trigger: tick)
         .sensoryFeedback(.selection, trigger: estimateStep)
-        .confirmationDialog("删除「\(product.name)」？", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("删除", role: .destructive) {
-                let p = product
-                close()
-                withAnimation(Theme.spring) { context.delete(p) }
-            }
+        .confirmationDialog("删除「\(current.name)」？", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("删除", role: .destructive) { deleteCurrent() }
         } message: {
             Text("删除后无法恢复。")
         }
+    }
+
+    // MARK: 一张卡（每件产品一张）
+
+    private func card(_ p: Product) -> some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                hero(p)
+                    .padding(.top, 46)
+
+                VStack(spacing: 4) {
+                    Text(p.name)
+                        .font(.title.weight(.bold))
+                        .multilineTextAlignment(.center)
+                    if !p.brand.isEmpty {
+                        Text(p.brand).font(.title3).foregroundStyle(.secondary)
+                    }
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityAddTraits(.isHeader)
+
+                stats(p)
+                expiryLine(p)
+                if p.measureMode == .estimate {
+                    estimateSlider(p)
+                }
+                usageDots(p)
+                slotToggles
+            }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 20)
+            .opacity(revealed ? 1 : 0)
+        }
+        .scrollIndicators(.hidden)
     }
 
     // MARK: 拿起来
@@ -132,67 +140,67 @@ struct ProductDetailView: View {
         }
     }
 
-    private var hero: some View {
-        VStack(spacing: 14) {
-            UseGestureHero(product: product, size: heroSize, slosh: uses, demoTrigger: buttonUses) {
-                logUse(fromGesture: true)
+    private func hero(_ p: Product) -> some View {
+        VStack(spacing: 10) {
+            UseGestureHero(product: p,
+                           size: heroSize(p),
+                           slosh: sloshes[p.uid] ?? 0,
+                           demoTrigger: demos[p.uid] ?? 0) {
+                logUse(p, fromGesture: true)
             }
-            .modifier(HeroMatch(id: product.uid, ns: ns, enabled: !zoomed))
             .rotation3DEffect(.degrees(tilt), axis: (x: 1, y: -0.4, z: 0), anchor: .bottom, perspective: 0.55)
             .background(alignment: .bottom) {
                 // 投影：拿起来后变大、变柔、离得更远
                 Ellipse()
                     .fill(Color.black.opacity(lifted ? 0.16 : 0.3))
-                    .frame(width: heroSize.width * (lifted ? 0.85 : 0.65), height: lifted ? 26 : 8)
+                    .frame(width: heroSize(p).width * (lifted ? 0.85 : 0.65), height: lifted ? 26 : 8)
                     .blur(radius: lifted ? 16 : 3)
                     .offset(y: lifted ? 30 : 4)
                     .accessibilityHidden(true)
             }
             .scaleEffect(lifted ? 1 : 0.96, anchor: .bottom)
 
-            if !product.isFinished {
-                Text(gestureHint)
+            if !p.isFinished {
+                Text(UseGestureHero.hint(for: p))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
-                    .padding(.top, 18)
+                    .padding(.top, 16)
                     .accessibilityHidden(true)
             }
         }
     }
 
-    private var gestureHint: String {
-        UseGestureHero.hint(for: product)
-    }
-
     // MARK: 估算剩余
 
-    private var estimateBinding: Binding<Double> {
-        Binding(get: { product.level },
-                set: { product.setEstimatedLevel($0) })
+    private func estimateBinding(_ p: Product) -> Binding<Double> {
+        Binding(get: { p.level },
+                set: { p.setEstimatedLevel($0) })
     }
 
     /// 每跨过 5% 轻触一下
-    private var estimateStep: Int { product.measureMode == .estimate ? Int((product.level * 20).rounded()) : -1 }
+    private var estimateStep: Int {
+        current.measureMode == .estimate ? Int((current.level * 20).rounded()) : -1
+    }
 
-    private var estimateSlider: some View {
+    private func estimateSlider(_ p: Product) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text("估算剩余").font(.subheadline.weight(.semibold))
                 Spacer()
-                Text("\(Int((product.level * 100).rounded()))%")
+                Text("\(Int((p.level * 100).rounded()))%")
                     .font(.system(.subheadline, design: .rounded).weight(.semibold))
                     .monospacedDigit()
                     .contentTransition(.numericText())
             }
-            Slider(value: estimateBinding, in: 0...1, step: 0.05) {
+            Slider(value: estimateBinding(p), in: 0...1, step: 0.05) {
                 Text("估算剩余")
             } minimumValueLabel: {
                 Image(systemName: "circle.dotted").accessibilityHidden(true)
             } maximumValueLabel: {
                 Image(systemName: "circle.fill").accessibilityHidden(true)
             }
-            .tint(product.tint.mixed(with: .black, 0.15))
-            .accessibilityValue("约剩 \(Int((product.level * 100).rounded()))%")
+            .tint(p.tint.mixed(with: .black, 0.15))
+            .accessibilityValue("约剩 \(Int((p.level * 100).rounded()))%")
         }
         .padding(16)
         .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Theme.card))
@@ -200,18 +208,18 @@ struct ProductDetailView: View {
 
     // MARK: 数据
 
-    private var stats: some View {
+    private func stats(_ p: Product) -> some View {
         Grid(horizontalSpacing: 8, verticalSpacing: 6) {
             GridRow {
-                stat("\(product.useCount)", "次")
-                stat(remainingValue, remainingUnit)
-                stat("\(abs(product.daysUntilExpiry))", "天",
-                     color: product.expiryState == .fresh ? .primary : product.expiryState.color)
+                stat("\(p.useCount)", "次")
+                stat(remainingValue(p), remainingUnit(p))
+                stat("\(abs(p.daysUntilExpiry))", "天",
+                     color: p.expiryState == .fresh ? .primary : p.expiryState.color)
             }
             GridRow {
                 Text("已用")
-                Text(usesLeftText.map { "还剩 · \($0)" } ?? "还剩")
-                Text(product.daysUntilExpiry >= 0 ? "后到期" : "已过期")
+                Text(usesLeftText(p).map { "还剩 · \($0)" } ?? "还剩")
+                Text(p.daysUntilExpiry >= 0 ? "后到期" : "已过期")
             }
             .font(.subheadline)
             .foregroundStyle(.secondary)
@@ -219,23 +227,23 @@ struct ProductDetailView: View {
             .minimumScaleFactor(0.8)
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 6)
+        .padding(.top, 4)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("已使用 \(product.useCount) 次，\(product.remainingText)，\(product.expiryText)")
+        .accessibilityLabel("已使用 \(p.useCount) 次，\(p.remainingText)，\(p.expiryText)")
     }
 
-    private var remainingValue: String {
-        switch product.measureMode {
-        case .volume: return Fmt.amount(product.remainingAmount)
-        case .count: return "\(Int(product.remainingAmount.rounded()))"
-        case .estimate: return "\(Int(product.remainingAmount.rounded()))"
+    private func remainingValue(_ p: Product) -> String {
+        switch p.measureMode {
+        case .volume: return Fmt.amount(p.remainingAmount)
+        case .count: return "\(Int(p.remainingAmount.rounded()))"
+        case .estimate: return "\(Int(p.remainingAmount.rounded()))"
         }
     }
 
-    private var remainingUnit: String {
-        switch product.measureMode {
-        case .volume: return product.unit
-        case .count: return "/\(Int(product.totalAmount.rounded())) 片"
+    private func remainingUnit(_ p: Product) -> String {
+        switch p.measureMode {
+        case .volume: return p.unit
+        case .count: return "/\(Int(p.totalAmount.rounded())) 片"
         case .estimate: return "%"
         }
     }
@@ -253,26 +261,26 @@ struct ProductDetailView: View {
     }
 
     /// 约还能用几次（按每次用量）
-    private var usesLeftText: String? {
-        guard product.measureMode == .volume, product.amountPerUse > 0 else { return nil }
-        let n = Int((product.remainingAmount / product.amountPerUse).rounded(.down))
+    private func usesLeftText(_ p: Product) -> String? {
+        guard p.measureMode == .volume, p.amountPerUse > 0 else { return nil }
+        let n = Int((p.remainingAmount / p.amountPerUse).rounded(.down))
         return "约 \(n) 次"
     }
 
     // MARK: 到期一行（替代原来的日期卡片）
 
-    private var expiryLine: some View {
+    private func expiryLine(_ p: Product) -> some View {
         var basis: String {
-            switch product.expiryBasis {
+            switch p.expiryBasis {
             case .packaging: return "（包装日期）"
             case .afterOpening(let m): return "（开封后 \(m) 个月）"
             }
         }
-        let extra = [product.price.map { p in product.costPerUse.map { "每次 \(Fmt.money($0))" } ?? Fmt.money(p) },
-                     product.backupStock > 0 ? "备用 \(product.backupStock) 件" : nil].compactMap { $0 }
+        let extra = [p.price.map { price in p.costPerUse.map { "每次 \(Fmt.money($0))" } ?? Fmt.money(price) },
+                     p.backupStock > 0 ? "备用 \(p.backupStock) 件" : nil].compactMap { $0 }
         return VStack(spacing: 4) {
-            Text("\(Fmt.day(product.effectiveExpiry).replacingOccurrences(of: " ", with: "")) 到期\(basis)")
-                .foregroundStyle(product.expiryState == .fresh ? Color.secondary : product.expiryState.color)
+            Text("\(Fmt.day(p.effectiveExpiry).replacingOccurrences(of: " ", with: "")) 到期\(basis)")
+                .foregroundStyle(p.expiryState == .fresh ? Color.secondary : p.expiryState.color)
             if !extra.isEmpty {
                 Text(extra.joined(separator: " · ")).foregroundStyle(.tertiary)
             }
@@ -293,7 +301,7 @@ struct ProductDetailView: View {
                 ForEach(RoutineSlot.allCases) { slot in routineToggle(slot) }
             }
         }
-        .padding(.top, 4)
+        .padding(.top, 2)
     }
 
     private func routineToggle(_ slot: RoutineSlot) -> some View {
@@ -314,46 +322,45 @@ struct ProductDetailView: View {
         .accessibilityAddTraits(on ? .isSelected : [])
     }
 
-    // MARK: 配色：白天瓷白、夜间近黑，跟随系统
+    // MARK: 配色：白天瓷白、夜间近黑，跟随系统（和首页、藏品、空瓶同一层底色）
 
     private var dark: Bool { scheme == .dark }
-    private var stage: Color { dark ? Color(hex: "0E0F12") : Color(hex: "F6F6F7") }
+    private var stage: Color { Theme.porcelain }
     /// 主色：夜间白、白天黑
     private var ink: Color { dark ? Color.white.opacity(0.95) : Color(hex: "1C1C1E") }
     private var inkReverse: Color { dark ? .black : .white }
     private var soft: Color { Color.primary.opacity(dark ? 0.1 : 0.07) }
 
-    // MARK: 背景：产品色的柔光
+    // MARK: 背景：一层淡淡的瓷白 + 产品色的一团柔光（不用粉调的大片渐变）
 
     private var backdrop: some View {
         ZStack {
-            stage
-            RadialGradient(colors: [product.tint.opacity(dark ? 0.22 : 0.16), .clear], center: UnitPoint(x: 0.15, y: 0.28), startRadius: 0, endRadius: 260)
-            RadialGradient(colors: [product.tint.opacity(dark ? 0.14 : 0.1), .clear], center: UnitPoint(x: 0.85, y: 0.48), startRadius: 0, endRadius: 240)
-            RadialGradient(colors: [Color.white.opacity(dark ? 0.06 : 0.7), .clear], center: UnitPoint(x: 0.5, y: 0.32), startRadius: 0, endRadius: 300)
+            Theme.porcelain
+            AmbientGlow(colors: [current.tint.mixed(with: Theme.porcelain, 0.62)])
         }
         .ignoresSafeArea()
+        .animation(.easeInOut(duration: 0.35), value: index)
     }
 
     // MARK: 最近 14 天
 
-    private var usageDots: some View {
+    private func usageDots(_ p: Product) -> some View {
         let cal = Calendar.current
         let today = cal.startOfDay(for: .now)
         let days: [Date] = (0..<14).reversed().compactMap { cal.date(byAdding: .day, value: -$0, to: today) }
-        let usedCount = days.filter { product.used(on: $0) }.count
+        let usedCount = days.filter { p.used(on: $0) }.count
         return VStack(spacing: 8) {
             HStack(spacing: 7) {
                 ForEach(days, id: \.self) { day in
                     Circle()
-                        .fill(product.used(on: day) ? ink : Color.primary.opacity(0.12))
+                        .fill(p.used(on: day) ? ink : Color.primary.opacity(0.12))
                         .frame(width: 10, height: 10)
                 }
             }
             Text("最近 14 天").font(.footnote).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 4)
+        .padding(.top, 2)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("最近 14 天里用了 \(usedCount) 天")
     }
@@ -362,25 +369,12 @@ struct ProductDetailView: View {
 
     private var actions: some View {
         VStack(spacing: 10) {
-            if recorded {
-                HStack(spacing: 10) {
-                    Label("已记一次 · \(slot.title)", systemImage: "checkmark.circle.fill")
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(.secondary)
-                    Spacer(minLength: 8)
-                    Button { undoLast() } label: {
-                        Label("撤销", systemImage: "arrow.uturn.backward")
-                            .font(.subheadline.weight(.semibold))
-                            .frame(minHeight: 44)
-                    }
-                    .buttonStyle(.plain)
-                }
-                .transition(.opacity)
-            }
-            Button { logUse(fromGesture: false) } label: {
+            statusRow
+
+            Button { logUse(current, fromGesture: false) } label: {
                 HStack(spacing: 8) {
-                    if recorded { Image(systemName: "checkmark") }
-                    Text(recorded ? "已记下" : "用了一次")
+                    if recordedID == current.uid { Image(systemName: "checkmark") }
+                    Text(recordedID == current.uid ? "已记下" : "用了一次")
                 }
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(inkReverse)
@@ -388,27 +382,83 @@ struct ProductDetailView: View {
                 .background(Capsule().fill(ink))
             }
             .buttonStyle(ShelfPressStyle())
-            .disabled(product.isFinished)
-            HStack(spacing: 12) {
-                darkPill("用完了") {
-                    let p = product
+            .disabled(current.isFinished)
+
+            HStack(spacing: 10) {
+                softPill("用完了") {
+                    let p = current
                     close()
                     coordinator.finish(p)
                 }
-                darkPill(product.needsRestock ? "已在补货" : "加入补货") {
-                    withAnimation(Theme.snappy) { product.needsRestock.toggle() }
+                .disabled(current.isFinished)
+                softPill(current.needsRestock ? "已在补货" : "加入补货") {
+                    withAnimation(Theme.snappy) { current.needsRestock.toggle() }
                 }
+                .disabled(current.isFinished)
+                // 退出放在拇指够得到的地方，不用再伸手去左上角
+                softPill("完成") { close() }
+                    .accessibilityLabel("关闭详情")
             }
-            .disabled(product.isFinished)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 14)
+        .padding(.bottom, 8)
+        .background {
+            // 一层不透明的底：滚动的内容不会从按钮后面透出来
+            VStack(spacing: 0) {
+                LinearGradient(colors: [stage.opacity(0), stage.opacity(0.92), stage],
+                               startPoint: .top, endPoint: .bottom)
+                    .frame(height: 18)
+                stage
+            }
+            .ignoresSafeArea(edges: .bottom)
         }
     }
 
-    private func darkPill(_ title: String, action: @escaping () -> Void) -> some View {
+    /// 按钮上方那一条：刚记下的撤销，或者"第几张 / 共几张"
+    @ViewBuilder private var statusRow: some View {
+        if recordedID == current.uid {
+            HStack(spacing: 10) {
+                Label("已记一次 · \(slot.title)", systemImage: "checkmark.circle.fill")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.secondary)
+                Spacer(minLength: 8)
+                Button { undoLast() } label: {
+                    Label("撤销", systemImage: "arrow.uturn.backward")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(minHeight: 32)
+                }
+                .buttonStyle(.plain)
+            }
+            .transition(.opacity)
+        } else if grouped {
+            HStack(spacing: 6) {
+                ForEach(items.indices, id: \.self) { i in
+                    Circle()
+                        .fill(i == index ? ink : Color.primary.opacity(0.18))
+                        .frame(width: 7, height: 7)
+                }
+                Text("\(index + 1) / \(items.count)")
+                    .font(.caption)
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 4)
+            }
+            .frame(height: 22)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("第 \(index + 1) 件，共 \(items.count) 件，左右滑动切换")
+            .transition(.opacity)
+        }
+    }
+
+    private func softPill(_ title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
-                .font(.title3.weight(.semibold))
+                .font(.subheadline.weight(.semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
                 .foregroundStyle(.primary)
-                .frame(maxWidth: .infinity, minHeight: 56)
+                .frame(maxWidth: .infinity, minHeight: 50)
                 .background(Capsule().fill(soft))
         }
         .buttonStyle(ShelfPressStyle())
@@ -430,33 +480,33 @@ struct ProductDetailView: View {
                 Spacer()
 
                 Menu {
-                    Button(product.isPinned ? "取消常用" : "标为常用", systemImage: product.isPinned ? "star.slash" : "star") {
-                        product.togglePin()
+                    Button(current.isPinned ? "取消常用" : "标为常用", systemImage: current.isPinned ? "star.slash" : "star") {
+                        current.togglePin()
                         coordinator.dataChanged()
                     }
                     Menu("日常流程") {
                         ForEach(RoutineSlot.allCases) { s in
                             Button {
-                                withAnimation(Theme.snappy) { product.setRoutine(s, !product.inRoutine(s)) }
+                                withAnimation(Theme.snappy) { current.setRoutine(s, !current.inRoutine(s)) }
                                 coordinator.dataChanged()
                             } label: {
-                                Label(product.inRoutine(s) ? "移出\(s.title)" : "加入\(s.title)",
-                                      systemImage: product.inRoutine(s) ? "checkmark" : s.symbol)
+                                Label(current.inRoutine(s) ? "移出\(s.title)" : "加入\(s.title)",
+                                      systemImage: current.inRoutine(s) ? "checkmark" : s.symbol)
                             }
                         }
                     }
                     Divider()
                     Button("删除", systemImage: "trash", role: .destructive) { confirmDelete = true }
                 } label: {
-                    Image(systemName: product.isPinned ? "star.fill" : "ellipsis")
+                    Image(systemName: current.isPinned ? "star.fill" : "ellipsis")
                         .font(.body.weight(.semibold))
-                        .foregroundStyle(product.isPinned ? Theme.honey : .primary)
+                        .foregroundStyle(current.isPinned ? Theme.honey : .primary)
                         .frame(width: 50, height: 50)
                         .background(Circle().fill(soft))
                 }
                 .accessibilityLabel("更多操作")
 
-                Button { coordinator.editor = .edit(product) } label: {
+                Button { coordinator.editor = .edit(current) } label: {
                     Text("编辑")
                         .font(.title3.weight(.semibold))
                         .foregroundStyle(.primary)
@@ -472,51 +522,47 @@ struct ProductDetailView: View {
         .padding(.top, 8)
     }
 
-    private func logUse(fromGesture: Bool) {
-        guard !product.isFinished else { return }
+    // MARK: 记一次
+
+    private func logUse(_ p: Product, fromGesture: Bool) {
+        guard !p.isFinished else { return }
         // 记一次，并标明属于哪个时段（胶囊默认当前时段）
-        withAnimation(Theme.spring) { coordinator.logRoutine(product, slot) }
-        uses += 1
-        if !fromGesture { buttonUses += 1 }
-        markRecorded()
+        withAnimation(Theme.spring) { coordinator.logRoutine(p, slot) }
+        sloshes[p.uid, default: 0] += 1
+        if !fromGesture { demos[p.uid, default: 0] += 1 }
+        tick += 1
+        markRecorded(p)
         // 用到见底：关闭详情，交给"倒空"动画
-        if coordinator.finishing === product {
+        if coordinator.finishing === p {
             close()
         }
     }
 
     /// 按钮短暂变成"已记下"，并给出撤销；不自动关闭，让用户看到数字和圆点的变化
-    private func markRecorded() {
-        withAnimation(Theme.snappy) { recorded = true }
+    private func markRecorded(_ p: Product) {
+        withAnimation(Theme.snappy) { recordedID = p.uid }
         resetTask?.cancel()
         resetTask = Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(2600))
             guard !Task.isCancelled else { return }
-            withAnimation(Theme.snappy) { recorded = false }
+            withAnimation(Theme.snappy) {
+                if recordedID == p.uid { recordedID = nil }
+            }
         }
     }
 
     private func undoLast() {
         resetTask?.cancel()
+        let p = current
         withAnimation(Theme.spring) {
-            coordinator.undoRoutine(product, slot)
-            recorded = false
+            coordinator.undoRoutine(p, slot)
+            recordedID = nil
         }
     }
-}
 
-/// iOS 17 浮层模式：和架子上那件共用 matchedGeometryEffect；iOS 18 缩放转场时关闭
-struct HeroMatch: ViewModifier {
-    let id: UUID
-    var ns: Namespace.ID?
-    var enabled: Bool
-
-    @ViewBuilder
-    func body(content: Content) -> some View {
-        if enabled, let ns {
-            content.matchedGeometryEffect(id: "container-\(id)", in: ns)
-        } else {
-            content
-        }
+    private func deleteCurrent() {
+        let p = current
+        close()
+        withAnimation(Theme.spring) { context.delete(p) }
     }
 }
