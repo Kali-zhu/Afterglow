@@ -115,7 +115,8 @@ struct ProductDetailView: View {
                     estimateSlider(p)
                 }
                 usageDots(p)
-                slotToggles
+                // 空瓶只看记录：不再选时段
+                if !p.isFinished { slotToggles }
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 20)
@@ -374,7 +375,7 @@ struct ProductDetailView: View {
             Button { logUse(current, fromGesture: false) } label: {
                 HStack(spacing: 8) {
                     if recordedID == current.uid { Image(systemName: "checkmark") }
-                    Text(recordedID == current.uid ? "已记下" : "用了一次")
+                    Text(useTitle(current))
                 }
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(inkReverse)
@@ -385,16 +386,17 @@ struct ProductDetailView: View {
             .disabled(current.isFinished)
 
             HStack(spacing: 10) {
-                softPill("用完了") {
-                    let p = current
-                    close()
-                    coordinator.finish(p)
+                // 空瓶不再「用完了」，只留补货
+                if !current.isFinished {
+                    softPill("用完了") {
+                        let p = current
+                        close()
+                        coordinator.finish(p)
+                    }
                 }
-                .disabled(current.isFinished)
                 softPill(current.needsRestock ? "已在补货" : "加入补货") {
                     withAnimation(Theme.snappy) { current.needsRestock.toggle() }
                 }
-                .disabled(current.isFinished)
                 // 退出放在拇指够得到的地方，不用再伸手去左上角
                 softPill("完成") { close() }
                     .accessibilityLabel("关闭详情")
@@ -449,6 +451,13 @@ struct ProductDetailView: View {
             .accessibilityLabel("第 \(index + 1) 件，共 \(items.count) 件，左右滑动切换")
             .transition(.opacity)
         }
+    }
+
+    /// 主按钮文字：刚记下 / 空瓶显示用完的日期 / 平时"用了一次"
+    private func useTitle(_ p: Product) -> String {
+        if recordedID == p.uid { return "已记下" }
+        if let d = p.finishedDate { return "\(d.formatted(.dateTime.year().month().day()))用完" }
+        return "用了一次"
     }
 
     private func softPill(_ title: String, action: @escaping () -> Void) -> some View {

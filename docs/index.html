@@ -363,7 +363,7 @@ button .ui-icon+span{margin-inline-start:6px}
 .journal-alt{display:block;margin:4px auto 0}
 .journal-log{padding:0;margin:0;list-style:none}
 .journal-log li,.journal-choice{display:grid;align-items:center;gap:12px;min-height:51px;border-bottom:1px solid var(--sep);font-size:15px}
-.journal-log li{grid-template-columns:52px 1fr 36px;position:relative;padding-left:14px}
+.journal-log li{grid-template-columns:52px 1fr 36px;position:relative;padding-left:14px;cursor:pointer}
 .journal-log li::before{content:"";position:absolute;left:0;top:50%;width:4px;height:4px;border-radius:50%;background:var(--ink3)}
 .journal-log .r,.journal-day{color:var(--ink2);font-size:14px}
 .journal-day{margin:16px 0 3px;font-weight:600}
@@ -396,6 +396,7 @@ button .ui-icon+span{margin-inline-start:6px}
 [aria-pressed=true] .choice-mark{color:var(--card);background:var(--ink);border-color:var(--ink)}
 [aria-pressed=true] .choice-mark svg{visibility:visible}
 #t-today [hidden]{display:none}
+#toggles[hidden],#finBtn[hidden]{display:none}
 @media(min-width:760px){.journal-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;gap:40px}.journal-history>h2{margin-top:0}}
 .shelf-attention{margin-top:12px}
 .shelf-attention summary{min-height:44px;padding-block:11px;cursor:pointer;font-size:14px;font-weight:600}
@@ -998,7 +999,7 @@ function openDetail(id,el){
   d.classList.add("open");d.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";
   const svg=el?.querySelector("svg");
   if(svg){const from=svg.getBoundingClientRect(),to=stage.getBoundingClientRect();
-    el.querySelector(".cw").style.visibility="hidden";
+    (el.querySelector(".cw")||svg).style.visibility="hidden";
     fly.animate([{transform:`translate(${from.left-to.left}px,${from.top-to.top}px) scale(${from.width/150})`},{transform:"none"}],{duration:reduce?1:540,easing:"cubic-bezier(.34,1.2,.64,1)"});}
   setTimeout(()=>d.classList.add("revealed"),110);
 }
@@ -1033,6 +1034,9 @@ function fillDetail(anim){
   // 胶囊 = 这一次记给哪个时段（默认当前时段：15:00 前早间，之后晚间）
   $$("#toggles [data-rt]").forEach(b=>b.onclick=()=>{detailSlot=b.dataset.rt;haptic(4);fillDetail(false);toast(`这一次记给${{am:"早间",pm:"晚间",mk:"化妆"}[detailSlot]}`)});
   const u=$("#useBtn");u.disabled=p.left<=0;u.textContent=p.left<=0?"已经用完":p.mode==="count"?"用了一片":"用了一次";
+  // 空瓶：只看记录，不再有时段胶囊和「用完了」
+  const done=!!p.finished;$("#toggles").hidden=done;$("#finBtn").hidden=done;
+  if(done){const f=dParse(p.finished);u.textContent=`${f.getFullYear()} 年 ${f.getMonth()+1} 月 ${f.getDate()} 日用完`}
   $("#restockBtn").textContent=p.restock?"已在补货清单":"加入补货";
 }
 $("#useBtn").onclick=()=>{
@@ -1187,13 +1191,14 @@ function renderToday(){
     title=many?`再记这 ${featured.length} 件`:recent?"再记一次":"用了一次";
     symbol=recent?"repeat":"drop";
     // 单件：不直接记录，打开详情页，在详情里点「用了一次」；多件：一键批量记
-    button.onclick=()=>{if(many)recordJournal(featured);else openDetail(p.id,null)};
-    $("#journalStage").onclick=()=>{if(!many)openDetail(p.id,null)};
+    const fig=()=>$("#journalStage .journal-figure span");
+    button.onclick=()=>{if(many)recordJournal(featured);else openDetail(p.id,fig())};
+    $("#journalStage").onclick=()=>{if(!many)openDetail(p.id,fig())};
     $("#journalStage").style.cursor="pointer";
     $("#journalStage").setAttribute("role","button");
     $("#journalStage").setAttribute("tabindex","0");
     $("#journalStage").setAttribute("aria-label",`打开 ${p.name} 的详情`);
-    $("#journalStage").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();if(!many)openDetail(p.id,null)}};
+    $("#journalStage").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();if(!many)openDetail(p.id,fig())}};
   }else{
     $("#journalStage").innerHTML=`<h2 class="journal-name">${available.length?"这次用了哪些产品？":"还没有可记录的产品"}</h2>`;
     $("#journalStage").onclick=null;$("#journalStage").style.cursor="";
@@ -1224,7 +1229,7 @@ function renderToday(){
   renderStreak();
 }
 /* 近期记录、藏品、空瓶里点任何产品，都打开同一个详情页 */
-$("#journalEntries").onclick=e=>{const li=e.target.closest("[data-detail]");if(li)openDetail(+li.dataset.detail,null)};
+$("#journalEntries").onclick=e=>{const li=e.target.closest("[data-detail]");if(li)openDetail(+li.dataset.detail,li.querySelector(".journal-thumb"))};
 /* 连续记录：今天还没记就从昨天往前数，不清零 */
 function prevDayISO(day){const x=dParse(day);x.setDate(x.getDate()-1);return iso(x)}
 function usedDaysSet(){
