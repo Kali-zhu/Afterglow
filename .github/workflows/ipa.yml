@@ -1,9 +1,16 @@
 name: Build unsigned IPA
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
   push:
-    branches: [main, dev]
-    paths: ["BeautyShelf/**", "Widgets/**", "project.yml", "Entitlements/**", ".github/workflows/ipa.yml"]
+    branches:
+      - main
+      - dev
+    paths:
+      - "BeautyShelf/**"
+      - "Widgets/**"
+      - "project.yml"
+      - "Entitlements/**"
+      - ".github/workflows/ipa.yml"
 concurrency:
   group: ipa-${{ github.ref }}
   cancel-in-progress: true
