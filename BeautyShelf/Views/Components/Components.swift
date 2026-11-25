@@ -133,7 +133,7 @@ struct ProgressRing: View {
     }
 }
 
-/// v3 架板：浅色磨砂玻璃。顶面亮、细细一道高光边，正面带一点玻璃断面的青绿，下方一层柔和的投影。
+/// v1.0 架板：浅色磨砂玻璃。顶面亮、细细一道高光边，正面带一点玻璃断面的青绿，下方一层柔和的投影。
 struct ShelfPlank: View {
     @Environment(\.colorScheme) private var scheme
     static let height: CGFloat = 12

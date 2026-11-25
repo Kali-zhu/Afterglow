@@ -25,7 +25,7 @@ enum Theme {
     /// 剩余不足 15%：冷调石板蓝，与保质期的三种状态色区分
     static let low = Color(light: "5B7DB1", dark: "8FAEE0")
 
-    // v3 玻璃架板：浅色磨砂玻璃，顶面亮、正面带一点玻璃断面的青绿
+    // v1.0 玻璃架板：浅色磨砂玻璃，顶面亮、正面带一点玻璃断面的青绿
     static let plankSurface = Color(light: "FFFFFF", dark: "8E9AA6")
     static let plankEdge = Color(light: "CFE6E0", dark: "4A5A58")
     static let plankShadow = Color(light: "1D2A3A", dark: "000000")
