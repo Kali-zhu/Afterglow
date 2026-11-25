@@ -8,7 +8,6 @@ struct TodayView: View {
     @Query(sort: \Product.createdAt, order: .reverse) private var products: [Product]
     @State private var picking = false
     @State private var receipt: [Change] = []
-    @State private var confirming = false
     @State private var saveError = false
 
     private struct UsageState: Equatable {
@@ -66,15 +65,6 @@ struct TodayView: View {
         return history.values.sorted { $0.date == $1.date ? $0.id < $1.id : $0.date > $1.date }
     }
 
-    private func featured(in history: [Session]) -> [Product] {
-        for session in history {
-            let usable = session.items.filter { !$0.isFinished && $0.remainingAmount > 0 }
-            if usable.count == session.originalCount { return usable }
-            if let first = usable.first { return [first] }
-        }
-        return available.count == 1 ? available : []
-    }
-
     private var undoTargets: [Product] {
         let targets = receipt.compactMap { change in
             products.first { $0.uid == change.id && !$0.isFinished && UsageState($0) == change.after }
@@ -84,17 +74,10 @@ struct TodayView: View {
 
     var body: some View {
         let history = sessions
-        let featuredItems = featured(in: history)
         return NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
-                    VStack(spacing: 4) {
-                        journalCard(featuredItems)
-                        if !featuredItems.isEmpty && available.count > 1 {
-                            Button(action: showPicker) { Label("换一件或记多件", systemImage: "checklist") }
-                                .font(.subheadline).frame(minHeight: 44)
-                        }
-                    }
+                    journalCard
                     if !usedDays.isEmpty { streakStrip }
                     historyList(Array(history.prefix(8)))
                     if products.contains(where: { !$0.isFinished && $0.remainingAmount <= 0 }) {
@@ -119,11 +102,6 @@ struct TodayView: View {
                 UsagePicker(products: available, record: record)
             }
             .alert("记录未能保存，请重试", isPresented: $saveError) { Button("好") {} }
-            .task(id: receipt.first?.after.log.last) {
-                guard confirming else { return }
-                try? await Task.sleep(for: .milliseconds(1200))
-                if !Task.isCancelled { confirming = false }
-            }
         }
     }
 
@@ -203,72 +181,58 @@ struct TodayView: View {
         .accessibilityLabel("连续记录 \(streak) 天，这周记了 \(weekCount) 天")
     }
 
-    private func action(for items: [Product]) -> (title: String, symbol: String) {
-        if items.count > 1 { return ("逐件记这 \(items.count) 件", "rectangle.on.rectangle") }
-        if let p = items.first { return p.useLog.isEmpty ? ("去记这一次", "drop") : ("再记一次", "arrow.clockwise") }
-        return available.isEmpty ? ("添加产品", "plus") : ("记下用过的产品", "checklist")
-    }
-
     /// 一件：直接打开它；多件：还是同一个详情页，几件产品像卡片一样左右滑动，一件件记
     private func openDetail(_ items: [Product]) {
         guard let first = items.first else { return }
         coordinator.openDetail(first, also: Array(items.dropFirst()))
     }
 
-    private func journalCard(_ items: [Product]) -> some View {
+    /// 首页第一张卡：不预选任何一件。这次用了什么，由你自己挑。
+    /// 右边那三个瓶子只是"你的东西"的缩影，谁都没被选中。
+    private var journalCard: some View {
         let recorded = undoTargets
-        let justRecorded = confirming && recorded.contains { $0.uid == items.first?.uid }
-        let button = action(for: items)
+        let shelf = Array(available.prefix(3))
         return VStack(alignment: .leading, spacing: 16) {
-            if let p = items.first {
-                let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading)) : AnyLayout(HStackLayout(spacing: 12))
-                // 点卡片 = 打开这件的详情（"使用页"），在那里记一次；
-                // 多件时也进同一个页面，几件产品左右滑动一件件记
-                Button {
-                    openDetail(items)
-                } label: {
-                    layout {
-                        VStack(alignment: .leading, spacing: 5) {
-                            Text(p.useLog.isEmpty ? "在用的产品" : "最近用过").font(.subheadline).foregroundStyle(.secondary)
-                            if let date = p.useLog.last {
-                                Text("\(dayLabel(date))　\(date.formatted(date: .omitted, time: .shortened))")
-                                    .font(.headline).monospacedDigit().padding(.bottom, 10)
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(available.isEmpty ? "还没有可记录的产品" : "这次用了哪些产品？")
+                        .font(.title2.bold())
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(available.isEmpty
+                         ? "添加第一件，之后每天点一下就好。"
+                         : "从在用的 \(available.count) 件里挑，勾几件就记几件。")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                if !shelf.isEmpty {
+                    VStack(spacing: 0) {
+                        HStack(alignment: .bottom, spacing: 2) {
+                            ForEach(shelf) { item in
+                                ProductFigure(product: item, maxPixel: 200)
+                                    .frame(maxWidth: .infinity, alignment: .bottom)
                             }
-                            Text(items.count > 1 ? "一起用了 \(items.count) 件" : p.name).font(.title2.bold())
-                            Text(items.count > 1 ? items.map(\.name).joined(separator: "、") :
-                                    [p.brand, p.remainingText].filter { !$0.isEmpty }.joined(separator: " · "))
-                                .font(.subheadline).foregroundStyle(.secondary)
-                        }.frame(maxWidth: .infinity, alignment: .leading)
-                        VStack(spacing: 0) {
-                            HStack(alignment: .bottom, spacing: 2) {
-                                ForEach(Array(items.prefix(3))) { item in
-                                    ProductFigure(product: item)
-                                        .frame(maxWidth: .infinity, alignment: .bottom)
-                                        .detailTransitionSource(id: item.uid)
-                                }
-                            }.frame(height: items.count > 1 ? 100 : 140, alignment: .bottom)
-                            ShelfPlank()
-                        }.frame(width: 98).accessibilityHidden(true)
+                        }
+                        .frame(height: typeSize.isAccessibilitySize ? 84 : 124, alignment: .bottom)
+                        ShelfPlank()
                     }
-                    .contentShape(Rectangle())
+                    .frame(width: 92)
+                    .accessibilityHidden(true)
                 }
-                .buttonStyle(.plain)
-                .accessibilityHint(items.count > 1 ? "打开详情，左右滑动一件件记" : "打开详情，在详情里记一次")
-            } else {
-                Text(available.isEmpty ? "还没有可记录的产品" : "这次用了哪些产品？").font(.title2.bold())
             }
+
             Button {
-                if items.isEmpty {
-                    if available.isEmpty { coordinator.editor = .new } else { showPicker() }
-                } else {
-                    openDetail(items)
-                }
+                if available.isEmpty { coordinator.editor = .new } else { showPicker() }
             } label: {
-                Label(justRecorded ? "已记下" : button.title, systemImage: justRecorded ? "checkmark" : button.symbol)
+                Label(available.isEmpty ? "添加第一件" : "挑产品，记一次",
+                      systemImage: available.isEmpty ? "plus" : "checklist")
                     .font(.headline).frame(maxWidth: .infinity, minHeight: 46)
             }
             .buttonStyle(.borderedProminent).buttonBorderShape(.capsule)
-            .tint(.primary).foregroundStyle(Color(uiColor: .systemBackground)).disabled(justRecorded)
+            .tint(.primary).foregroundStyle(Color(uiColor: .systemBackground))
+
             if let first = recorded.first {
                 HStack {
                     Text(recorded.count > 1 ? "已记录 \(recorded.count) 件，各一次" : "\(first.name)已记一次")
@@ -279,7 +243,7 @@ struct TodayView: View {
             }
         }
         .padding(18).frame(maxWidth: .infinity, alignment: .leading)
-        .glassPanel(cornerRadius: 22, tint: items.first?.tint)
+        .glassPanel(cornerRadius: 22)
     }
 
     private func dayLabel(_ date: Date) -> String {
@@ -332,11 +296,9 @@ struct TodayView: View {
         }
         do { try context.save() } catch {
             for (p, change) in zip(items, changes) { change.before.apply(to: p) }
-            if !picking { saveError = true }
             return false
         }
         receipt = changes
-        confirming = true
         coordinator.dataChanged()
         return true
     }
@@ -351,7 +313,6 @@ struct TodayView: View {
             return
         }
         receipt.removeAll()
-        confirming = false
         coordinator.dataChanged()
     }
 }
@@ -412,47 +373,45 @@ private struct UsagePicker: View {
         let large = products.count > suggestionLimit
         let searching = !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         return NavigationStack {
-            VStack(spacing: 0) {
-                if large || searching {
-                    HStack {
-                        Text(result.title).font(.subheadline.weight(.semibold))
-                        Spacer()
-                        if large && !searching { categoryMenu }
-                    }.padding(.horizontal, 20).frame(minHeight: 44)
-                }
-                List(result.items) { p in
-                    Button {
-                        if !selected.insert(p.uid).inserted { selected.remove(p.uid) }
-                    } label: {
-                        HStack {
-                            ProductFigure(product: p, maxPixel: 120).frame(width: 32, height: 38)
-                            VStack(alignment: .leading) {
-                                Text(p.name).foregroundStyle(.primary)
-                                Text([p.brand, p.remainingText].filter { !$0.isEmpty }.joined(separator: " · "))
-                                    .font(.caption).foregroundStyle(.secondary)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    if large || searching {
+                        HStack(spacing: 8) {
+                            Text(result.title).font(.subheadline.weight(.semibold))
+                            if !selected.isEmpty && !searching {
+                                Text("已选 \(selected.count) 件")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 3)
+                                    .background(Capsule().fill(Color.primary.opacity(0.08)))
                             }
-                            Spacer()
-                            Image(systemName: selected.contains(p.uid) ? "checkmark.circle.fill" : "circle")
-                                .imageScale(.large).accessibilityHidden(true)
-                        }.frame(minHeight: 44)
-                    }.accessibilityAddTraits(selected.contains(p.uid) ? .isSelected : [])
+                            Spacer(minLength: 8)
+                            if large && !searching { categoryMenu }
+                        }
+                        .padding(.horizontal, 20)
+                        .frame(minHeight: 40)
+                    }
+                    if result.items.isEmpty {
+                        if searching {
+                            ContentUnavailableView.search(text: query).padding(.top, 40)
+                        } else {
+                            Text("这里还没有产品")
+                                .font(.subheadline).foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity).padding(.top, 40)
+                        }
+                    } else {
+                        LazyVGrid(columns: columns, spacing: 12) {
+                            ForEach(result.items) { p in tile(p) }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 2)
+                        .padding(.bottom, 10)
+                    }
                 }
-                .listStyle(.plain)
-                .overlay { if result.items.isEmpty && searching { ContentUnavailableView.search(text: query) } }
             }
-            .safeAreaInset(edge: .bottom) {
-                Button {
-                    let items = products.filter { selected.contains($0.uid) }
-                    guard !items.isEmpty, items.count == selected.count else { return }
-                    if record(items) { dismiss() } else { saveError = true }
-                } label: {
-                    Text(selected.isEmpty ? "请选择产品" : "记录 \(selected.count) 件，各一次")
-                        .font(.headline).frame(maxWidth: .infinity, minHeight: 44)
-                }
-                .buttonStyle(.borderedProminent).buttonBorderShape(.capsule)
-                .tint(.primary).foregroundStyle(Color(uiColor: .systemBackground)).disabled(selected.isEmpty)
-                .padding(.horizontal).padding(.vertical, 6).background(.bar)
-            }
+            .scrollDismissesKeyboard(.immediately)
+            .safeAreaInset(edge: .bottom) { bottomBar }
             .onChange(of: products.map(\.uid)) { _, ids in
                 selected.formIntersection(ids)
                 if case let .category(cat) = scope, !products.contains(where: { $0.category == cat }) { scope = .suggested }
@@ -460,9 +419,97 @@ private struct UsagePicker: View {
             .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "搜索所有产品、品牌或品类")
             .navigationTitle("这次用了哪些产品？").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() } } }
+            .sensoryFeedback(.selection, trigger: selected.count)
         }
-        .presentationDetents(large ? [.large] : [.medium, .large])
+        .presentationDetents(products.count > 3 ? [.large] : [.medium, .large])
         .alert("记录未能保存，请重试", isPresented: $saveError) { Button("好") {} }
+    }
+
+    /// 一格 = 一件产品：实物站在一小段玻璃架上，选中的带一道描边和产品色
+    private func tile(_ p: Product) -> some View {
+        let on = selected.contains(p.uid)
+        return Button {
+            withAnimation(Theme.snappy) {
+                if !selected.insert(p.uid).inserted { selected.remove(p.uid) }
+            }
+        } label: {
+            VStack(alignment: .leading, spacing: 0) {
+                ZStack(alignment: .topTrailing) {
+                    VStack(spacing: 0) {
+                        ProductFigure(product: p, maxPixel: 220)
+                            .frame(height: 76)
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 12)
+                            .padding(.top, 16)
+                        ShelfPlank()
+                            .padding(.horizontal, 14)
+                    }
+                    Image(systemName: on ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(on ? Color.primary : Color.secondary.opacity(0.5))
+                        .padding(9)
+                        .accessibilityHidden(true)
+                }
+                Text(p.name)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 11)
+                    .padding(.top, 9)
+                Text([p.brand, p.remainingText].filter { !$0.isEmpty }.joined(separator: " · "))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 11)
+                    .padding(.top, 2)
+                    .padding(.bottom, 11)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .glassPanel(cornerRadius: 18, tint: on ? p.tint : nil, strong: on)
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .strokeBorder(on ? Color.primary.opacity(0.5) : .clear, lineWidth: 1.5)
+            }
+            .scaleEffect(on ? 0.98 : 1)
+            .animation(Theme.snappy, value: on)
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(p.name)，\([p.brand, p.remainingText].filter { !$0.isEmpty }.joined(separator: "，"))")
+        .accessibilityValue(on ? "已选中" : "未选中")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAddTraits(on ? .isSelected : [])
+    }
+
+    private let columns = [GridItem(.adaptive(minimum: 104, maximum: 168), spacing: 12)]
+
+    private var bottomBar: some View {
+        VStack(spacing: 6) {
+            Button {
+                let items = products.filter { selected.contains($0.uid) }
+                guard !items.isEmpty else { return }
+                if record(items) { dismiss() } else { saveError = true }
+            } label: {
+                Text(selected.isEmpty ? "挑一件，或者几件一起" : "记录 \(selected.count) 件，各一次")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, minHeight: 50)
+            }
+            .buttonStyle(.borderedProminent).buttonBorderShape(.capsule)
+            .tint(.primary).foregroundStyle(Color(uiColor: .systemBackground))
+            .disabled(selected.isEmpty)
+
+            if selected.isEmpty {
+                Text("勾选的产品会各记一次，记完可以撤销。")
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 10)
+        .padding(.bottom, 6)
+        .background(.bar)
     }
 
     private var categoryMenu: some View {
