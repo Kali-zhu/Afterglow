@@ -3,42 +3,11 @@ import SwiftData
 
 struct TodayView: View {
     @Environment(AppCoordinator.self) private var coordinator
-    @Environment(\.modelContext) private var context
     @Environment(\.dynamicTypeSize) private var typeSize
     @Query(sort: \Product.createdAt, order: .reverse) private var products: [Product]
     @State private var picking = false
-    @State private var receipt: [Change] = []
-    @State private var saveError = false
-
-    private struct UsageState: Equatable {
-        let remaining: Double
-        let opened: Date?
-        let count: Int
-        let log: [Date]
-        let groups: [UsageGroupMark]?
-
-        init(_ p: Product) {
-            remaining = p.remainingAmount
-            opened = p.openedDate
-            count = p.useCount
-            log = p.useLog
-            groups = p.groupedUses
-        }
-
-        func apply(to p: Product) {
-            p.remainingAmount = remaining
-            p.openedDate = opened
-            p.useCount = count
-            p.useLog = log
-            p.groupedUses = groups
-        }
-    }
-
-    private struct Change {
-        let id: UUID
-        let before: UsageState
-        let after: UsageState
-    }
+    /// 挑选页选完之后真正要打开的那几件：等弹层收起来再进详情，两个呈现不会撞在一起
+    @State private var pendingOpen: [Product]? = nil
 
     private struct Session: Identifiable {
         let id: String
@@ -63,13 +32,6 @@ struct TodayView: View {
             }
         }
         return history.values.sorted { $0.date == $1.date ? $0.id < $1.id : $0.date > $1.date }
-    }
-
-    private var undoTargets: [Product] {
-        let targets = receipt.compactMap { change in
-            products.first { $0.uid == change.id && !$0.isFinished && UsageState($0) == change.after }
-        }
-        return targets.count == receipt.count ? targets : []
     }
 
     var body: some View {
@@ -98,10 +60,23 @@ struct TodayView: View {
                         .accessibilityLabel("添加产品")
                 }
             }
-            .sheet(isPresented: $picking) {
-                UsagePicker(products: available, record: record)
+            // 挑完不直接记：收好弹层，进详情页一件件记（用完了会自动滑到下一件）
+            .sheet(isPresented: $picking, onDismiss: openPending) {
+                UsagePicker(products: available) { items in
+                    pendingOpen = items
+                    picking = false
+                }
             }
-            .alert("记录未能保存，请重试", isPresented: $saveError) { Button("好") {} }
+        }
+    }
+
+    private func openPending() {
+        guard let items = pendingOpen else { return }
+        pendingOpen = nil
+        // 等弹层彻底收好再呈现详情页：两个呈现不会撞在一起
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(220))
+            openDetail(items)
         }
     }
 
@@ -190,7 +165,6 @@ struct TodayView: View {
     /// 首页第一张卡：不预选任何一件。这次用了什么，由你自己挑。
     /// 右边那三个瓶子只是"你的东西"的缩影，谁都没被选中。
     private var journalCard: some View {
-        let recorded = undoTargets
         let shelf = Array(available.prefix(3))
         return VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top, spacing: 12) {
@@ -200,7 +174,7 @@ struct TodayView: View {
                         .fixedSize(horizontal: false, vertical: true)
                     Text(available.isEmpty
                          ? "添加第一件，之后每天点一下就好。"
-                         : "从在用的 \(available.count) 件里挑，勾几件就记几件。")
+                         : "从在用的 \(available.count) 件里挑，然后一件件记。")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -226,21 +200,12 @@ struct TodayView: View {
             Button {
                 if available.isEmpty { coordinator.editor = .new } else { showPicker() }
             } label: {
-                Label(available.isEmpty ? "添加第一件" : "挑产品，记一次",
+                Label(available.isEmpty ? "添加第一件" : "挑产品，逐件记",
                       systemImage: available.isEmpty ? "plus" : "checklist")
                     .font(.headline).frame(maxWidth: .infinity, minHeight: 46)
             }
             .buttonStyle(.borderedProminent).buttonBorderShape(.capsule)
             .tint(.primary).foregroundStyle(Color(uiColor: .systemBackground))
-
-            if let first = recorded.first {
-                HStack {
-                    Text(recorded.count > 1 ? "已记录 \(recorded.count) 件，各一次" : "\(first.name)已记一次")
-                        .font(.subheadline)
-                    Spacer()
-                    Button { undo() } label: { Label("撤销", systemImage: "arrow.uturn.backward") }.frame(minHeight: 44)
-                }
-            }
         }
         .padding(18).frame(maxWidth: .infinity, alignment: .leading)
         .glassPanel(cornerRadius: 22)
@@ -284,54 +249,32 @@ struct TodayView: View {
     private func showPicker() {
         picking = true
     }
-
-    @discardableResult private func record(_ items: [Product]) -> Bool {
-        guard !items.isEmpty, items.allSatisfy({ !$0.isFinished && $0.remainingAmount > 0 }) else { return false }
-        let date = Date.now
-        let group = items.count > 1 ? UsageGroupMark(id: UUID(), date: date, count: items.count) : nil
-        let changes = items.map { p in
-            let before = UsageState(p)
-            p.logUse(at: date, group: group)
-            return Change(id: p.uid, before: before, after: UsageState(p))
-        }
-        do { try context.save() } catch {
-            for (p, change) in zip(items, changes) { change.before.apply(to: p) }
-            return false
-        }
-        receipt = changes
-        coordinator.dataChanged()
-        return true
-    }
-
-    private func undo() {
-        let targets = undoTargets
-        guard !targets.isEmpty else { return }
-        for (p, change) in zip(targets, receipt) { change.before.apply(to: p) }
-        do { try context.save() } catch {
-            for (p, change) in zip(targets, receipt) { change.after.apply(to: p) }
-            saveError = true
-            return
-        }
-        receipt.removeAll()
-        coordinator.dataChanged()
-    }
 }
 
 private struct UsagePicker: View {
     let products: [Product]
-    let record: ([Product]) -> Bool
+    /// 选完之后做什么：交回给首页，收好弹层再打开详情页逐件记
+    let open: ([Product]) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
     @State private var selected: Set<UUID> = []
     @State private var scope = Scope.suggested
-    @State private var saveError = false
 
     private enum Scope: Hashable {
         case suggested, all, category(ProductCategory)
     }
 
     private let suggestionLimit = 6
+
+    /// 勾中的产品，按列表顺序交给详情页
+    private var selectedProducts: [Product] {
+        products.filter { selected.contains($0.uid) }
+    }
+
+    private var enterTitle: String {
+        selected.count == 1 ? "进详情，记这一件" : "进详情，逐件记这 \(selected.count) 件"
+    }
 
     // 入参已按入库时间从新到旧排列。
     private var suggestions: (title: String, items: [Product]) {
@@ -422,7 +365,6 @@ private struct UsagePicker: View {
             .sensoryFeedback(.selection, trigger: selected.count)
         }
         .presentationDetents(products.count > 3 ? [.large] : [.medium, .large])
-        .alert("记录未能保存，请重试", isPresented: $saveError) { Button("好") {} }
     }
 
     /// 一格 = 一件产品：实物站在一小段玻璃架上，选中的带一道描边和产品色
@@ -489,11 +431,13 @@ private struct UsagePicker: View {
     private var bottomBar: some View {
         VStack(spacing: 6) {
             Button {
-                let items = products.filter { selected.contains($0.uid) }
+                let items = selectedProducts
                 guard !items.isEmpty else { return }
-                if record(items) { dismiss() } else { saveError = true }
+                // 不在这里直接记：交回首页，收起弹层后进详情页，一件一件地记
+                open(items)
+                dismiss()
             } label: {
-                Text(selected.isEmpty ? "挑一件，或者几件一起" : "记录 \(selected.count) 件，各一次")
+                Text(selected.isEmpty ? "挑一件，或者几件一起" : enterTitle)
                     .font(.headline)
                     .frame(maxWidth: .infinity, minHeight: 50)
             }
@@ -502,7 +446,7 @@ private struct UsagePicker: View {
             .disabled(selected.isEmpty)
 
             if selected.isEmpty {
-                Text("勾选的产品会各记一次，记完可以撤销。")
+                Text("勾选后进入详情页，一件件记；记完可以撤销。")
                     .font(.caption2).foregroundStyle(.secondary)
             }
         }
