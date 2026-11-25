@@ -38,7 +38,7 @@ Entitlements/ App 与小组件的 App Group 权限
 数据：SwiftData 数据库放在 App Group `group.com.llmzhu.BeautyShelf` 里（`ModelConfiguration(groupContainer:)`），App 和小组件读写同一份。旧版本放在 App 沙盒里的数据库会在第一次启动时自动搬过去。App 里的修改经 `AppCoordinator.dataChanged()` 防抖保存并 `WidgetCenter.shared.reloadAllTimelines()`；小组件里勾选后，App 回到前台时会换一个新的 ModelContext 重新读取。
 
 ## 设计
-见 [DESIGN.md](DESIGN.md)；产品方案见 [PRODUCT.md](PRODUCT.md)。
+见 [DESIGN.md](DESIGN.md)；产品方案见 [PRODUCT.md](PRODUCT.md)；待办与改进清单见 [ROADMAP.md](ROADMAP.md)（不参与 App 打包）。
 
 ## 运行
 需要 Xcode 15+ / iOS 17+（SwiftData）。
