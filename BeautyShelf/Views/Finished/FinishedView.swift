@@ -65,22 +65,30 @@ struct FinishedView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 26) {
-                    statsCard
-                    if !finished.isEmpty { shareButton }
-                    if !restock.isEmpty { restockList }
-                    if finished.isEmpty { emptyState } else { wall }
+            Group {
+                // 一件空瓶都还没有、也没有待补货：整页只讲一件事，不摆满零和破折号的统计卡
+                if finished.isEmpty && restock.isEmpty {
+                    emptyPage
+                } else {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 26) {
+                            if finished.isEmpty {
+                                if !restock.isEmpty { restockList }
+                                emptyCard
+                            } else {
+                                statsCard
+                                shareButton
+                                if !restock.isEmpty { restockList }
+                                wall
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 40)
+                    }
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 40)
             }
             .background {
-                ZStack {
-                    Theme.porcelain
-                    AmbientGlow(colors: Array(finished.prefix(3).map(\.tint)))
-                }
-                .ignoresSafeArea()
+                ScreenBackground(colors: Array(finished.prefix(3).map(\.tint)))
             }
             .navigationTitle("空瓶")
             .toolbar {
@@ -276,19 +284,87 @@ struct FinishedView: View {
         }
     }
 
-    private var emptyState: some View {
-        VStack(spacing: 12) {
-            ContainerView(kind: .bottle, level: 0, tint: Color(hex: Theme.liquids[2]), animated: false)
-                .frame(width: 56, height: 92)
-                .accessibilityHidden(true)
-            Text("还没有空瓶").font(.headline)
-            Text("用完一件，在藏品里长按它选「用完了」，它会站在这里。")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+    // MARK: 还没有空瓶
+
+    /// 一面还空着的墙：三件磨砂的空瓶影子站在一段玻璃架板上
+    private var ghostShelf: some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .bottom, spacing: 22) {
+                ghost(.bottle, size: CGSize(width: 34, height: 76))
+                ghost(.jar, size: CGSize(width: 44, height: 58))
+                ghost(.tube, size: CGSize(width: 30, height: 68))
+            }
+            .padding(.bottom, 3)
+            ShelfPlank()
+                .frame(width: 186)
+        }
+        .accessibilityHidden(true)
+    }
+
+    private func ghost(_ kind: VesselKind, size: CGSize) -> some View {
+        ContainerView(kind: kind, level: 0, tint: Theme.shelf, animated: false)
+            .frame(width: size.width, height: size.height)
+            .grayscale(1)
+            .opacity(0.42)
+    }
+
+    /// 崭新的空瓶页：一面空墙、一句话、一个去处，上下留白把它居中
+    private var emptyPage: some View {
+        GeometryReader { geo in
+            ScrollView {
+                VStack(spacing: 0) {
+                    Spacer(minLength: 24)
+                    ghostShelf
+                    VStack(spacing: 8) {
+                        Text("空瓶墙还空着").font(.title3.weight(.semibold))
+                        Text("用完一件，它就会褪成磨砂的白，站到这一面墙上——记着它陪了你多久、用了几次、每次多少钱。")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.top, 26)
+                    Button { coordinator.tab = .shelf } label: {
+                        Label("去藏品里挑一件", systemImage: "square.grid.2x2")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity, minHeight: 50)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .buttonBorderShape(.capsule)
+                    .tint(.primary)
+                    .foregroundStyle(Color(uiColor: .systemBackground))
+                    .padding(.top, 26)
+                    .accessibilityHint("打开藏品，长按一件产品选「用完了」")
+                    Text("在藏品里长按任意一件，选「用完了」")
+                        .font(.footnote)
+                        .foregroundStyle(.tertiary)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 10)
+                    Spacer(minLength: 24)
+                }
+                .padding(.horizontal, 28)
+                .frame(minHeight: geo.size.height)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+        }
+    }
+
+    /// 有待补货、但墙上还空着：一张小卡，别让页面被切成两截
+    private var emptyCard: some View {
+        VStack(spacing: 16) {
+            ghostShelf
+            VStack(spacing: 6) {
+                Text("空瓶墙还空着").font(.headline)
+                Text("用完一件，它会站到这里。")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 40)
+        .padding(.vertical, 24)
+        .padding(.horizontal, 16)
+        .glassPanel(cornerRadius: 24)
     }
 }
 

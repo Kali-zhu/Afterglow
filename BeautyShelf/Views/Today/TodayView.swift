@@ -43,7 +43,7 @@ struct RoutineTodayView: View {
         Group {
             if useList { compactList } else { ritual }
         }
-        .background(Theme.porcelain.ignoresSafeArea())
+        .background { ScreenBackground(colors: Array(list.prefix(3).map(\.tint))) }
         .navigationTitle("日常流程")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.visible, for: .navigationBar)

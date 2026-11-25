@@ -109,13 +109,7 @@ struct ShelfView: View {
                 .padding(.horizontal, 20)
                 .padding(.bottom, 40)
             }
-            .background {
-                ZStack {
-                    Theme.porcelain
-                    AmbientGlow(colors: glowColors)
-                }
-                .ignoresSafeArea()
-            }
+            .background { ScreenBackground(colors: glowColors) }
             .navigationTitle("藏品")
             .searchable(text: $search, prompt: "搜索名称或品牌")
             .toolbar {

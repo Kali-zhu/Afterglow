@@ -335,12 +335,8 @@ struct ProductDetailView: View {
     // MARK: 背景：一层淡淡的瓷白 + 产品色的一团柔光（不用粉调的大片渐变）
 
     private var backdrop: some View {
-        ZStack {
-            Theme.porcelain
-            AmbientGlow(colors: [current.tint.mixed(with: Theme.porcelain, 0.62)])
-        }
-        .ignoresSafeArea()
-        .animation(.easeInOut(duration: 0.35), value: index)
+        ScreenBackground(colors: [current.tint.mixed(with: Theme.porcelain, 0.62)])
+            .animation(.easeInOut(duration: 0.35), value: index)
     }
 
     // MARK: 最近 14 天

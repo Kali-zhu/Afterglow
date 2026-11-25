@@ -19,7 +19,7 @@ enum EditorTarget: Identifiable {
 /// 跨标签页共享的界面状态：表单、"用完了"倒空动画、补货询问、设置。
 @Observable
 final class AppCoordinator {
-    enum Tab: Hashable { case shelf, today, finished }
+    enum Tab: Hashable { case shelf, today, finished, me }
 
     var tab: Tab = .today
     var editor: EditorTarget? = nil

@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-/// 底部三个标签：妆台 / 今日 / 空瓶
+/// 底部四个标签：今日 / 藏品 / 空瓶 / 我的
 struct MainTabView: View {
     let startWithAdd: Bool
 
@@ -37,6 +37,12 @@ struct MainTabView: View {
                         .environment(\.symbolVariants, coordinator.tab == .finished ? .fill : .none)
                 }
                 .tag(AppCoordinator.Tab.finished)
+            ProfileView()
+                .tabItem {
+                    Label("我的", systemImage: "person.crop.circle")
+                        .environment(\.symbolVariants, coordinator.tab == .me ? .fill : .none)
+                }
+                .tag(AppCoordinator.Tab.me)
         }
         .environment(coordinator)
         .environment(\.detailNamespace, detailNS)

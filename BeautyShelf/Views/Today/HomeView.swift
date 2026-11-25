@@ -105,11 +105,7 @@ struct TodayView: View {
                 .frame(maxWidth: 740).frame(maxWidth: .infinity)
             }
             .background {
-                ZStack {
-                    Theme.porcelain
-                    AmbientGlow(colors: Array(available.prefix(3).map(\.tint)))
-                }
-                .ignoresSafeArea()
+                ScreenBackground(colors: Array(available.prefix(3).map(\.tint)))
             }
             .navigationTitle("使用手记")
             .toolbar {
