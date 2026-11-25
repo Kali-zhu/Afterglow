@@ -36,6 +36,9 @@ struct ProductDetailView: View {
     /// 刚记下的那一件：按钮短暂变成"已记下"，并给出撤销
     @State var recordedID: UUID? = nil
     @State var resetTask: Task<Void, Never>? = nil
+    /// 刚在一组里用完的那件：提示"收进空瓶墙了"，可以顺手加进补货
+    @State var finishedID: UUID? = nil
+    @State var finishedTask: Task<Void, Never>? = nil
 
     init(items: [Product], close: @escaping () -> Void) {
         self.items = items
@@ -80,6 +83,7 @@ struct ProductDetailView: View {
         .onDisappear {
             MotionService.shared.end()
             resetTask?.cancel()
+            finishedTask?.cancel()
         }
         .sensoryFeedback(.impact(weight: .light), trigger: tick)
         .sensoryFeedback(.selection, trigger: estimateStep)
@@ -384,11 +388,7 @@ struct ProductDetailView: View {
             HStack(spacing: 10) {
                 // 空瓶不再「用完了」，只留补货
                 if !current.isFinished {
-                    softPill("用完了") {
-                        let p = current
-                        close()
-                        coordinator.finish(p)
-                    }
+                    softPill("用完了") { finishCurrent() }
                 }
                 softPill(current.needsRestock ? "已在补货" : "加入补货") {
                     withAnimation(Theme.snappy) { current.needsRestock.toggle() }
@@ -413,9 +413,30 @@ struct ProductDetailView: View {
         }
     }
 
-    /// 按钮上方那一条：刚记下的撤销，或者"第几张 / 共几张"
+    /// 按钮上方那一条：刚用完的提示，其次是刚记下的撤销，再其次是"第几张 / 共几张"
     @ViewBuilder private var statusRow: some View {
-        if recordedID == current.uid {
+        if let finishedID, let done = items.first(where: { $0.uid == finishedID }) {
+            HStack(spacing: 10) {
+                Label("「\(done.name)」收进空瓶墙", systemImage: "archivebox")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                Spacer(minLength: 8)
+                if !done.needsRestock {
+                    Button {
+                        withAnimation(Theme.snappy) { done.needsRestock = true }
+                        coordinator.dataChanged()
+                    } label: {
+                        Label("加入补货", systemImage: "cart")
+                            .font(.subheadline.weight(.semibold))
+                            .frame(minHeight: 32)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .transition(.opacity)
+        } else if recordedID == current.uid {
             HStack(spacing: 10) {
                 Label("已记一次 · \(slot.title)", systemImage: "checkmark.circle.fill")
                     .font(.subheadline.weight(.medium))
@@ -537,15 +558,67 @@ struct ProductDetailView: View {
         if !fromGesture { demos[p.uid, default: 0] += 1 }
         tick += 1
         markRecorded(p)
-        // 用到见底：关闭详情，交给"倒空"动画
+        // 用到见底
         if coordinator.finishing === p {
-            close()
+            if grouped {
+                // 一起记多件：不倒空、不退出，就地把这件收进空瓶墙，滑到下一件
+                coordinator.finishing = nil
+                markDrained(p)
+            } else {
+                close()
+            }
         }
+    }
+
+    /// 点「用完了」。一组里记多件时留在这一页：这件收进空瓶墙，自动滑到下一件还没用完的；
+    /// 单件时保持原来的样子——关掉详情，播"倒空"动画。
+    private func finishCurrent() {
+        let p = current
+        guard !p.isFinished else { return }
+        if grouped {
+            markDrained(p)
+        } else {
+            close()
+            coordinator.finish(p)
+        }
+    }
+
+    /// 在一组里就地用完：标记为已用完、保存、给一次触感，然后滑到下一件。
+    /// 这一组都用完了就停在这张卡上（用「完成」退出），不把用户甩出去。
+    private func markDrained(_ p: Product) {
+        tick += 1
+        withAnimation(Theme.spring) { p.markFinished() }
+        coordinator.dataChanged()
+        resetTask?.cancel()
+        recordedID = nil
+        withAnimation(Theme.snappy) { finishedID = p.uid }
+        // 这条提示是过路的：4 秒后自己收起来，别一直挂在页脚上
+        finishedTask?.cancel()
+        finishedTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(4000))
+            guard !Task.isCancelled else { return }
+            withAnimation(Theme.snappy) { finishedID = nil }
+        }
+        advance(after: p)
+    }
+
+    /// 从当前这张往后找下一件还没用完的（绕回开头）；全都用完了就留在原地
+    private func advance(after p: Product) {
+        let count = items.count
+        guard count > 1 else { return }
+        let next = (1..<count)
+            .map { (index + $0) % count }
+            .first { !items[$0].isFinished }
+        guard let next else { return }
+        withAnimation(Theme.spring) { index = next }
     }
 
     /// 按钮短暂变成"已记下"，并给出撤销；不自动关闭，让用户看到数字和圆点的变化
     private func markRecorded(_ p: Product) {
-        withAnimation(Theme.snappy) { recordedID = p.uid }
+        withAnimation(Theme.snappy) {
+            recordedID = p.uid
+            finishedID = nil
+        }
         resetTask?.cancel()
         resetTask = Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(2600))
