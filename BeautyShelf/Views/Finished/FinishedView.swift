@@ -22,8 +22,15 @@ struct FinishedView: View {
 
     private var restock: [Product] { all.filter { $0.needsRestock } }
 
+    /// 统计只算真的用空的：示例数据不该变成"你的战绩"。
+    /// 一件真的都还没有时退回顾示示例，免得统计卡全是破折号。
+    private var counted: [Product] {
+        let own = finished.filter { !$0.isSample }
+        return own.isEmpty ? finished : own
+    }
+
     private var thisYear: [Product] {
-        finished.filter {
+        counted.filter {
             guard let d = $0.finishedDate else { return false }
             return Calendar.current.isDate(d, equalTo: .now, toGranularity: .year)
         }
@@ -31,10 +38,10 @@ struct FinishedView: View {
 
     // MARK: 统计
 
-    private var finishedValue: Double { finished.reduce(0.0) { $0 + ($1.price ?? 0) } }
+    private var finishedValue: Double { counted.reduce(0.0) { $0 + ($1.price ?? 0) } }
 
     private var averagePerUse: Double? {
-        let priced = finished.filter { ($0.price ?? 0) > 0 && $0.useCount > 0 }
+        let priced = counted.filter { ($0.price ?? 0) > 0 && $0.useCount > 0 }
         guard !priced.isEmpty else { return nil }
         let cost = priced.reduce(0.0) { $0 + ($1.price ?? 0) }
         let uses = priced.reduce(0) { $0 + $1.useCount }
@@ -43,8 +50,8 @@ struct FinishedView: View {
     }
 
     private var averageDays: Int? {
-        guard !finished.isEmpty else { return nil }
-        return finished.reduce(0) { $0 + $1.usageDays } / finished.count
+        guard !counted.isEmpty else { return nil }
+        return counted.reduce(0) { $0 + $1.usageDays } / counted.count
     }
 
     private var durationValue: String {
@@ -114,7 +121,7 @@ struct FinishedView: View {
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(.secondary)
                 Spacer(minLength: 8)
-                Text("累计 \(finished.count) 件")
+                Text("累计 \(counted.count) 件")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

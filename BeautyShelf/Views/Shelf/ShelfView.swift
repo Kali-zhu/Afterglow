@@ -41,19 +41,27 @@ struct ShelfView: View {
 
     // MARK: 收藏总览（"我东西很多"这件事，先用数字说出来）
 
-    private var totalValue: Double { active.reduce(0.0) { $0 + ($1.price ?? 0) } }
-    private var pricedCount: Int { active.filter { ($0.price ?? 0) > 0 }.count }
-    private var brandCount: Int {
-        Set(active.map { $0.brand.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }).count
+    /// 总览只算自己的东西：示例数据不该变成"你的藏品总值"。
+    /// 如果台上只有示例（刚点「先看看示例」），就照示例算，免得一眼全是零。
+    private var counted: [Product] {
+        let own = active.filter { !$0.isSample }
+        return own.isEmpty ? active : own
     }
-    private var backupCount: Int { active.reduce(0) { $0 + $1.backupStock } }
+    private var countsSamples: Bool { counted.contains { $0.isSample } }
+
+    private var totalValue: Double { counted.reduce(0.0) { $0 + ($1.price ?? 0) } }
+    private var pricedCount: Int { counted.filter { ($0.price ?? 0) > 0 }.count }
+    private var brandCount: Int {
+        Set(counted.map { $0.brand.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }).count
+    }
+    private var backupCount: Int { counted.reduce(0) { $0 + $1.backupStock } }
     private var attentionCount: Int {
-        active.filter { $0.expiryState != .fresh || $0.isLow }.count
+        counted.filter { $0.expiryState != .fresh || $0.isLow }.count
     }
 
     /// "14 件在用 · 13 个品牌 · 4 件该先处理 · 3 件备用"
     private var summary: String {
-        var parts = ["\(active.count) 件在用"]
+        var parts = ["\(counted.count) 件在用"]
         if brandCount > 0 { parts.append("\(brandCount) 个品牌") }
         if attentionCount > 0 { parts.append("\(attentionCount) 件该先处理") }
         if backupCount > 0 { parts.append("\(backupCount) 件备用") }
@@ -152,7 +160,7 @@ struct ShelfView: View {
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.secondary)
                 } else {
-                    Text("\(active.count)")
+                    Text("\(counted.count)")
                         .font(.system(size: 32, weight: .bold, design: .rounded))
                         .monospacedDigit()
                         .contentTransition(.numericText())
@@ -171,8 +179,13 @@ struct ShelfView: View {
             Text(summary)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
-            if totalValue > 0 && pricedCount < active.count {
+            if totalValue > 0 && pricedCount < counted.count {
                 Text("总值按填了价格的 \(pricedCount) 件算")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+            if countsSamples {
+                Text("这 \(counted.count) 件是示例，添加自己的之后，总览只算你的。")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }

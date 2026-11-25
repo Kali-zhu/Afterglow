@@ -7,6 +7,8 @@ struct BeautyShelfApp: App {
     init() {
         // App 在前台时也显示提醒横幅
         UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
+        // 崩溃与卡顿报告只在本机保存（MetricKit，无第三方 SDK）
+        DiagnosticsService.shared.start()
     }
 
     var body: some Scene {

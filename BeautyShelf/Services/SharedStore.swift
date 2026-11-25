@@ -23,17 +23,38 @@ enum SharedStore {
     /// 共享容器。App 和小组件各自进程里各有一个实例，指向同一个文件。
     static let container: ModelContainer = makeContainer()
 
+    /// 数据库结构版本（ROADMAP A4）。改 Product 的字段时：新增一个 VersionedSchema（V2），
+    /// 加进 `MigrationPlan.schemas`，并在 `stages` 里写上迁移阶段。V1 保持不动。
+    enum SchemaV1: VersionedSchema {
+        static let versionIdentifier = Schema.Version(1, 0, 0)
+        static var models: [any PersistentModel.Type] { [Product.self] }
+    }
+
+    enum MigrationPlan: SchemaMigrationPlan {
+        static var schemas: [any VersionedSchema.Type] { [SchemaV1.self] }
+        static var stages: [MigrationStage] { [] }
+    }
+
+    /// 先按迁移计划打开；计划对不上旧库时退回不带计划的打开，别让 App 一启动就崩
+    private static func openContainer(_ schema: Schema, _ configuration: ModelConfiguration) throws -> ModelContainer {
+        do {
+            return try ModelContainer(for: schema, migrationPlan: MigrationPlan.self, configurations: [configuration])
+        } catch {
+            return try ModelContainer(for: schema, configurations: [configuration])
+        }
+    }
+
     private static func makeContainer() -> ModelContainer {
-        let schema = Schema([Product.self])
+        let schema = Schema(versionedSchema: SchemaV1.self)
         if groupURL != nil {
             migrateLegacyStoreIfNeeded()
             let config = ModelConfiguration(schema: schema, groupContainer: .identifier(appGroup))
-            if let c = try? ModelContainer(for: schema, configurations: [config]) { return c }
+            if let c = try? openContainer(schema, config) { return c }
         }
         // 兜底：App Group 不可用（例如签名未开启）时用 App 自己的沙盒，小组件将读不到数据
         let fallback = ModelConfiguration(schema: schema, groupContainer: .none)
         do {
-            return try ModelContainer(for: schema, configurations: [fallback])
+            return try openContainer(schema, fallback)
         } catch {
             fatalError("无法创建数据库：\(error)")
         }
