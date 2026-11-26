@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>底色小样 · 余香 Afterglow</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 28px 18px 64px;
+    font: 15px/1.65 -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+    background: #0F1214; color: #ECEFEA;
+  }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  p.lead { color: #9AA6A0; margin: 0 0 22px; max-width: 720px; }
+  .switcher { display: flex; gap: 8px; margin: 0 0 22px; flex-wrap: wrap; }
+  button {
+    font: inherit; padding: 9px 16px; border-radius: 999px; cursor: pointer;
+    border: 1px solid #2E3A35; background: #161D1A; color: #C8D2CB;
+  }
+  button[aria-pressed="true"] { background: #ECEFEA; color: #12181A; border-color: #ECEFEA; }
+  .grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(268px, 1fr)); max-width: 1080px; }
+  .cand { border: 1px solid #26302C; border-radius: 18px; overflow: hidden; background: #121917; }
+  .cand header { padding: 14px 16px; border-bottom: 1px solid #26302C; }
+  .cand h2 { font-size: 15px; margin: 0 0 2px; }
+  .cand header p { margin: 0; font-size: 12px; color: #8E9B94; }
+  .cand header code { font-size: 11px; color: #6F7C75; }
+  .screen { padding: 18px 16px 22px; }
+  .title-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+  .title-row b { font-size: 20px; letter-spacing: .3px; }
+  .title-row span { font-size: 11px; opacity: .55; }
+  .glass {
+    border-radius: 18px; padding: 13px 14px; margin-bottom: 18px;
+    border: 1px solid var(--hair);
+    background: var(--glass-bg);
+    box-shadow: 0 8px 20px var(--glass-shadow);
+  }
+  .glass .big { font-size: 22px; font-weight: 700; letter-spacing: .2px; }
+  .glass .cap { font-size: 11px; opacity: .6; margin-left: 6px; }
+  .glass .sub { font-size: 11.5px; opacity: .62; margin-top: 5px; }
+  .shelf { position: relative; padding-bottom: 12px; }
+  .row { display: flex; align-items: flex-end; gap: 14px; height: 108px; padding: 0 4px; }
+  .bottle { position: relative; width: 34px; }
+  .bottle .cap { position: absolute; left: 50%; transform: translateX(-50%); top: 0; width: 13px; height: 12px; border-radius: 3px 3px 0 0; background: var(--cap); }
+  .bottle .body {
+    position: absolute; bottom: 0; left: 0; width: 100%;
+    border-radius: 8px 8px 7px 7px;
+    background: linear-gradient(180deg, rgba(255,255,255,.42), rgba(255,255,255,.16));
+    border: 1px solid var(--glass-line);
+    overflow: hidden;
+  }
+  .bottle .body i { position: absolute; left: 0; right: 0; bottom: 0; display: block; background: var(--liquid); }
+  .bottle .body::after {
+    content: ""; position: absolute; top: 0; bottom: 0; left: 4px; width: 4px;
+    background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.2));
+    border-radius: 3px;
+  }
+  .bottle .label {
+    position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%);
+    width: 15px; height: 15px; border-radius: 50%;
+    background: var(--label); border: 1px solid rgba(255,255,255,.75);
+  }
+  .plank {
+    height: 10px; border-radius: 3px; margin-top: -2px;
+    background: linear-gradient(180deg, var(--plank-top), var(--plank));
+    box-shadow: 0 5px 12px var(--plank-shadow), inset 0 1px 0 var(--plank-edge);
+  }
+  .names { display: flex; gap: 14px; padding: 8px 4px 0; font-size: 10.5px; opacity: .7; }
+  .names span { width: 34px; text-align: center; }
+  .chips { display: flex; gap: 6px; margin-top: 16px; flex-wrap: wrap; }
+  .chip { font-size: 11px; padding: 4px 10px; border-radius: 999px; background: var(--chip); }
+  .chip.on { background: var(--ink); color: var(--ink-reverse); }
+  .dots { display: flex; gap: 6px; align-items: center; margin-top: 14px; font-size: 11px; opacity: .8; }
+  .dots i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 3px; }
+  .notes { max-width: 1080px; margin-top: 30px; color: #9AA6A0; font-size: 13.5px; }
+  .notes h3 { color: #ECEFEA; font-size: 15px; margin: 22px 0 6px; }
+  .notes li { margin-bottom: 4px; }
+  .fine { color: #6F7C75; font-size: 12px; }
+</style>
+</head>
+<body>
+<h1>底色：三个方向的小样</h1>
+<p class="lead">同一段界面（标题 · 藏品总览玻璃卡 · 三层架板 · 分类胶囊 · 状态点）在三套底色下的样子。手机上左右滑不动，往下看。看完告诉我选 A / B / C，我再改 `Theme.porcelain` 和配套的几个色。</p>
+
+<div class="switcher">
+  <button id="light" aria-pressed="true">浅色</button>
+  <button id="dark" aria-pressed="false">深色</button>
+</div>
+
+<div class="grid">
+  <!-- A 现状：冷瓷白 -->
+  <section class="cand" style="
+    --bg:#EEF1F4; --ink:#1C1C1E; --ink-reverse:#FFFFFF;
+    --glass-bg:rgba(255,255,255,.55); --glass-shadow:rgba(29,42,58,.08); --hair:rgba(255,255,255,.85);
+    --shelf:#D9DEE4; --plank-top:#FFFFFF; --plank:#D9DEE4; --plank-edge:#CFE6E0; --plank-shadow:rgba(29,42,58,.14);
+    --glass-line:rgba(28,28,30,.10); --cap:#3A3A3C; --liquid:#E7B873; --label:#F1E6D8; --chip:rgba(28,28,30,.07);">
+    <header>
+      <h2>A · 冷瓷白（现在）</h2>
+      <p>中性偏冷，配 sa​ge 绿和蜂蜜黄；工具感强，最安全。</p>
+      <code>#EEF1F4</code>
+    </header>
+    <div class="screen">
+      <div class="title-row"><b>藏品</b><span>14 件在用</span></div>
+      <div class="glass">
+        <div><span class="big">¥11,641</span><span class="cap">藏品总值</span></div>
+        <div class="sub">14 件在用 · 13 个品牌 · 4 件该先处理 · 3 件备用</div>
+      </div>
+      <div class="shelf">
+        <div class="row">
+          <div class="bottle" style="height:86px"><span class="cap"></span><span class="body" style="height:74px"><i style="height:58%;--liquid:#E7B873"></i><span class="label"></span></span></div>
+          <div class="bottle" style="height:102px"><span class="cap"></span><span class="body" style="height:90px"><i style="height:74%;--liquid:#BFD7EA"></i><span class="label"></span></span></div>
+          <div class="bottle" style="height:70px"><span class="cap"></span><span class="body" style="height:58px"><i style="height:32%;--liquid:#C9505C"></i><span class="label"></span></span></div>
+        </div>
+        <div class="plank"></div>
+        <div class="names"><span>神仙水</span><span>精华</span><span>口红</span></div>
+      </div>
+      <div class="chips"><span class="chip on">全部 14</span><span class="chip">护肤 8</span><span class="chip">彩妆 4</span></div>
+      <div class="dots"><span><i style="background:#B8404F"></i>已过期</span><span><i style="background:#C7862B"></i>快到期</span><span><i style="background:#5B7DB1"></i>快用完</span></div>
+    </div>
+  </section>
+
+  <!-- B 象牙暖白 -->
+  <section class="cand" style="
+    --bg:#F6F1E7; --ink:#241F19; --ink-reverse:#FFFDF8;
+    --glass-bg:rgba(255,253,247,.6); --glass-shadow:rgba(74,58,33,.10); --hair:rgba(255,255,255,.9);
+    --shelf:#E3D9C7; --plank-top:#FCF6EA; --plank:#E3D9C7; --plank-edge:#EFE2C9; --plank-shadow:rgba(74,58,33,.16);
+    --glass-line:rgba(36,31,25,.10); --cap:#40382C; --liquid:#E7B873; --label:#FBF3E2; --chip:rgba(36,31,25,.07);">
+    <header>
+      <h2>B · 象牙暖白</h2>
+      <p>暖中性：象牙 / 亚麻。液体色在暖底上更"贵"，但 DESIGN.md 原先说过要避开米色。</p>
+      <code>#F6F1E7</code>
+    </header>
+    <div class="screen">
+      <div class="title-row"><b>藏品</b><span>14 件在用</span></div>
+      <div class="glass">
+        <div><span class="big">¥11,641</span><span class="cap">藏品总值</span></div>
+        <div class="sub">14 件在用 · 13 个品牌 · 4 件该先处理 · 3 件备用</div>
+      </div>
+      <div class="shelf">
+        <div class="row">
+          <div class="bottle" style="height:86px"><span class="cap"></span><span class="body" style="height:74px"><i style="height:58%;--liquid:#E7B873"></i><span class="label"></span></span></div>
+          <div class="bottle" style="height:102px"><span class="cap"></span><span class="body" style="height:90px"><i style="height:74%;--liquid:#BFD7EA"></i><span class="label"></span></span></div>
+          <div class="bottle" style="height:70px"><span class="cap"></span><span class="body" style="height:58px"><i style="height:32%;--liquid:#C9505C"></i><span class="label"></span></span></div>
+        </div>
+        <div class="plank"></div>
+        <div class="names"><span>神仙水</span><span>精华</span><span>口红</span></div>
+      </div>
+      <div class="chips"><span class="chip on">全部 14</span><span class="chip">护肤 8</span><span class="chip">彩妆 4</span></div>
+      <div class="dots"><span><i style="background:#B8404F"></i>已过期</span><span><i style="background:#C7862B"></i>快到期</span><span><i style="background:#5B7DB1"></i>快用完</span></div>
+    </div>
+  </section>
+
+  <!-- C 保持冷灰但加强光 -->
+  <section class="cand" style="
+    --bg:#E7EBEF; --ink:#17191B; --ink-reverse:#FFFFFF;
+    --glass-bg:rgba(255,255,255,.72); --glass-shadow:rgba(20,30,45,.14); --hair:rgba(255,255,255,1);
+    --shelf:#CBD2DA; --plank-top:#FFFFFF; --plank:#CBD2DA; --plank-edge:#D6E9E3; --plank-shadow:rgba(20,30,45,.22);
+    --glass-line:rgba(23,25,27,.11); --cap:#2C2C2E; --liquid:#E7B873; --label:#F1E6D8; --chip:rgba(23,25,27,.08);">
+    <header>
+      <h2>C · 冷瓷白 + 更强的光</h2>
+      <p>底色只深一档，靠顶光、接触阴影和焦散把"柜子"的感觉压出来。改动最小。</p>
+      <code>#E7EBEF · 光 +40%</code>
+    </header>
+    <div class="screen">
+      <div class="title-row"><b>藏品</b><span>14 件在用</span></div>
+      <div class="glass">
+        <div><span class="big">¥11,641</span><span class="cap">藏品总值</span></div>
+        <div class="sub">14 件在用 · 13 个品牌 · 4 件该先处理 · 3 件备用</div>
+      </div>
+      <div class="shelf">
+        <div class="row">
+          <div class="bottle" style="height:86px"><span class="cap"></span><span class="body" style="height:74px"><i style="height:58%;--liquid:#E7B873"></i><span class="label"></span></span></div>
+          <div class="bottle" style="height:102px"><span class="cap"></span><span class="body" style="height:90px"><i style="height:74%;--liquid:#BFD7EA"></i><span class="label"></span></span></div>
+          <div class="bottle" style="height:70px"><span class="cap"></span><span class="body" style="height:58px"><i style="height:32%;--liquid:#C9505C"></i><span class="label"></span></span></div>
+        </div>
+        <div class="plank"></div>
+        <div class="names"><span>神仙水</span><span>精华</span><span>口红</span></div>
+      </div>
+      <div class="chips"><span class="chip on">全部 14</span><span class="chip">护肤 8</span><span class="chip">彩妆 4</span></div>
+      <div class="dots"><span><i style="background:#B8404F"></i>已过期</span><span><i style="background:#C7862B"></i>快到期</span><span><i style="background:#5B7DB1"></i>快用完</span></div>
+    </div>
+  </section>
+</div>
+
+<div class="notes">
+  <h3>我的看法</h3>
+  <ul>
+    <li><b>B</b> 最能把"液体色"衬出来——琥珀、奶白、淡紫在暖底上像真的瓶子；代价是 App 会从"工具"变成"生活方式"，而且文字对比度要重新过一遍（胶囊、分隔线、玻璃卡）。</li>
+    <li><b>C</b> 改动最小：底色只深一档，光加强（`Theme.Light` 的浓度和架板高光），一天能看到效果，风险最低。</li>
+    <li><b>A</b> 现状。如果你觉得"素"只是缺光，那就选 C；如果嫌它冷，选 B。</li>
+    <li class="fine">这张页只是小样：真实效果还要看玻璃材质（ultraThinMaterial）、液体渐变和照片贴纸叠在一起的样子。</li>
+  </ul>
+  <h3>深色模式</h3>
+  <ul>
+    <li>三种方案的深色都是纯黑底（`#000000`），差别只在架板、玻璃边和状态色的亮度；点上面的「深色」按钮可以预览。</li>
+  </ul>
+  <h3>选了之后我改哪里</h3>
+  <ul>
+    <li>`BeautyShelf/Design/Theme.swift`：`porcelain`、`shelf`、`plankSurface`、`plankEdge`、`card`，外加 `Theme.Light` 的浓度。</li>
+    <li>逐页重看对比度的地方：分类胶囊、`glassPanel` 的高光边、空瓶墙的残影、详情页底部按钮条。</li>
+  </ul>
+</div>
+
+<script>
+  const light = document.getElementById('light');
+  const dark = document.getElementById('dark');
+  function apply(mode) {
+    const isDark = mode === 'dark';
+    light.setAttribute('aria-pressed', String(!isDark));
+    dark.setAttribute('aria-pressed', String(isDark));
+    document.querySelectorAll('.screen').forEach(function (screen) {
+      const cand = screen.closest('.cand');
+      if (isDark) {
+        screen.style.setProperty('--ink', '#F2F2F7');
+        screen.style.setProperty('--ink-reverse', '#000000');
+        screen.style.setProperty('--glass-bg', 'rgba(28,28,30,.72)');
+        screen.style.setProperty('--glass-shadow', 'rgba(0,0,0,.5)');
+        screen.style.setProperty('--hair', 'rgba(255,255,255,.14)');
+        screen.style.setProperty('--plank-top', '#3A3A3C');
+        screen.style.setProperty('--plank', '#2C2C2E');
+        screen.style.setProperty('--plank-edge', '#4A5A58');
+        screen.style.setProperty('--plank-shadow', 'rgba(0,0,0,.6)');
+        screen.style.setProperty('--glass-line', 'rgba(255,255,255,.16)');
+        screen.style.setProperty('--cap', '#AEAEB2');
+        screen.style.setProperty('--chip', 'rgba(255,255,255,.10)');
+        cand.style.setProperty('--bg', '#000000');
+      } else {
+        screen.style.removeProperty('--ink');
+        screen.style.removeProperty('--ink-reverse');
+        screen.style.removeProperty('--glass-bg');
+        screen.style.removeProperty('--glass-shadow');
+        screen.style.removeProperty('--hair');
+        screen.style.removeProperty('--plank-top');
+        screen.style.removeProperty('--plank');
+        screen.style.removeProperty('--plank-edge');
+        screen.style.removeProperty('--plank-shadow');
+        screen.style.removeProperty('--glass-line');
+        screen.style.removeProperty('--cap');
+        screen.style.removeProperty('--chip');
+        cand.style.removeProperty('--bg');
+      }
+      screen.style.background = 'var(--bg)';
+      screen.style.color = 'var(--ink)';
+      screen.style.borderRadius = '0';
+    });
+  }
+  light.addEventListener('click', function () { apply('light'); });
+  dark.addEventListener('click', function () { apply('dark'); });
+  apply('light');
+</script>
+</body>
+</html>

@@ -90,7 +90,8 @@ enum ShareCard {
     static func render(period: EmptiesPeriod, products: [Product]) -> UIImage? {
         let content = ShareCardView(period: period, items: items(for: period, in: products))
             .frame(width: canvas.width, height: canvas.height)
-            .environment(\.colorScheme, .light)
+            // 深色展柜：容器按夜间着色画，玻璃在深底上才有厚度
+            .environment(\.colorScheme, .dark)
             .environment(\.dynamicTypeSize, .large)
         let renderer = ImageRenderer(content: content)
         renderer.scale = 2
@@ -112,14 +113,21 @@ enum ShareCard {
 }
 
 // MARK: - 分享图本体
+//
+// 一版"海报"，不是一张浅色清单：
+// 深色展柜的底 + 顶上一盏暖灯 + 黄铜细线 + 衬线大标题 + 账单式小字 + 一句人话。
+// 内容逻辑（月份 / 年份、每件用了几次、¥/次）沿用原来的，只重排版式。
 
 struct ShareCardView: View {
     let period: EmptiesPeriod
     let items: [Product]
 
-    private let ink = Color(hex: "1C1C1E")
-    private let soft = Color(hex: "6B7078")
-    private let plank = Color(hex: "D9DEE4")
+    // 深色展柜的配色：夜绿、象牙、黄铜、灰绿
+    private let nightTop = Color(hex: "0B1210")
+    private let nightBottom = Color(hex: "18241E")
+    private let ivory = Color(hex: "F7F2E8")
+    private let dim = Color(hex: "9CAC9F")
+    private let brass = Color(hex: "CBA36A")
 
     private var maxShown: Int { 12 }
     private var shown: [Product] { Array(items.prefix(maxShown)) }
@@ -129,107 +137,190 @@ struct ShareCardView: View {
     }
     private var figureHeight: CGFloat {
         switch rows.count {
-        case 0, 1: 210
-        case 2: 140
-        default: 96
+        case 0, 1: 190
+        case 2: 128
+        default: 92
         }
     }
+    private var compactLabels: Bool { rows.count >= 3 }
 
     private var totalUses: Int { items.reduce(0) { $0 + $1.useCount } }
     private var totalSpent: Double { items.compactMap(\.price).reduce(0, +) }
     private var pricedUses: Int { items.filter { ($0.price ?? 0) > 0 }.reduce(0) { $0 + $1.useCount } }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            titleBlock
-                .padding(.top, 44)
-            Spacer(minLength: 16)
-            if shown.isEmpty {
-                Text("这段时间还没有空瓶")
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(soft)
-                    .frame(maxWidth: .infinity)
-                Spacer(minLength: 16)
-            } else {
-                VStack(spacing: rows.count >= 3 ? 14 : 22) {
-                    ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-                        shelfRow(row)
-                    }
-                }
-                if items.count > shown.count {
-                    Text("还有 \(items.count - shown.count) 件没摆下")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(soft)
+        ZStack(alignment: .topLeading) {
+            backdrop
+
+            VStack(alignment: .leading, spacing: 0) {
+                header
+                    .padding(.top, 42)
+                titleBlock
+                    .padding(.top, 18)
+                ornament
+                    .padding(.vertical, 18)
+                if shown.isEmpty {
+                    Text("这段时间还没有空瓶")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(dim)
                         .frame(maxWidth: .infinity)
-                        .padding(.top, 10)
+                        .padding(.top, 40)
+                } else {
+                    showcase
                 }
-                Spacer(minLength: 16)
+                Spacer(minLength: 18)
+                footer
+                    .padding(.bottom, 34)
             }
-            footer
-                .padding(.bottom, 30)
+            .padding(.horizontal, 38)
+            .frame(width: ShareCard.canvas.width, height: ShareCard.canvas.height, alignment: .topLeading)
+
+            frameOutline
         }
-        .padding(.horizontal, 36)
         .frame(width: ShareCard.canvas.width, height: ShareCard.canvas.height)
-        .background(
-            LinearGradient(colors: [Color(hex: "F6F7F9"), Color(hex: "E9EDF1")], startPoint: .top, endPoint: .bottom)
-        )
+        .clipped()
     }
+
+    // MARK: 展柜的底：夜绿渐变 + 顶上一盏暖灯 + 左下一团冷光
+
+    private var backdrop: some View {
+        ZStack {
+            LinearGradient(colors: [nightTop, nightBottom], startPoint: .top, endPoint: .bottom)
+            RadialGradient(colors: [Color(hex: "F0D7A8").opacity(0.26), .clear],
+                           center: UnitPoint(x: 0.5, y: 0.0), startRadius: 6, endRadius: 340)
+            RadialGradient(colors: [Color(hex: "5E9277").opacity(0.18), .clear],
+                           center: UnitPoint(x: 0.12, y: 1.0), startRadius: 4, endRadius: 300)
+        }
+    }
+
+    private var frameOutline: some View {
+        RoundedRectangle(cornerRadius: 3, style: .continuous)
+            .strokeBorder(ivory.opacity(0.14), lineWidth: 0.8)
+            .padding(16)
+    }
+
+    // MARK: 抬头
+
+    private var header: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Text("AFTERGLOW")
+                .font(.system(size: 9.5, weight: .semibold))
+                .tracking(3)
+                .foregroundStyle(brass)
+            Rectangle()
+                .fill(brass.opacity(0.45))
+                .frame(width: 20, height: 0.8)
+            Text("空瓶记")
+                .font(.system(size: 10.5, weight: .medium))
+                .tracking(1.4)
+                .foregroundStyle(dim)
+            Spacer(minLength: 8)
+            Text(period.stamp)
+                .font(.system(size: 10.5, weight: .medium, design: .rounded))
+                .tracking(1.2)
+                .monospacedDigit()
+                .foregroundStyle(dim)
+        }
+    }
+
+    // MARK: 标题：衬线大字 + 一行"账目"
 
     private var titleBlock: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(period.title)
-                    .font(.system(size: 40, weight: .bold, design: .rounded))
-                Text("· \(items.count) 件")
-                    .font(.system(size: 26, weight: .semibold, design: .rounded))
-                    .foregroundStyle(soft)
-            }
-            .foregroundStyle(ink)
-            .lineLimit(1)
-            .minimumScaleFactor(0.7)
+            Text(period.title)
+                .font(.system(size: 58, weight: .semibold, design: .serif))
+                .foregroundStyle(ivory)
+                .lineLimit(2)
+                .minimumScaleFactor(0.55)
+                .fixedSize(horizontal: false, vertical: true)
 
-            HStack(spacing: 14) {
-                stat("\(totalUses)", "次使用")
-                if totalSpent > 0 {
-                    stat(Fmt.money(totalSpent), "花费")
-                    if pricedUses > 0 {
-                        stat(Fmt.money(totalSpent / Double(pricedUses)), "平均每次")
-                    }
-                }
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                Text("\(items.count) 件")
+                    .font(.system(size: 15, weight: .semibold, design: .serif))
+                    .monospacedDigit()
+                    .foregroundStyle(brass)
+                specLine
             }
         }
     }
 
-    private func stat(_ value: String, _ label: String) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 4) {
-            Text(value)
-                .font(.system(size: 17, weight: .semibold, design: .rounded))
+    private var specLine: some View {
+        HStack(spacing: 8) {
+            Text("\(totalUses) 次使用")
+                .font(.system(size: 11.5, design: .rounded))
                 .monospacedDigit()
-                .foregroundStyle(ink)
-            Text(label)
-                .font(.system(size: 13))
-                .foregroundStyle(soft)
+                .foregroundStyle(dim)
+            if totalSpent > 0 {
+                dot
+                Text("花了 \(Fmt.money(totalSpent))")
+                    .font(.system(size: 11.5, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(dim)
+                if pricedUses > 0 {
+                    dot
+                    Text("平均 \(Fmt.money(totalSpent / Double(pricedUses)))/次")
+                        .font(.system(size: 11.5, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(dim)
+                }
+            }
         }
+        .lineLimit(1)
+        .minimumScaleFactor(0.75)
+    }
+
+    private var dot: some View {
+        Circle().fill(brass.opacity(0.6)).frame(width: 2.5, height: 2.5)
+    }
+
+    private var ornament: some View {
+        HStack(spacing: 8) {
+            Rectangle().fill(brass.opacity(0.4)).frame(height: 0.7)
+            Rectangle().fill(brass).frame(width: 4, height: 4).rotationEffect(.degrees(45))
+            Rectangle().fill(brass.opacity(0.4)).frame(height: 0.7)
+        }
+    }
+
+    // MARK: 陈列：空的容器站在黄铜架板上
+
+    private var showcase: some View {
+        VStack(spacing: rows.count >= 3 ? 14 : 22) {
+            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                shelfRow(row)
+            }
+        }
+        .padding(.top, 2)
     }
 
     private func shelfRow(_ row: [Product]) -> some View {
         VStack(spacing: 0) {
-            HStack(alignment: .bottom, spacing: 12) {
+            HStack(alignment: .bottom, spacing: 10) {
                 ForEach(row) { p in
-                    ProductFigure(product: p, maxPixel: 520, level: 0)
-                        .frame(height: figureHeight * p.shelfScale)
-                        .frame(maxWidth: .infinity, maxHeight: figureHeight, alignment: .bottom)
+                    let glowWidth = figureHeight * 0.42
+                    ZStack(alignment: .bottom) {
+                        CausticGlow(tint: p.tint, width: glowWidth, strength: 1.15)
+                        ContactShadow(width: glowWidth * 1.05)
+                        ProductFigure(product: p, maxPixel: 520, level: 0)
+                            .frame(height: figureHeight * p.shelfScale)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: figureHeight, alignment: .bottom)
                 }
                 ForEach(0..<(perRow - row.count), id: \.self) { _ in
                     Color.clear.frame(maxWidth: .infinity, maxHeight: figureHeight)
                 }
             }
-            .padding(.horizontal, 8)
-            RoundedRectangle(cornerRadius: 3, style: .continuous)
-                .fill(plank)
-                .frame(height: 7)
-                .shadow(color: .black.opacity(0.08), radius: 4, y: 3)
-            HStack(alignment: .top, spacing: 12) {
+            .padding(.horizontal, 4)
+
+            // 黄铜架板：一道细线、一线暖高光，下面一点点投影
+            VStack(spacing: 0) {
+                LinearGradient(colors: [brass.opacity(0.95), brass.opacity(0.45)],
+                               startPoint: .leading, endPoint: .trailing)
+                    .frame(height: 1)
+                LinearGradient(colors: [brass.opacity(0.16), .clear], startPoint: .top, endPoint: .bottom)
+                    .frame(height: 9)
+            }
+
+            HStack(alignment: .top, spacing: 10) {
                 ForEach(row) { p in
                     label(p).frame(maxWidth: .infinity)
                 }
@@ -237,51 +328,76 @@ struct ShareCardView: View {
                     Color.clear.frame(maxWidth: .infinity, maxHeight: 1)
                 }
             }
-            .padding(.horizontal, 8)
-            .padding(.top, 8)
+            .padding(.horizontal, 4)
+            .padding(.top, 9)
         }
     }
 
     private func label(_ p: Product) -> some View {
         VStack(spacing: 2) {
             Text(p.name)
-                .font(.system(size: rows.count >= 3 ? 11 : 13, weight: .semibold))
-                .foregroundStyle(ink)
+                .font(.system(size: compactLabels ? 10 : 12, weight: .semibold))
+                .foregroundStyle(ivory)
                 .lineLimit(1)
-                .minimumScaleFactor(0.75)
-            Text(perUseLine(p))
-                .font(.system(size: rows.count >= 3 ? 10 : 11, design: .rounded))
+                .minimumScaleFactor(0.7)
+            Text("\(p.useCount) 次")
+                .font(.system(size: compactLabels ? 9 : 10.5, design: .rounded))
                 .monospacedDigit()
-                .foregroundStyle(soft)
+                .foregroundStyle(dim)
                 .lineLimit(1)
-                .minimumScaleFactor(0.75)
+            if let c = p.costPerUse {
+                Text("\(Fmt.money(c))/次")
+                    .font(.system(size: compactLabels ? 9 : 10.5, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(brass)
+                    .lineLimit(1)
+            }
         }
         .multilineTextAlignment(.center)
     }
 
-    private func perUseLine(_ p: Product) -> String {
-        if let c = p.costPerUse { return "\(p.useCount) 次 · \(Fmt.money(c))/次" }
-        return "用了 \(p.useCount) 次"
-    }
+    // MARK: 落款
 
     private var footer: some View {
-        HStack(alignment: .lastTextBaseline) {
-            HStack(spacing: 6) {
-                Image(systemName: "drop.fill")
-                    .font(.system(size: 12))
-                    .foregroundStyle(Color(hex: "E7B873"))
-                Text("余香")
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
-                    .foregroundStyle(ink)
-                Text("Afterglow")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(soft)
+        VStack(alignment: .leading, spacing: 14) {
+            if items.count > shown.count {
+                Text("还有 \(items.count - shown.count) 件没摆下")
+                    .font(.system(size: 10))
+                    .foregroundStyle(dim.opacity(0.8))
             }
-            Spacer()
-            Text(period.stamp)
-                .font(.system(size: 13, weight: .medium, design: .rounded))
-                .monospacedDigit()
-                .foregroundStyle(soft)
+            Text(narrative)
+                .font(.system(size: 12.5))
+                .foregroundStyle(dim)
+                .fixedSize(horizontal: false, vertical: true)
+                .lineSpacing(3)
+
+            HStack(alignment: .lastTextBaseline) {
+                HStack(spacing: 6) {
+                    Image(systemName: "drop.fill")
+                        .font(.system(size: 9))
+                        .foregroundStyle(brass)
+                    Text("余香")
+                        .font(.system(size: 14, weight: .bold, design: .serif))
+                        .foregroundStyle(ivory)
+                    Text("AFTERGLOW")
+                        .font(.system(size: 8, weight: .medium))
+                        .tracking(1.6)
+                        .foregroundStyle(dim)
+                }
+                Spacer(minLength: 8)
+                Text("把梳妆台搬进手机")
+                    .font(.system(size: 9.5))
+                    .foregroundStyle(dim.opacity(0.75))
+            }
         }
+    }
+
+    /// 一句人话：这张图想说的是"我用完了多少、用得值不值"
+    private var narrative: String {
+        var parts = ["这段时间用完了 \(items.count) 件，一共用了 \(totalUses) 次"]
+        if totalSpent > 0, pricedUses > 0 {
+            parts.append("花了 \(Fmt.money(totalSpent))，平均每次 \(Fmt.money(totalSpent / Double(pricedUses)))")
+        }
+        return parts.joined(separator: "；") + "。"
     }
 }

@@ -18,10 +18,12 @@ struct MainTabView: View {
     }
 
     var body: some View {
+        // 四个图标用同一套线宽（book / grid / archivebox / person 都是 outline，
+        // 选中时才换成 .fill）。book.closed 比其余三个重一档，所以换成了 book。
         TabView(selection: $coordinator.tab) {
             TodayView()
                 .tabItem {
-                    Label("今日", systemImage: "book.closed")
+                    Label("今日", systemImage: "book")
                         .environment(\.symbolVariants, coordinator.tab == .today ? .fill : .none)
                 }
                 .tag(AppCoordinator.Tab.today)

@@ -17,7 +17,8 @@ struct ProductCard: View {
     static let illustrationAspect: CGFloat = 150.0 / 244.0
 
     private var itemHeight: CGFloat { (stageHeight - 6) * CGFloat(product.shelfScale) }
-    private var hasCutout: Bool { product.cutout != nil }
+    /// 标签模式下架子上永远是"画出来的容器 + 贴纸"，高度按插画的比例
+    private var itemWidth: CGFloat { itemHeight * Self.illustrationAspect }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -38,10 +39,10 @@ struct ProductCard: View {
     }
 
     private var stage: some View {
-        let width = hasCutout ? nil : itemHeight * Self.illustrationAspect
-        let shadowWidth = (width ?? itemHeight * 0.55)
+        let width = itemWidth
+        let shadowWidth = width * 0.92
         return ZStack(alignment: .bottom) {
-            if !hasCutout, product.kind == .bottle || product.kind == .jar,
+            if product.kind == .bottle || product.kind == .jar,
                product.finish == .clear || product.finish == .frosted, product.level > 0.02 {
                 CausticGlow(tint: product.tint, width: shadowWidth,
                             strength: (product.finish == .clear ? 1 : 0.5) * min(1, 0.4 + product.level))

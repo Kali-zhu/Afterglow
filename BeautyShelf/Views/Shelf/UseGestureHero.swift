@@ -73,7 +73,8 @@ struct UseGestureHero: View {
     var body: some View {
         let emit = ContainerView.emitPoint(for: product, in: size)
         ZStack {
-            ContainerView(product: product, slosh: slosh, pose: pose)
+            // 详情页大图用实物模式：整张抠图，液面画在实物上
+            ContainerView(product: product, slosh: slosh, pose: pose, wholeCutout: true)
                 .frame(width: size.width, height: size.height)
                 .accessibilityHidden(true)
             UseEmission(kind: emissionKind, tint: product.tint, trigger: emits,

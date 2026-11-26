@@ -316,7 +316,11 @@ struct ShelfView: View {
 
     private func card(_ p: Product) -> some View {
         Button { coordinator.openDetail(p) } label: {
-            ProductCard(product: p, live: coordinator.detail == nil, stageHeight: stageHeight)
+            // 动效预算（ROADMAP B8）：一屏只允许一处"表演"——
+            // 详情页打开、或正在播倒空动画时，架子上的液面全部静止
+            ProductCard(product: p,
+                        live: coordinator.detail == nil && coordinator.finishing == nil,
+                        stageHeight: stageHeight)
         }
         .buttonStyle(ShelfPressStyle())
         .overlay(alignment: .topTrailing) {

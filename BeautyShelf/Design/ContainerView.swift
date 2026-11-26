@@ -24,6 +24,9 @@ struct ContainerView: View {
     /// 抠图按片计数：不做磨砂，只显示 "7/10" 小胶囊
     var countMode: Bool
     var pose: VesselPose
+    /// 实物模式：整张抠图铺满（详情页大图、倒空动画）。
+    /// 标签模式（false）：画出来的容器做底，把抠图 / 照片当贴纸贴在瓶身上——架子上、托盘里、分享图上都用它。
+    var wholeCutout: Bool
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -41,7 +44,8 @@ struct ContainerView: View {
          material: CapMaterial? = nil,
          cutout: Data? = nil,
          countMode: Bool = false,
-         pose: VesselPose = .rest) {
+         pose: VesselPose = .rest,
+         wholeCutout: Bool = true) {
         self.kind = kind
         self.level = level
         self.tint = tint
@@ -57,6 +61,7 @@ struct ContainerView: View {
         self.cutout = cutout
         self.countMode = countMode
         self.pose = pose
+        self.wholeCutout = wholeCutout
     }
 
     private var live: Bool { animated && !reduceMotion }
@@ -69,7 +74,7 @@ struct ContainerView: View {
 
     @ViewBuilder
     private var content: some View {
-        if let cutout, let image = PhotoCache.cutoutImage(for: cutout, key: photoKey) {
+        if wholeCutout, let cutout, let image = PhotoCache.cutoutImage(for: cutout, key: photoKey) {
             CutoutVessel(image: image,
                          opaque: PhotoCache.opaqueBounds(of: image, key: photoKey),
                          kind: kind, level: level, frosted: !countMode,
@@ -83,12 +88,12 @@ struct ContainerView: View {
         }
     }
 
-    /// 照片标签、片数徽章
+    /// 照片 / 抠图贴纸、片数徽章
     private var decorations: some View {
         GeometryReader { geo in
             let g = ContainerGeometry.make(kind, cap: cap, in: CGRect(origin: .zero, size: geo.size))
             ZStack(alignment: .topLeading) {
-                if let image = photoImage, g.labelDiameter > 4 {
+                if let image = stickerImage, g.labelDiameter > 4 {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFill()
@@ -107,19 +112,25 @@ struct ContainerView: View {
         .allowsHitTesting(false)
     }
 
-    private var photoImage: UIImage? {
+    /// 贴在瓶身上的那枚标签：标签模式下优先用抠图（干净、自带透明底），没有再退回照片
+    private var stickerImage: UIImage? {
+        if !wholeCutout, let cutout,
+           let image = PhotoCache.cutoutImage(for: cutout, key: photoKey, maxPixel: 280) {
+            return image
+        }
         guard let photo else { return nil }
         return PhotoCache.image(for: photo, key: photoKey)
     }
 }
 
 extension ContainerView {
-    init(product: Product, level: Double? = nil, slosh: Int = 0, animated: Bool = true, pose: VesselPose = .rest) {
+    init(product: Product, level: Double? = nil, slosh: Int = 0, animated: Bool = true,
+         pose: VesselPose = .rest, wholeCutout: Bool = false) {
         let count = product.measureMode == .count
         self.init(kind: product.kind,
                   level: level ?? product.level,
                   tint: product.tint,
-                  photo: product.cutout == nil ? product.photo : nil,
+                  photo: product.photo,
                   photoKey: product.uid.uuidString,
                   badge: count ? "\(Int(product.remainingAmount.rounded()))/\(Int(product.totalAmount.rounded()))" : nil,
                   slosh: slosh,
@@ -131,7 +142,8 @@ extension ContainerView {
                                                   finish: product.finish, category: product.category),
                   cutout: product.cutout,
                   countMode: count,
-                  pose: pose)
+                  pose: pose,
+                  wholeCutout: wholeCutout)
     }
 
     /// 用一次时液滴 / 喷雾出现的位置（容器坐标系），给详情页的手势反馈用
