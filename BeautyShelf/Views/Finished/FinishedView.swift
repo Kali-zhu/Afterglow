@@ -99,9 +99,8 @@ struct FinishedView: View {
                     }
                 }
             }
-            .background {
-                ScreenBackground(colors: Array(finished.prefix(3).map(\.tint)))
-            }
+            // 四个标签页同一个底：冷瓷白，不带任何产品柔光
+            .background { ScreenBackground() }
             .navigationTitle("空瓶")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) { SettingsButton() }

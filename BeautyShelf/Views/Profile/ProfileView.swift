@@ -10,8 +10,6 @@ struct ProfileView: View {
     @Environment(AppCoordinator.self) private var coordinator
     @Query(sort: \Product.createdAt, order: .forward) private var all: [Product]
 
-    private var active: [Product] { all.filter { !$0.isFinished } }
-
     /// 身份卡上的数字只算你自己的：示例数据不算"累计记下"。一件真的都还没有时照示例显示。
     private var counted: [Product] {
         let own = all.filter { !$0.isSample }
@@ -41,7 +39,8 @@ struct ProfileView: View {
                 .frame(maxWidth: .infinity)
             }
             .background {
-                ScreenBackground(colors: Array(active.prefix(3).map(\.tint)))
+                // 四个标签页同一个底：冷瓷白，不带任何产品柔光
+                ScreenBackground()
             }
             .navigationTitle("我的")
         }

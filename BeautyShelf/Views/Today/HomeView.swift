@@ -49,9 +49,8 @@ struct TodayView: View {
                 .padding(.horizontal, 20).padding(.bottom, 30)
                 .frame(maxWidth: 740).frame(maxWidth: .infinity)
             }
-            .background {
-                ScreenBackground(colors: Array(available.prefix(3).map(\.tint)))
-            }
+            // 四个标签页同一个底：冷瓷白，不带任何产品柔光（换标签不换气质）
+            .background { ScreenBackground() }
             .navigationTitle("使用手记")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) { SettingsButton() }

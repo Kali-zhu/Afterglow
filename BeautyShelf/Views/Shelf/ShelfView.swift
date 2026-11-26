@@ -68,11 +68,6 @@ struct ShelfView: View {
         return parts.joined(separator: " · ")
     }
 
-    private var glowColors: [Color] {
-        let tints = active.compactMap { p -> Color? in p.cutout == nil ? p.tint : nil }
-        return Array(tints.prefix(3))
-    }
-
     // MARK: 分组
 
     private struct ShelfGroup: Identifiable {
@@ -117,7 +112,8 @@ struct ShelfView: View {
                 .padding(.horizontal, 20)
                 .padding(.bottom, 40)
             }
-            .background { ScreenBackground(colors: glowColors) }
+            // 四个标签页同一个底：冷瓷白，不带任何产品柔光
+            .background { ScreenBackground() }
             .navigationTitle("藏品")
             .searchable(text: $search, prompt: "搜索名称或品牌")
             .toolbar {
