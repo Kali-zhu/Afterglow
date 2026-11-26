@@ -134,6 +134,7 @@ struct ProgressRing: View {
 }
 
 /// v1.0 架板：浅色磨砂玻璃。顶面亮、细细一道高光边，正面带一点玻璃断面的青绿，下方一层柔和的投影。
+/// 光从左上来（`Theme.Light`）：前缘高光偏暖，投影往下偏右一点点。
 struct ShelfPlank: View {
     @Environment(\.colorScheme) private var scheme
     static let height: CGFloat = 12
@@ -150,9 +151,9 @@ struct ShelfPlank: View {
                                                  Theme.plankSurface.opacity(dark ? 0.08 : 0.35)],
                                         startPoint: .top, endPoint: .bottom))
                 .frame(height: Self.surface)
-            // 前缘高光线
+            // 前缘高光线：暖白，不是死白
             Rectangle()
-                .fill(Color.white.opacity(dark ? 0.35 : 0.95))
+                .fill(Theme.Light.highlight.opacity(dark ? 0.4 : 0.95))
                 .frame(height: 0.75)
             // 正面：玻璃断面
             Rectangle()
@@ -167,12 +168,12 @@ struct ShelfPlank: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: 2.5, style: .continuous))
         .background(alignment: .top) {
-            // 架板下方的深度投影
+            // 架板下方的深度投影：往右下偏一点，和接触阴影同方向
             LinearGradient(colors: [Theme.plankShadow.opacity(dark ? 0.55 : 0.13), .clear],
                            startPoint: .top, endPoint: .bottom)
                 .frame(height: 18)
                 .blur(radius: 3)
-                .offset(y: Self.height + 1)
+                .offset(x: 3, y: Self.height + 1)
                 .padding(.horizontal, 6)
         }
         .frame(height: Self.height)
@@ -180,7 +181,8 @@ struct ShelfPlank: View {
     }
 }
 
-/// 物件和架子之间的接触阴影：一层紧贴的深影 + 一层柔和的环境影
+/// 物件和架子之间的接触阴影：一层紧贴的深影 + 一层柔和的环境影。
+/// 影子往右下偏（光从左上来），这两层是"物件真的站在架板上"的关键。
 struct ContactShadow: View {
     var width: CGFloat
     @Environment(\.colorScheme) private var scheme
@@ -189,20 +191,23 @@ struct ContactShadow: View {
         let dark = scheme == .dark
         ZStack {
             Ellipse()
-                .fill(Color.black.opacity(dark ? 0.35 : 0.10))
+                .fill(Theme.Light.contactCore.opacity(dark ? Theme.Light.contactAmbientOpacityDark
+                                                           : Theme.Light.contactAmbientOpacity))
                 .frame(width: width * 1.15, height: 10)
                 .blur(radius: 5)
             Ellipse()
-                .fill(Color.black.opacity(dark ? 0.6 : 0.26))
+                .fill(Theme.Light.contactCore.opacity(dark ? Theme.Light.contactCoreOpacityDark
+                                                           : Theme.Light.contactCoreOpacity))
                 .frame(width: width * 0.78, height: 4)
                 .blur(radius: 1.8)
+                .offset(x: width * Theme.Light.shadowShift)
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
 }
 
-/// 透明有色玻璃在架板上投下的彩色焦散光
+/// 透明有色玻璃在架板上投下的彩色焦散光：光穿过瓶子后往右折出去，落在影子边上
 struct CausticGlow: View {
     var tint: Color
     var width: CGFloat
@@ -215,6 +220,7 @@ struct CausticGlow: View {
                                  center: .center, startRadius: 0, endRadius: width * 0.6))
             .frame(width: width * 1.2, height: 12)
             .scaleEffect(x: 1, y: 0.8)
+            .offset(x: width * Theme.Light.causticShift)
             .opacity((scheme == .dark ? 0.55 : 0.45) * strength)
             .blendMode(scheme == .dark ? .plusLighter : .normal)
             .blur(radius: 1.5)

@@ -10,6 +10,7 @@ struct FinishedView: View {
     @Environment(\.modelContext) private var context
     @Environment(AppCoordinator.self) private var coordinator
     @Environment(\.horizontalSizeClass) private var widthClass
+    @Environment(\.dynamicTypeSize) private var typeSize
     @Query(sort: \Product.createdAt, order: .forward, animation: .spring(response: 0.42, dampingFraction: 0.82))
     private var all: [Product]
     @State private var restockTick = 0
@@ -62,7 +63,11 @@ struct FinishedView: View {
 
     // MARK: 空瓶墙的分行
 
-    private var columns: Int { widthClass == .regular ? 6 : 4 }
+    /// 一层放几件：大字号时每件更宽，一层只放两件（ROADMAP B9）
+    private var columns: Int {
+        if typeSize.isAccessibilitySize { return 2 }
+        return widthClass == .regular ? 6 : 4
+    }
 
     private var rows: [[Product]] {
         stride(from: 0, to: finished.count, by: columns).map { start in
@@ -143,7 +148,7 @@ struct FinishedView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassPanel(cornerRadius: 24, tint: finished.first?.tint)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("今年用空 \(thisYear.count) 件，累计 \(finished.count) 件")
+        .accessibilityLabel("今年用空 \(thisYear.count) 件，累计 \(counted.count) 件")
     }
 
     private static var year: Int {
@@ -384,9 +389,13 @@ private struct EmptyBottleCell: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack(alignment: .bottom) {
+                // 空瓶不是纯白：底部留一道它自己颜色的残影，架板上还有一小片焦散。
+                // 明度差靠这两样和影子一起拉开，墙才不是一片糊掉的白（ROADMAP B4）
+                CausticGlow(tint: product.tint, width: 34, strength: 0.55)
+                    .offset(y: -1)
                 ContactShadow(width: 38)
                     .offset(y: 1)
-                ContainerView(product: product, level: 0, animated: false)
+                ContainerView(product: product, level: 0.06, animated: false)
                     .frame(width: 44, height: 78)
             }
             .frame(height: Self.stageHeight, alignment: .bottom)

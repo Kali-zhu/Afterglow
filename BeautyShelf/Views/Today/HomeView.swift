@@ -257,6 +257,7 @@ private struct UsagePicker: View {
     let open: ([Product]) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var query = ""
     @State private var selected: Set<UUID> = []
     @State private var scope = Scope.suggested
@@ -426,7 +427,12 @@ private struct UsagePicker: View {
         .accessibilityAddTraits(on ? .isSelected : [])
     }
 
-    private let columns = [GridItem(.adaptive(minimum: 104, maximum: 168), spacing: 12)]
+    /// 大字号时一排放两格，字才有地方（ROADMAP B9）
+    private var columns: [GridItem] {
+        typeSize.isAccessibilitySize
+            ? [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
+            : [GridItem(.adaptive(minimum: 104, maximum: 168), spacing: 12)]
+    }
 
     private var bottomBar: some View {
         VStack(spacing: 6) {

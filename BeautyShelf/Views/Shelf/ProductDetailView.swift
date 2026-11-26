@@ -8,6 +8,7 @@ import SwiftData
 /// 估算型产品（口红、粉盒）用滑块调整剩余量。
 ///
 /// 一起记多件时也进这一页：几件产品像卡片一样左右滑动，一张一张地记。
+/// 记完不用退出去再点下一件：底部的「完成」接着滑到下一件，走到这一组最后一件才关掉。
 /// 底色和首页、藏品、空瓶一样是那层淡淡的瓷白（Theme.porcelain），产品色只是背景里的一团柔光。
 struct ProductDetailView: View {
     /// 可以左右滑动的几件产品，第一张是点开的那件
@@ -379,6 +380,9 @@ struct ProductDetailView: View {
                 }
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(inkReverse)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
                 .frame(maxWidth: .infinity, minHeight: 56)
                 .background(Capsule().fill(ink))
             }
@@ -394,8 +398,9 @@ struct ProductDetailView: View {
                     withAnimation(Theme.snappy) { current.needsRestock.toggle() }
                 }
                 // 退出放在拇指够得到的地方，不用再伸手去左上角
-                softPill("完成") { close() }
-                    .accessibilityLabel("关闭详情")
+                // 一起记多件时这一颗是"下一件"：记完接着记下一件，走到最后一件才退出
+                softPill("完成") { completeStep() }
+                    .accessibilityHint(grouped ? "接着记下一件产品" : "关闭详情")
             }
         }
         .padding(.horizontal, 20)
@@ -600,6 +605,20 @@ struct ProductDetailView: View {
             withAnimation(Theme.snappy) { finishedID = nil }
         }
         advance(after: p)
+    }
+
+    /// 点「完成」。一起记多件时不是退出：记完这一件就滑到下一件还没用完的，
+    /// 接着记；走到这一组的最后一件才关掉详情。
+    /// 单件时没有下一件，照旧关掉；左上角的 × 随时可以直接退出。
+    private func completeStep() {
+        guard grouped, index + 1 < items.count,
+              let next = items[(index + 1)...].firstIndex(where: { !$0.isFinished })
+        else {
+            close()
+            return
+        }
+        resetTask?.cancel()
+        withAnimation(Theme.spring) { index = next }
     }
 
     /// 从当前这张往后找下一件还没用完的（绕回开头）；全都用完了就留在原地

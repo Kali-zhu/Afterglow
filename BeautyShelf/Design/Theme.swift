@@ -36,9 +36,39 @@ enum Theme {
     static let lift = Animation.spring(response: 0.5, dampingFraction: 0.72)
     /// 弹回原状（挤管、按泵后松手）
     static let springBack = Animation.spring(response: 0.34, dampingFraction: 0.48)
+
+    // MARK: 全 App 只有一盏灯（ROADMAP B2）
+
+    /// 方向：从左上方打下来，暖白。架板、接触阴影、焦散光都从这里取值——
+    /// 改一处，藏品架、托盘、空瓶墙、分享图的光就跟着一起改，不用一屏一屏调。
+    enum Light {
+        /// 影子往右下偏多少（物件宽度的比例）。
+        static let shadowShift: Double = 0.12
+        /// 焦散光往右折出去多少（光穿过有色玻璃后的落点）。
+        static let causticShift: Double = 0.16
+        /// 高光不是冷白，掺一点暖
+        static let highlight = Color(light: "FFFDF7", dark: "FFF6E4")
+        /// 接触阴影：紧贴的一层要够深，环境影要够散
+        static let contactCore = Color(light: "1B2430", dark: "000000")
+        static let contactCoreOpacity: Double = 0.26
+        static let contactCoreOpacityDark: Double = 0.60
+        static let contactAmbientOpacity: Double = 0.10
+        static let contactAmbientOpacityDark: Double = 0.34
+    }
 }
 
 extension Color {
+    /// 去饱和：向自己的亮度灰靠拢（t = 1 全灰）。背景柔光用它，产品多了才不会打架。
+    func desaturated(_ t: Double) -> Color {
+        let c = rgba
+        let g = luminance
+        let k = max(0, min(1, t))
+        return Color(red: c.r + (g - c.r) * k,
+                     green: c.g + (g - c.g) * k,
+                     blue: c.b + (g - c.b) * k,
+                     opacity: c.a)
+    }
+
     init(hex: String) {
         var v: UInt64 = 0
         Scanner(string: hex.trimmingCharacters(in: CharacterSet(charactersIn: "#"))).scanHexInt64(&v)
