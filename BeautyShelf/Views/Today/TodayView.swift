@@ -243,7 +243,7 @@ struct RoutineTodayView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 36)
         .padding(.horizontal, 20)
-        .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Theme.card))
+        .background(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous).fill(Theme.card))
         .accessibilityElement(children: .combine)
     }
 
@@ -272,7 +272,7 @@ struct RoutineTodayView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 32)
         .padding(.horizontal, 20)
-        .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Theme.card))
+        .background(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous).fill(Theme.card))
     }
 
     private func use(_ p: Product) {
@@ -408,12 +408,12 @@ struct RitualCard: View {
         }
         .padding(18)
         .background(
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
+            RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous)
                 .fill(Theme.card)
                 .shadow(color: .black.opacity(0.06), radius: 14, y: 6)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
+            RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous)
                 .strokeBorder(isNext ? product.tint.opacity(0.55) : Color.clear, lineWidth: 1.5)
         )
         .offset(y: dragY)
@@ -449,7 +449,7 @@ struct DoneChip: View {
             ProductFigure(product: product, maxPixel: 200)
                 .frame(width: 40, height: 56)
                 .frame(width: 60, height: 68)
-                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Theme.card))
+                .background(RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous).fill(Theme.card))
                 .opacity(0.85)
             Image(systemName: "checkmark.circle.fill")
                 .font(.body)

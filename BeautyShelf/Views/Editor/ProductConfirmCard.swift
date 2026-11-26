@@ -101,7 +101,7 @@ struct ProductConfirmCard: View {
                         .resizable()
                         .scaledToFill()
                         .frame(width: previewHeight * 0.85, height: previewHeight * 0.85)
-                        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
                         .shadow(color: .black.opacity(0.15), radius: 10, y: 6)
                 } else {
                     // 没有照片：形状插画兜底
@@ -758,6 +758,6 @@ struct EditorPressStyle: ButtonStyle {
 extension View {
     /// 编辑器里的分组：和首页、藏品同一套玻璃
     func editorCard() -> some View {
-        glassPanel(cornerRadius: 20, strong: true)
+        glassPanel(cornerRadius: Theme.Radius.panel, strong: true)
     }
 }

@@ -150,7 +150,7 @@ struct TodayView: View {
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 12)
-        .glassPanel(cornerRadius: 18)
+        .glassPanel(cornerRadius: Theme.Radius.panel)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("连续记录 \(streak) 天，这周记了 \(weekCount) 天")
     }
@@ -207,7 +207,7 @@ struct TodayView: View {
             .tint(.primary).foregroundStyle(Color(uiColor: .systemBackground))
         }
         .padding(18).frame(maxWidth: .infinity, alignment: .leading)
-        .glassPanel(cornerRadius: 22)
+        .glassPanel()
     }
 
     private func dayLabel(_ date: Date) -> String {
@@ -410,9 +410,9 @@ private struct UsagePicker: View {
                     .padding(.bottom, 11)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .glassPanel(cornerRadius: 18, tint: on ? p.tint : nil, strong: on)
+            .glassPanel(cornerRadius: Theme.Radius.panel, tint: on ? p.tint : nil, strong: on)
             .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                RoundedRectangle(cornerRadius: Theme.Radius.panel, style: .continuous)
                     .strokeBorder(on ? Color.primary.opacity(0.5) : .clear, lineWidth: 1.5)
             }
             .scaleEffect(on ? 0.98 : 1)

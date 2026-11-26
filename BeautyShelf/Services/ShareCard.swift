@@ -194,7 +194,7 @@ struct ShareCardView: View {
     }
 
     private var frameOutline: some View {
-        RoundedRectangle(cornerRadius: 3, style: .continuous)
+        RoundedRectangle(cornerRadius: Theme.Radius.hairline, style: .continuous)
             .strokeBorder(ivory.opacity(0.14), lineWidth: 0.8)
             .padding(16)
     }

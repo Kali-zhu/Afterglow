@@ -30,6 +30,25 @@ enum Theme {
     static let plankEdge = Color(light: "CFE6E0", dark: "4A5A58")
     static let plankShadow = Color(light: "1D2A3A", dark: "000000")
 
+    // MARK: 圆角 token
+    //
+    // 全部落在 4pt 网格上，全部配 `.continuous`（iOS 的"连续圆角"，等价于 Web 的
+    // superellipse 连续曲率）。层级从外到内：
+    //   card 24 → panel 20 → control 16 → tag 8 → hairline 4
+    // 内层 = 外层 − 内边距；同一层的块共用一个值；胶囊和圆形保持全圆，不参与这套。
+    enum Radius {
+        /// 页面一级的玻璃卡：藏品总览、空瓶统计卡、身份卡、会员卡、首页提问卡、挑选页弹层里的卡片
+        static let card: CGFloat = 24
+        /// 卡内的一块、弹层里的面板、说明块、关于页的每个 block
+        static let panel: CGFloat = 20
+        /// 控件级：估算滑块块、紧凑清单行、弹层里的预览框
+        static let control: CGFloat = 16
+        /// 小标签、小方块
+        static let tag: CGFloat = 8
+        /// 架板、细边框这类薄元素的下限
+        static let hairline: CGFloat = 4
+    }
+
     static let spring = Animation.spring(response: 0.42, dampingFraction: 0.82)
     static let snappy = Animation.spring(response: 0.3, dampingFraction: 0.65)
     /// "拿起来"：略带回弹

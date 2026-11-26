@@ -24,7 +24,7 @@ struct LiftingStageView: View {
                     Image(uiImage: photo)
                         .resizable()
                         .frame(width: fit.width, height: fit.height)
-                        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
                         .blur(radius: lifted ? 18 : 0)
                         .opacity(lifted ? 0.25 : 1)
                         .scaleEffect(lifted && !reduceMotion ? 0.96 : 1)
@@ -90,7 +90,7 @@ struct LiftingStageView: View {
             .position(x: fit.midX, y: fit.minY + 45 + (fit.height - 90) * scanPhase)
             .blendMode(.plusLighter)
             .mask(
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous)
                     .frame(width: fit.width, height: fit.height)
                     .position(x: fit.midX, y: fit.midY)
             )

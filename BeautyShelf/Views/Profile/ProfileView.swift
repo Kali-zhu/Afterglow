@@ -83,7 +83,7 @@ struct ProfileView: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassPanel(cornerRadius: 24)
+        .glassPanel()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("本机使用中，在用 \(activeCount) 件，空瓶 \(emptyCount) 件，累计记下 \(totalUses) 次")
     }
@@ -113,7 +113,7 @@ struct ProfileView: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassPanel(cornerRadius: 24, tint: Theme.sage)
+        .glassPanel(tint: Theme.sage)
         .accessibilityElement(children: .contain)
     }
 
@@ -163,7 +163,7 @@ struct ProfileView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 4)
-        .glassPanel(cornerRadius: 22)
+        .glassPanel()
     }
 
     private func row(_ title: String, detail: String?, symbol: String) -> some View {
@@ -222,7 +222,7 @@ private struct AboutView: View {
                         .contentShape(Rectangle())
                     }
                     .padding(.horizontal, 16)
-                    .glassPanel(cornerRadius: 18)
+                    .glassPanel(cornerRadius: Theme.Radius.panel)
                     .accessibilityLabel("在浏览器里打开隐私政策")
                 }
             }
@@ -245,6 +245,6 @@ private struct AboutView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .glassPanel(cornerRadius: 18)
+        .glassPanel(cornerRadius: Theme.Radius.panel)
     }
 }

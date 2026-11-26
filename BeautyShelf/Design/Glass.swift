@@ -6,7 +6,7 @@ import UIKit
 /// 今日的手记卡、藏品总览、空瓶统计都用它。玻璃在这里不是装饰，
 /// 而是把"妆台"这个主题一路延伸下去：物件站在玻璃架上，信息也装在玻璃里。
 struct GlassPanelModifier: ViewModifier {
-    var cornerRadius: CGFloat = 22
+    var cornerRadius: CGFloat = Theme.Radius.card
     /// 液体色：让这张卡靠近"它讲的这件产品"的颜色
     var tint: Color? = nil
     /// 更厚的一层（背后没有太多内容时用），默认 ultraThin
@@ -46,7 +46,7 @@ struct GlassPanelModifier: ViewModifier {
 
 extension View {
     /// 玻璃卡片。`tint` 传产品自己的液体色，卡片就会带上一点它的颜色。
-    func glassPanel(cornerRadius: CGFloat = 22, tint: Color? = nil, strong: Bool = false) -> some View {
+    func glassPanel(cornerRadius: CGFloat = Theme.Radius.card, tint: Color? = nil, strong: Bool = false) -> some View {
         modifier(GlassPanelModifier(cornerRadius: cornerRadius, tint: tint, strong: strong))
     }
 }

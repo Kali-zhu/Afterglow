@@ -198,7 +198,7 @@ struct CaptureCameraView: View {
                         .accessibilityHidden(true)
 
                     if let p = focusPoint {
-                        RoundedRectangle(cornerRadius: 8)
+                        RoundedRectangle(cornerRadius: Theme.Radius.tag, style: .continuous)
                             .strokeBorder(Color.yellow, lineWidth: 1.5)
                             .frame(width: 64, height: 64)
                             .position(p)
@@ -267,7 +267,7 @@ struct CaptureCameraView: View {
             }
             .fill(Color.black.opacity(0.45), style: FillStyle(eoFill: true))
 
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
+            RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous)
                 .stroke(Color.white.opacity(0.9), style: StrokeStyle(lineWidth: 2, dash: [10, 8]))
                 .frame(width: guide.width, height: guide.height)
                 .position(x: guide.midX, y: guide.midY)

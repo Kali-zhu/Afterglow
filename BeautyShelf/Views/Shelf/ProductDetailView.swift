@@ -209,7 +209,7 @@ struct ProductDetailView: View {
             .accessibilityValue("约剩 \(Int((p.level * 100).rounded()))%")
         }
         .padding(16)
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Theme.card))
+        .background(RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous).fill(Theme.card))
     }
 
     // MARK: 数据

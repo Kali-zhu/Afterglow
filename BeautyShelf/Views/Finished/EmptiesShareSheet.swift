@@ -87,13 +87,13 @@ struct EmptiesShareSheet: View {
     @ViewBuilder
     private var preview: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
+            RoundedRectangle(cornerRadius: Theme.Radius.panel, style: .continuous)
                 .fill(Theme.card)
             if let image {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFit()
-                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.panel, style: .continuous))
                     .transition(.opacity)
                     .accessibilityLabel(period.map { "\($0.title) \(count) 件的分享图预览" } ?? "分享图预览")
             } else if periods.isEmpty {

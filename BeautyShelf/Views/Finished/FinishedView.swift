@@ -145,7 +145,7 @@ struct FinishedView: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassPanel(cornerRadius: 24, tint: finished.first?.tint)
+        .glassPanel(tint: finished.first?.tint)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("今年用空 \(thisYear.count) 件，累计 \(counted.count) 件")
     }
@@ -192,7 +192,7 @@ struct FinishedView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 4)
-            .glassPanel(cornerRadius: 20)
+            .glassPanel(cornerRadius: Theme.Radius.panel)
         }
     }
 
@@ -375,7 +375,7 @@ struct FinishedView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 24)
         .padding(.horizontal, 16)
-        .glassPanel(cornerRadius: 24)
+        .glassPanel()
     }
 }
 

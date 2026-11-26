@@ -166,7 +166,7 @@ struct ShelfPlank: View {
                 }
                 .frame(height: Self.height - Self.surface - 0.75)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 2.5, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.hairline, style: .continuous))
         .background(alignment: .top) {
             // 架板下方的深度投影：往右下偏一点，和接触阴影同方向
             LinearGradient(colors: [Theme.plankShadow.opacity(dark ? 0.55 : 0.13), .clear],

@@ -188,7 +188,7 @@ struct ShelfView: View {
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassPanel(cornerRadius: 24, tint: active.first?.tint)
+        .glassPanel(tint: active.first?.tint)
         .accessibilityElement(children: .combine)
     }
 
