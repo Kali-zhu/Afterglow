@@ -1,9 +1,8 @@
 import SwiftUI
 
-/// 产品的"实物"形象。
-/// 默认是**标签模式**：画出来的容器做底，把抠图 / 照片当一枚圆形标签贴在瓶身上
-/// （模板是自己的，图只是贴纸，不涉及把别人的瓶身图整张搬过来）。
-/// `wholeCutout: true` 是**实物模式**：整张抠图，只用在详情页大图和倒空动画里。
+/// 产品的"实物"形象：有抠图就直接用抠图（透明底 PNG）——它们本身就是"贴纸"；
+/// 没有抠图时画出容器（有照片则把照片当圆形标签贴在瓶身上）。
+/// 今日托盘、首页、挑选页、空瓶记分享图都用它。
 struct ProductFigure: View {
     let product: Product
     /// 抠图解码的最长边像素
@@ -11,10 +10,9 @@ struct ProductFigure: View {
     /// 覆盖液面（空瓶显示 0）
     var level: Double? = nil
     var slosh: Int = 0
-    var wholeCutout: Bool = false
 
     var body: some View {
-        if wholeCutout, let data = product.cutout,
+        if let data = product.cutout,
            let image = SharedStore.thumbnail(data, key: product.uid.uuidString, maxPixel: maxPixel) {
             Image(uiImage: image)
                 .resizable()
@@ -22,7 +20,7 @@ struct ProductFigure: View {
                 .scaledToFit()
                 .accessibilityHidden(true)
         } else {
-            ContainerView(product: product, level: level, slosh: slosh, animated: false, wholeCutout: false)
+            ContainerView(product: product, level: level, slosh: slosh, animated: false)
                 .aspectRatio(0.62, contentMode: .fit)
                 .accessibilityHidden(true)
         }

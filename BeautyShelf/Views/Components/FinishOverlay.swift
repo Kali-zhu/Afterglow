@@ -35,7 +35,7 @@ struct FinishOverlay: View {
                 Rectangle().fill(.regularMaterial)
                     .opacity(dim)
 
-                ContainerView(product: product, level: level, slosh: slosh, animated: !reduceMotion, wholeCutout: true)
+                ContainerView(product: product, level: level, slosh: slosh, animated: !reduceMotion)
                     .frame(width: heroSize.width, height: heroSize.height)
                     .rotationEffect(.degrees(tilt), anchor: .bottomLeading)
                     .scaleEffect(travel ? 0.14 : 1)
