@@ -15,6 +15,15 @@ struct FinishedView: View {
     private var all: [Product]
     @State private var restockTick = 0
     @State private var showShareCard = false
+    /// 空瓶的两种看法：墙（一眼看全）/ 时间线（按月看什么时候用空的）。记住上次选的
+    @AppStorage("finished.layout") private var layoutRaw = Layout.wall.rawValue
+
+    enum Layout: String, CaseIterable, Identifiable {
+        case wall = "空瓶墙", timeline = "时间线"
+        var id: String { rawValue }
+    }
+
+    private var layout: Layout { Layout(rawValue: layoutRaw) ?? .wall }
 
     private var finished: [Product] {
         all.filter { $0.isFinished }
@@ -91,7 +100,7 @@ struct FinishedView: View {
                                 statsCard
                                 shareButton
                                 if !restock.isEmpty { restockList }
-                                wall
+                                emptiesSection
                             }
                         }
                         .padding(.horizontal, 20)
@@ -256,18 +265,36 @@ struct FinishedView: View {
         }
     }
 
-    // MARK: 空瓶墙
+    // MARK: 空瓶墙 / 时间线
 
-    private var wall: some View {
-        VStack(alignment: .leading, spacing: 12) {
+    /// 标题 + 切换 + 内容。两种看法用同一份数据，切换只换排法
+    private var emptiesSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text("空瓶墙").font(.title3.weight(.semibold))
+                Text(layout.rawValue).font(.title3.weight(.semibold))
                 Spacer(minLength: 8)
                 Text("累计 \(finished.count) 件")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
             .accessibilityAddTraits(.isHeader)
+
+            Picker("看法", selection: $layoutRaw) {
+                ForEach(Layout.allCases) { option in
+                    Text(option.rawValue).tag(option.rawValue)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            switch layout {
+            case .wall: wall
+            case .timeline: EmptiesTimelineView(finished: finished)
+            }
+        }
+    }
+
+    private var wall: some View {
+        VStack(alignment: .leading, spacing: 12) {
             ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
                 emptyRow(row)
             }
