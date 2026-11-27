@@ -40,6 +40,8 @@ struct ProductDetailView: View {
     /// 刚在一组里用完的那件：提示"收进空瓶墙了"，可以顺手加进补货
     @State var finishedID: UUID? = nil
     @State var finishedTask: Task<Void, Never>? = nil
+    /// 正在分享的那条空瓶记录：「分享空瓶」打开的那张卡片
+    @State var sharingEmpty: Product? = nil
 
     init(items: [Product], close: @escaping () -> Void) {
         self.items = items
@@ -92,6 +94,10 @@ struct ProductDetailView: View {
             Button("删除", role: .destructive) { deleteCurrent() }
         } message: {
             Text("删除后无法恢复。")
+        }
+        .sheet(item: $sharingEmpty) { p in
+            EmptyShareSheet(product: p)
+                .environment(coordinator)
         }
     }
 
@@ -390,8 +396,10 @@ struct ProductDetailView: View {
             .disabled(current.isFinished)
 
             HStack(spacing: 10) {
-                // 空瓶不再「用完了」，只留补货
-                if !current.isFinished {
+                // 空瓶不再「用完了」，这一格换成「分享空瓶」：拿这条记录直接排一张卡片
+                if current.isFinished {
+                    softPill("分享空瓶") { sharingEmpty = current }
+                } else {
                     softPill("用完了") { finishCurrent() }
                 }
                 softPill(current.needsRestock ? "已在补货" : "加入补货") {

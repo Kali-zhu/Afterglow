@@ -30,9 +30,17 @@ enum SharedStore {
         static var models: [any PersistentModel.Type] { [Product.self] }
     }
 
+    /// v2.1：空瓶记录多了「用后感」和「复购态度」两个字段（都可为空）→ 轻量迁移
+    enum SchemaV2: VersionedSchema {
+        static let versionIdentifier = Schema.Version(2, 0, 0)
+        static var models: [any PersistentModel.Type] { [Product.self] }
+    }
+
     enum MigrationPlan: SchemaMigrationPlan {
-        static var schemas: [any VersionedSchema.Type] { [SchemaV1.self] }
-        static var stages: [MigrationStage] { [] }
+        static var schemas: [any VersionedSchema.Type] { [SchemaV1.self, SchemaV2.self] }
+        static var stages: [MigrationStage] {
+            [.lightweight(fromVersion: SchemaV1.self, toVersion: SchemaV2.self)]
+        }
     }
 
     /// 先按迁移计划打开；计划对不上旧库时退回不带计划的打开，别让 App 一启动就崩
@@ -45,7 +53,7 @@ enum SharedStore {
     }
 
     private static func makeContainer() -> ModelContainer {
-        let schema = Schema(versionedSchema: SchemaV1.self)
+        let schema = Schema(versionedSchema: SchemaV2.self)
         if groupURL != nil {
             migrateLegacyStoreIfNeeded()
             let config = ModelConfiguration(schema: schema, groupContainer: .identifier(appGroup))

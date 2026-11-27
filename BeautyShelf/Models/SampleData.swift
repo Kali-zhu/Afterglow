@@ -174,6 +174,8 @@ enum SampleData {
         handCream.price = 85
         handCream.useCount = 41
         handCream.finishedDate = ago(months: 2)
+        handCream.repurchase = .yes
+        handCream.note = "挤到最后一滴，管身都剪开了。秋冬还会买。"
         handCream.cutout = cutout("bodylotion")
         items.append(handCream)
 

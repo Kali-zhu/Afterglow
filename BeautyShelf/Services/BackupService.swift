@@ -5,7 +5,7 @@ import SwiftData
 /// 再从这个文件恢复。恢复只补上这台手机上还没有的产品（按 uid 去重），不覆盖现有数据。
 enum BackupService {
     /// 文件格式版本：字段增减时加一。旧版本 App 读到更新的文件会拒绝恢复。
-    static let formatVersion = 1
+    static let formatVersion = 2
 
     struct Backup: Codable {
         var version: Int
@@ -49,6 +49,9 @@ enum BackupService {
         var isSample: Bool
         var pinnedAt: Date?
         var lowStockAlertAt: Date?
+        /// 用后感与复购态度（可空：旧备份里没有这两个键）
+        var note: String?
+        var repurchaseRaw: String?
         var createdAt: Date
 
         init(_ p: Product) {
@@ -86,6 +89,8 @@ enum BackupService {
             isSample = p.isSample
             pinnedAt = p.pinnedAt
             lowStockAlertAt = p.lowStockAlertAt
+            note = p.note
+            repurchaseRaw = p.repurchaseRaw
             createdAt = p.createdAt
         }
 
@@ -123,6 +128,8 @@ enum BackupService {
             p.isSample = isSample
             p.pinnedAt = pinnedAt
             p.lowStockAlertAt = lowStockAlertAt
+            p.note = note ?? ""
+            p.repurchaseRaw = repurchaseRaw
             p.createdAt = createdAt
             return p
         }

@@ -146,6 +146,13 @@ enum MeasureMode: String, Codable {
     case estimate
 }
 
+/// 复购态度：空瓶分享卡上那枚朱红印章。没选（nil）就不盖章。
+enum RepurchaseStance: String, Codable, CaseIterable, Identifiable {
+    case yes = "会回购", maybe = "再想想", no = "不回购"
+    var id: String { rawValue }
+    var title: String { rawValue }
+}
+
 enum RoutineSlot: String, CaseIterable, Identifiable {
     case morning, evening, makeup
     var id: String { rawValue }
@@ -238,6 +245,10 @@ final class Product {
     /// 标为常用的时间，常用品优先显示在快速记录中
     var pinnedAt: Date? = nil
     var lowStockAlertAt: Date? = nil
+    /// 用后感：分享空瓶卡最下面那段话。空的时候卡片上不出现这一块。
+    var note: String = ""
+    /// 复购态度（会回购 / 再想想 / 不回购）。没选时为空，卡片上不盖印章。
+    var repurchaseRaw: String? = nil
     var createdAt: Date = Date.now
 
     init(name: String,
@@ -312,6 +323,18 @@ final class Product {
     var level: Double { totalAmount > 0 ? max(0, min(1, remainingAmount / totalAmount)) : 0 }
     var tint: Color { Color(hex: tintHex) }
     var isFinished: Bool { finishedDate != nil }
+
+    var repurchase: RepurchaseStance? {
+        get { repurchaseRaw.flatMap { RepurchaseStance(rawValue: $0) } }
+        set { repurchaseRaw = newValue?.rawValue }
+    }
+
+    /// 写下的心得（去掉首尾空白）；没写时返回 nil
+    var trimmedNote: String? {
+        let text = note.trimmingCharacters(in: .whitespacesAndNewlines)
+        return text.isEmpty ? nil : text
+    }
+
     /// 剩余不足 15%
     var isLow: Bool { !isFinished && level < 0.15 }
     var isPinned: Bool { pinnedAt != nil }
