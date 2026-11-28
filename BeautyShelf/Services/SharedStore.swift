@@ -23,37 +23,18 @@ enum SharedStore {
     /// 共享容器。App 和小组件各自进程里各有一个实例，指向同一个文件。
     static let container: ModelContainer = makeContainer()
 
-    /// 数据库结构版本（ROADMAP A4）。改 Product 的字段时：新增一个 VersionedSchema（V2），
-    /// 加进 `MigrationPlan.schemas`，并在 `stages` 里写上迁移阶段。V1 保持不动。
-    enum SchemaV1: VersionedSchema {
-        static let versionIdentifier = Schema.Version(1, 0, 0)
-        static var models: [any PersistentModel.Type] { [Product.self] }
-    }
-
-    /// v2.1：空瓶记录多了「用后感」和「复购态度」两个字段（都可为空）→ 轻量迁移
-    enum SchemaV2: VersionedSchema {
-        static let versionIdentifier = Schema.Version(2, 0, 0)
-        static var models: [any PersistentModel.Type] { [Product.self] }
-    }
-
-    enum MigrationPlan: SchemaMigrationPlan {
-        static var schemas: [any VersionedSchema.Type] { [SchemaV1.self, SchemaV2.self] }
-        static var stages: [MigrationStage] {
-            [.lightweight(fromVersion: SchemaV1.self, toVersion: SchemaV2.self)]
-        }
-    }
-
-    /// 先按迁移计划打开；计划对不上旧库时退回不带计划的打开，别让 App 一启动就崩
+    /// 数据库结构（ROADMAP A4）。
+    ///
+    /// 只给 Product 加「有默认值或可为空」的字段时，SwiftData 会自动做轻量迁移，不需要迁移计划。
+    /// 注意：别写两个 VersionedSchema 都指向同一个 `Product.self`——两版校验和完全相同，
+    /// SwiftData 会在打开数据库时直接崩溃（Duplicate version checksums），而且这个崩溃 catch 不住。
+    /// 真要做不兼容的改动时，把旧版 Product 原样复制进 SchemaV1 里（嵌套类型），再写迁移阶段。
     private static func openContainer(_ schema: Schema, _ configuration: ModelConfiguration) throws -> ModelContainer {
-        do {
-            return try ModelContainer(for: schema, migrationPlan: MigrationPlan.self, configurations: [configuration])
-        } catch {
-            return try ModelContainer(for: schema, configurations: [configuration])
-        }
+        try ModelContainer(for: schema, configurations: [configuration])
     }
 
     private static func makeContainer() -> ModelContainer {
-        let schema = Schema(versionedSchema: SchemaV2.self)
+        let schema = Schema([Product.self])
         if groupURL != nil {
             migrateLegacyStoreIfNeeded()
             let config = ModelConfiguration(schema: schema, groupContainer: .identifier(appGroup))
